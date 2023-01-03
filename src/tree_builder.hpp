@@ -28,7 +28,19 @@ namespace e_regex
             // Simple case, iterate
 
             using new_node
-                = add_child_t<last_node, tree_node<terminal<head>, false, false, false, std::tuple<>>>;
+                = add_child_t<last_node, tree_node<exact_matcher<head>, false, false, false, std::tuple<>>>;
+            using tree =
+                typename square_bracker_tree_builder_helper<new_node, std::tuple<tail...>>::tree;
+    };
+
+    template<typename last_node, char identifier, typename... tail>
+    struct square_bracker_tree_builder_helper<last_node, std::tuple<static_string<'\\', identifier>, tail...>>
+    {
+            // Simple case, iterate
+
+            using new_node = add_child_t<
+                last_node,
+                tree_node<terminal<static_string<'\\', identifier>>, false, false, false, std::tuple<>>>;
             using tree =
                 typename square_bracker_tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };

@@ -9,7 +9,7 @@ namespace e_regex
 }// namespace e_regex
 
 template<typename T, T... regex>
-auto operator"" _regex()
+constexpr auto operator"" _regex()
 {
     return typename e_regex::tree_builder<e_regex::static_string<regex...>>::tree {};
 }

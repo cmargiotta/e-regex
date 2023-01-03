@@ -1,10 +1,11 @@
 #ifndef MATCHER
 #define MATCHER
 
-#include <array>
 #include <string_view>
 #include <tuple>
 #include <type_traits>
+
+#include "match_result.hpp"
 
 namespace e_regex
 {
@@ -25,57 +26,6 @@ namespace e_regex
     struct group_counter<node>
     {
             static constexpr std::size_t value = 0;
-    };
-
-    template<std::size_t groups>
-    struct match_result
-    {
-            std::array<std::string_view, groups + 1> match_groups;
-            std::size_t                              matches  = 0;
-            bool                                     accepted = true;
-
-            constexpr auto operator=(bool accepted) noexcept -> match_result&
-            {
-                this->accepted = accepted;
-
-                return *this;
-            }
-
-            constexpr operator bool() const noexcept
-            {
-                return accepted;
-            }
-
-            constexpr auto is_accepted() const noexcept
-            {
-                return accepted;
-            }
-
-            constexpr auto operator[](std::size_t index) const noexcept
-            {
-                return match_groups[index];
-            }
-
-            constexpr auto to_view() const noexcept
-            {
-                return match_groups[0];
-            }
-
-            constexpr operator std::string_view() const noexcept
-            {
-                return to_view();
-            }
-
-            constexpr auto size() const noexcept
-            {
-                return matches;
-            }
-    };
-
-    template<typename T>
-    concept is_node = requires(T t)
-    {
-        t.groups;
     };
 
     template<typename matcher, bool repeat, bool optional, bool group, typename child>
@@ -104,34 +54,40 @@ namespace e_regex
             static constexpr std::size_t groups = group_counter<tree_node>::value;
 
             template<typename Iterator>
-            static constexpr auto dfs(Iterator /*unused*/, Iterator end, auto result)
+            static constexpr auto dfs(Iterator /*unused*/, Iterator, auto result)
             {
-                return std::make_pair(std::move(result), end);
+                return result;
             }
 
             template<typename Iterator, typename Child, typename... Children>
             static constexpr auto dfs(Iterator query_iterator, Iterator end, auto match_result)
             {
-                auto [result, iterator] = Child::match(query_iterator, end, match_result);
+                auto result = Child::match(query_iterator, end, match_result);
 
                 if (!result && sizeof...(Children) > 0)
                 {
                     return dfs<Iterator, Children...>(query_iterator, end, std::move(match_result));
                 }
 
-                return std::make_pair(std::move(result), iterator);
+                return result;
             }
 
             template<typename Iterator>
             static constexpr auto match(Iterator query_iterator, Iterator end, auto result)
             {
+                if (query_iterator == end)
+                {
+                    result = optional;
+                    return result;
+                }
+
                 if constexpr (!std::is_same_v<matcher, void>)
                 {
                     unsigned    matches       = 0;
                     std::size_t match_index   = 0;
                     auto        last_iterator = query_iterator;
 
-                    if constexpr (is_node<matcher>)
+                    if constexpr (group)
                     {
                         result.matches++;
                         match_index = result.matches;
@@ -141,15 +97,14 @@ namespace e_regex
                     {
                         while (query_iterator < end)
                         {
-                            auto res = matcher::match(query_iterator, end, std::move(result));
+                            auto res = matcher::match(query_iterator, end, result);
 
-                            result = std::move(res.first);
-
-                            if (result)
+                            if (res)
                             {
+                                result = res;
                                 matches++;
                                 last_iterator  = query_iterator;
-                                query_iterator = res.second;
+                                query_iterator = result.actual_iterator_end;
                             }
                             else
                             {
@@ -157,29 +112,24 @@ namespace e_regex
                             }
                         }
 
-                        if constexpr (optional)
-                        {
-                            result = true;
-                        }
-                        else
+                        if constexpr (!optional)
                         {
                             result = matches > 0;
                         }
                     }
                     else
                     {
-                        auto res = matcher::match(query_iterator, end, result);
+                        result = matcher::match(query_iterator, end, std::move(result));
 
-                        result         = std::move(res.first);
                         last_iterator  = query_iterator;
-                        query_iterator = res.second;
+                        query_iterator = result.actual_iterator_end;
                     }
 
-                    if (result)
+                    if constexpr (group)
                     {
-                        if constexpr (is_node<matcher>)
+                        if (result)
                         {
-                            result.match_groups[match_index]
+                            result.match_groups[match_index - 1]
                                 = std::string_view {last_iterator, query_iterator};
                         }
                     }
@@ -187,22 +137,15 @@ namespace e_regex
 
                 if (result)
                 {
-                    if constexpr (sizeof...(children) > 0)
-                    {
-                        return dfs<Iterator, children...>(query_iterator, end, std::move(result));
-                    }
+                    return dfs<Iterator, children...>(query_iterator, end, std::move(result));
                 }
 
-                return std::make_pair(std::move(result), query_iterator);
+                return result;
             }
 
             static constexpr auto match(std::string_view query)
             {
-                auto [result, iterator] = match(query.begin(), query.end(), match_result<groups> {});
-
-                result.match_groups[0] = std::string_view {query.begin(), iterator};
-
-                return result;
+                return match_result<tree_node, groups> {query};
             }
     };
 
