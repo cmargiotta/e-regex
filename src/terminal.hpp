@@ -102,6 +102,11 @@ namespace e_regex
     {
     };
 
+    template<>
+    struct terminal<pack_string<'\\', 'W'>> : public negated_terminal<terminal<pack_string<'\\', 'w'>>>
+    {
+    };
+
     template<char identifier>
     struct terminal<pack_string<'\\', identifier>>
     {
