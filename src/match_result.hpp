@@ -87,6 +87,10 @@ namespace e_regex
 
             constexpr auto to_view() const noexcept
             {
+                if (!is_accepted())
+                {
+                    return std::string_view {};
+                }
                 return std::string_view {data.actual_iterator_start, data.actual_iterator_end};
             }
 
@@ -111,12 +115,20 @@ namespace e_regex
                 {
                     if (initialized)
                     {
-                        // If accepted is false, probably this is the first call
-                        data.actual_iterator_start++;
+                        // This is not the first call
+                        if (!data.accepted)
+                        {
+                            data.actual_iterator_start++;
+                        }
+                        else
+                        {
+                            data.actual_iterator_start = data.actual_iterator_end;
+                        }
                     }
 
                     init();
-                } while (!data.accepted && data.actual_iterator_start < data.query.end());
+                } while (!data.accepted && data.actual_iterator_start < data.query.end()
+                         && data.actual_iterator_start >= data.query.begin());
 
                 return data.accepted;
             }

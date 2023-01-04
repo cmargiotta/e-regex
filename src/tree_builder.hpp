@@ -34,19 +34,19 @@ namespace e_regex
     };
 
     template<typename last_node, char identifier, typename... tail>
-    struct square_bracker_tree_builder_helper<last_node, std::tuple<static_string<'\\', identifier>, tail...>>
+    struct square_bracker_tree_builder_helper<last_node, std::tuple<pack_string<'\\', identifier>, tail...>>
     {
             // Simple case, iterate
 
             using new_node = add_child_t<
                 last_node,
-                tree_node<terminal<static_string<'\\', identifier>>, false, false, false, std::tuple<>>>;
+                tree_node<terminal<pack_string<'\\', identifier>>, false, false, false, std::tuple<>>>;
             using tree =
                 typename square_bracker_tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
 
     template<typename last_node, typename start, typename end, typename... tail>
-    struct square_bracker_tree_builder_helper<last_node, std::tuple<start, static_string<'-'>, end, tail...>>
+    struct square_bracker_tree_builder_helper<last_node, std::tuple<start, pack_string<'-'>, end, tail...>>
     {
             // Range found
 
@@ -69,7 +69,7 @@ namespace e_regex
     };
 
     template<typename last_node, typename... tail>
-    struct tree_builder_helper<last_node, std::tuple<static_string<'*'>, tail...>>
+    struct tree_builder_helper<last_node, std::tuple<pack_string<'*'>, tail...>>
     {
             // * operator found
             using new_node = set_repetition_t<set_optional_t<last_node, true>, true>;
@@ -78,7 +78,7 @@ namespace e_regex
     };
 
     template<typename last_node, typename... tail>
-    struct tree_builder_helper<last_node, std::tuple<static_string<'+'>, tail...>>
+    struct tree_builder_helper<last_node, std::tuple<pack_string<'+'>, tail...>>
     {
             // + operator found
             using new_node = set_repetition_t<last_node, true>;
@@ -87,7 +87,7 @@ namespace e_regex
     };
 
     template<typename last_node, typename... tail>
-    struct tree_builder_helper<last_node, std::tuple<static_string<'('>, tail...>>
+    struct tree_builder_helper<last_node, std::tuple<pack_string<'('>, tail...>>
     {
             // ( found
             using substring = extract_delimited_content_t<'(', ')', std::tuple<tail...>>;
@@ -101,7 +101,7 @@ namespace e_regex
     };
 
     template<typename last_node, typename... tail>
-    struct tree_builder_helper<last_node, std::tuple<static_string<'['>, tail...>>
+    struct tree_builder_helper<last_node, std::tuple<pack_string<'['>, tail...>>
     {
             // ( found
             using substring = extract_delimited_content_t<'[', ']', std::tuple<tail...>>;
@@ -117,7 +117,7 @@ namespace e_regex
     };
 
     template<typename last_node, typename... tail>
-    struct tree_builder_helper<last_node, std::tuple<static_string<'['>, static_string<'^'>, tail...>>
+    struct tree_builder_helper<last_node, std::tuple<pack_string<'['>, pack_string<'^'>, tail...>>
     {
             // ( found
             using substring = extract_delimited_content_t<'[', ']', std::tuple<tail...>>;
@@ -148,8 +148,8 @@ namespace e_regex
     struct tree_builder;
 
     template<char... regex>
-    struct tree_builder<static_string<regex...>>
-        : public tree_builder_helper<void, tokenize<static_string<regex...>>>
+    struct tree_builder<pack_string<regex...>>
+        : public tree_builder_helper<void, tokenize<pack_string<regex...>>>
     {
     };
 

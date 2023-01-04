@@ -29,7 +29,7 @@ namespace e_regex
     struct extract_delimited_content;
 
     template<char open, char closing, typename current, typename... tail_>
-    struct extract_delimited_content<open, closing, 0, current, std::tuple<static_string<closing>, tail_...>>
+    struct extract_delimited_content<open, closing, 0, current, std::tuple<pack_string<closing>, tail_...>>
     {
             // Base case, closing delimiter found
             using result    = current;
@@ -45,22 +45,22 @@ namespace e_regex
     };
 
     template<char open, char closing, unsigned skip_counter, typename current, typename... tail>
-    struct extract_delimited_content<open, closing, skip_counter, current, std::tuple<static_string<closing>, tail...>>
+    struct extract_delimited_content<open, closing, skip_counter, current, std::tuple<pack_string<closing>, tail...>>
         : public extract_delimited_content<open,
                                            closing,
                                            skip_counter - 1,
-                                           tuple_cat_t<current, static_string<closing>>,
+                                           tuple_cat_t<current, pack_string<closing>>,
                                            std::tuple<tail...>>
     {
             // Closing delimiter found, but it has to be skipped
     };
 
     template<char open, char closing, unsigned skip_counter, typename current, typename... tail>
-    struct extract_delimited_content<open, closing, skip_counter, current, std::tuple<static_string<open>, tail...>>
+    struct extract_delimited_content<open, closing, skip_counter, current, std::tuple<pack_string<open>, tail...>>
         : public extract_delimited_content<open,
                                            closing,
                                            skip_counter + 1,
-                                           tuple_cat_t<current, static_string<open>>,
+                                           tuple_cat_t<current, pack_string<open>>,
                                            std::tuple<tail...>>
     {
             // Open delimiter found, increase skip counter
@@ -76,6 +76,26 @@ namespace e_regex
     template<char open, char closing, typename string>
     using extract_delimited_content_t
         = extract_delimited_content<open, closing, 0, std::tuple<>, string>;
+
+    template<char separator, typename tokens, typename current = std::tuple<>>
+    struct split;
+
+    template<char separator, typename head, typename... tail, typename... current_tokens, typename... currents>
+    struct split<separator, std::tuple<head, tail...>, std::tuple<std::tuple<current_tokens...>, currents...>>
+    {
+            using current = std::tuple<std::tuple<head, current_tokens...>, currents...>;
+            using type    = split<separator, std::tuple<tail...>, current>;
+    };
+
+    template<char separator, typename... tail, typename... currents>
+    struct split<separator, std::tuple<static_string<'|'>, tail...>, std::tuple<currents...>>
+    {
+            using current = std::tuple<std::tuple<>, currents...>;
+            using type    = split<separator, std::tuple<tail...>, current>;
+    };
+
+    template<char separator, typename tokens>
+    using split_t = typename split<separator, tokens>::type;
 
 }// namespace e_regex
 

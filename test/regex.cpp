@@ -5,77 +5,73 @@
 #include <e_regex.hpp>
 #include <tokenizer.hpp>
 
-template<typename T, T... data>
-constexpr auto operator"" _sstring()
-{
-    return e_regex::static_string<data...> {};
-}
-
 TEST_CASE("Tokenization")
 {
-    using test   = decltype(R"(bb(a\)c)zz)"_sstring);
+    constexpr e_regex::static_string regex {R"(bb(a\)c)zz)"};
+
+    using test   = e_regex::build_pack_string_t<regex>;
     using tokens = e_regex::tokenize<test>;
 
-    using expected = std::tuple<e_regex::static_string<'b'>,
-                                e_regex::static_string<'b'>,
-                                e_regex::static_string<'('>,
-                                e_regex::static_string<'a'>,
-                                e_regex::static_string<'\\', ')'>,
-                                e_regex::static_string<'c'>,
-                                e_regex::static_string<')'>,
-                                e_regex::static_string<'z'>,
-                                e_regex::static_string<'z'>>;
+    using expected = std::tuple<e_regex::pack_string<'b'>,
+                                e_regex::pack_string<'b'>,
+                                e_regex::pack_string<'('>,
+                                e_regex::pack_string<'a'>,
+                                e_regex::pack_string<'\\', ')'>,
+                                e_regex::pack_string<'c'>,
+                                e_regex::pack_string<')'>,
+                                e_regex::pack_string<'z'>,
+                                e_regex::pack_string<'z'>>;
 
     REQUIRE(std::is_same_v<tokens, expected>);
 }
 
 TEST_CASE("Construction")
 {
-    static auto regex = "\\w"_regex;
+    constexpr e_regex::static_string regex {"\\w"};
 
-    REQUIRE(regex.match("a").is_accepted());
-    REQUIRE(!regex.match("0").is_accepted());
+    REQUIRE(e_regex::match<regex>("a").is_accepted());
+    REQUIRE(!e_regex::match<regex>("0").is_accepted());
 }
 
 TEST_CASE("Star operator")
 {
-    static auto regex = "aa*"_regex;
+    constexpr e_regex::static_string regex {"aa*"};
 
-    REQUIRE(regex.match("aaa").is_accepted());
-    REQUIRE(regex.match("a").is_accepted());
+    REQUIRE(e_regex::match<regex>("aaa").is_accepted());
+    REQUIRE(e_regex::match<regex>("a").is_accepted());
 
-    auto aab = regex.match("aab");
+    auto aab = e_regex::match<regex>("aab");
     REQUIRE(aab.is_accepted());
     REQUIRE(aab.get_group(0) == "aa");
 }
 
 TEST_CASE("Plus operator")
 {
-    static auto regex = "aa+"_regex;
+    constexpr e_regex::static_string regex {"aa+"};
 
-    REQUIRE(regex.match("aaa").is_accepted());
-    REQUIRE(!regex.match("a").is_accepted());
+    REQUIRE(e_regex::match<regex>("aaa").is_accepted());
+    REQUIRE(!e_regex::match<regex>("a").is_accepted());
 
-    auto aab = regex.match("aab");
+    auto aab = e_regex::match<regex>("aab");
     REQUIRE(aab.is_accepted());
     REQUIRE(aab.get_group(0) == "aa");
 }
 
 TEST_CASE("Round brackets")
 {
-    static auto regex = "a(ab)+"_regex;
+    constexpr e_regex::static_string regex {"a(ab)+"};
 
-    REQUIRE(!regex.match("aaa").is_accepted());
-    REQUIRE(!regex.match("a").is_accepted());
-    REQUIRE(regex.match("aab").is_accepted());
-    REQUIRE(regex.match("aabab").is_accepted());
+    REQUIRE(!e_regex::match<regex>("aaa").is_accepted());
+    REQUIRE(!e_regex::match<regex>("a").is_accepted());
+    REQUIRE(e_regex::match<regex>("aab").is_accepted());
+    REQUIRE(e_regex::match<regex>("aabab").is_accepted());
 }
 
 TEST_CASE("Group matching")
 {
-    static auto regex = "a(a(b))cd"_regex;
+    constexpr e_regex::static_string regex {"a(a(b))cd"};
 
-    auto match = regex.match("aabcdef");
+    auto match = e_regex::match<regex>("aabcdef");
 
     REQUIRE(match.is_accepted());
     REQUIRE(match.get_group(0) == "aabcd");
@@ -85,9 +81,9 @@ TEST_CASE("Group matching")
 
 TEST_CASE("Iterating matches")
 {
-    static auto regex = "ab"_regex;
+    constexpr e_regex::static_string regex {"ab"};
 
-    auto match = regex.match("abaab");
+    auto match = e_regex::match<regex>("abaab");
 
     REQUIRE(match.is_accepted());
     REQUIRE(match.get_group(0) == "ab");
@@ -99,49 +95,49 @@ TEST_CASE("Iterating matches")
 
 TEST_CASE("Square brackets")
 {
-    static auto regex = "a[\\w\\-]+"_regex;
+    constexpr e_regex::static_string regex {"a[\\w\\-]+"};
 
-    REQUIRE(regex.match("aaa").is_accepted());
-    REQUIRE(!regex.match("a").is_accepted());
-    REQUIRE(regex.match("aa-b").is_accepted());
-    REQUIRE(regex.match("aab--ab").is_accepted());
+    REQUIRE(e_regex::match<regex>("aaa").is_accepted());
+    REQUIRE(!e_regex::match<regex>("a").is_accepted());
+    REQUIRE(e_regex::match<regex>("aa-b").is_accepted());
+    REQUIRE(e_regex::match<regex>("aab--ab").is_accepted());
 
-    auto aabacb = regex.match("12aaba12");
+    auto aabacb = e_regex::match<regex>("12aaba12");
     REQUIRE(aabacb.is_accepted());
     REQUIRE(aabacb.to_view() == "aaba");
 }
 
 TEST_CASE("Range matchers")
 {
-    static auto regex = "a[a-fhm-o]+"_regex;
+    constexpr e_regex::static_string regex {"a[a-fhm-o]+"};
 
-    REQUIRE(regex.match("aaa").is_accepted());
-    REQUIRE(!regex.match("a").is_accepted());
-    REQUIRE(regex.match("aabfcno").is_accepted());
-    REQUIRE(regex.match("aabahb").is_accepted());
+    REQUIRE(e_regex::match<regex>("aaa").is_accepted());
+    REQUIRE(!e_regex::match<regex>("a").is_accepted());
+    REQUIRE(e_regex::match<regex>("aabfcno").is_accepted());
+    REQUIRE(e_regex::match<regex>("aabahb").is_accepted());
 
-    auto aabacb = regex.match("baabazb");
+    auto aabacb = e_regex::match<regex>("baabazb");
     REQUIRE(aabacb.is_accepted());
     REQUIRE(aabacb.get_group(0) == "aaba");
 }
 
 TEST_CASE("Negated matchers")
 {
-    static auto regex = "a[^a-fh]+"_regex;
+    constexpr e_regex::static_string regex {"a[^a-fh]+"};
 
-    REQUIRE(regex.match("axx").is_accepted());
-    REQUIRE(!regex.match("a").is_accepted());
-    REQUIRE(!regex.match("aaf").is_accepted());
-    REQUIRE(regex.match("baggn").is_accepted());
+    REQUIRE(e_regex::match<regex>("axx").is_accepted());
+    REQUIRE(!e_regex::match<regex>("a").is_accepted());
+    REQUIRE(!e_regex::match<regex>("aaf").is_accepted());
+    REQUIRE(e_regex::match<regex>("baggn").is_accepted());
 }
 
 TEST_CASE("General use")
 {
-    static constexpr auto regex = R"([\w.\-]+@[\w\-]+\.[\w.]+)"_regex;
+    constexpr e_regex::static_string regex {R"([\w.\-]+@[\w\-]+\.[\w.]+)"};
 
-    std::string email = "Test email <first.last@learnxinyminutes.com>";
+    constexpr std::string_view email = "Test email <first.last@learnxinyminutes.com>";
 
-    auto match = regex.match(email);
+    auto match = e_regex::match<regex>(email);
     REQUIRE(match.is_accepted());
     REQUIRE(match.get_group(0) == "first.last@learnxinyminutes.com");
 }

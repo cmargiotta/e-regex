@@ -13,23 +13,23 @@ namespace e_regex
     struct tokenizer;
 
     template<typename current, char head, char... tail>
-    struct tokenizer<current, static_string<head, tail...>>
+    struct tokenizer<current, pack_string<head, tail...>>
     {
             // Simple iteration
-            using current_ = tuple_cat_t<current, std::tuple<static_string<head>>>;
-            using tokens   = typename tokenizer<current_, static_string<tail...>>::tokens;
+            using current_ = tuple_cat_t<current, std::tuple<pack_string<head>>>;
+            using tokens   = typename tokenizer<current_, pack_string<tail...>>::tokens;
     };
 
     template<typename current, char head, char... tail>
-    struct tokenizer<current, static_string<'\\', head, tail...>>
+    struct tokenizer<current, pack_string<'\\', head, tail...>>
     {
             // Escaped character
-            using current_ = tuple_cat_t<current, std::tuple<static_string<'\\', head>>>;
-            using tokens   = typename tokenizer<current_, static_string<tail...>>::tokens;
+            using current_ = tuple_cat_t<current, std::tuple<pack_string<'\\', head>>>;
+            using tokens   = typename tokenizer<current_, pack_string<tail...>>::tokens;
     };
 
     template<typename current>
-    struct tokenizer<current, static_string<>>
+    struct tokenizer<current, pack_string<>>
     {
             // Base case
             using tokens = current;
