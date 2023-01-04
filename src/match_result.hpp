@@ -29,14 +29,14 @@ namespace e_regex
             }
     };
 
-    template<typename matcher, std::size_t groups>
+    template<typename matcher>
     class match_result
     {
             friend matcher;
 
         private:
-            match_result_data<groups> data;
-            bool                      initialized = false;
+            match_result_data<matcher::groups> data;
+            bool                               initialized = false;
 
             constexpr void init()
             {
@@ -91,6 +91,7 @@ namespace e_regex
                 {
                     return std::string_view {};
                 }
+
                 return std::string_view {data.actual_iterator_start, data.actual_iterator_end};
             }
 

@@ -27,8 +27,7 @@ namespace e_regex
     {
             // Simple case, iterate
 
-            using new_node
-                = add_child_t<last_node, tree_node<exact_matcher<head>, false, false, false, std::tuple<>>>;
+            using new_node = add_child_t<last_node, basic_node<exact_matcher<head>, std::tuple<>>>;
             using tree =
                 typename square_bracker_tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
@@ -38,9 +37,8 @@ namespace e_regex
     {
             // Simple case, iterate
 
-            using new_node = add_child_t<
-                last_node,
-                tree_node<terminal<pack_string<'\\', identifier>>, false, false, false, std::tuple<>>>;
+            using new_node
+                = add_child_t<last_node, basic_node<terminal<pack_string<'\\', identifier>>, std::tuple<>>>;
             using tree =
                 typename square_bracker_tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
@@ -51,8 +49,7 @@ namespace e_regex
             // Range found
 
             using new_node
-                = add_child_t<last_node,
-                              tree_node<range_terminal<start, end>, false, false, false, std::tuple<>>>;
+                = add_child_t<last_node, basic_node<range_terminal<start, end>, std::tuple<>>>;
             using tree =
                 typename square_bracker_tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
@@ -72,7 +69,7 @@ namespace e_regex
     struct tree_builder_helper<last_node, std::tuple<pack_string<'?'>, tail...>>
     {
             // ? operator found
-            using new_node = set_optional_t<last_node, true>;
+            using new_node = basic_node<optional_node<last_node>>;
 
             using tree = typename tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
@@ -81,7 +78,7 @@ namespace e_regex
     struct tree_builder_helper<last_node, std::tuple<pack_string<'*'>, tail...>>
     {
             // * operator found
-            using new_node = set_repetition_t<set_optional_t<last_node, true>, true>;
+            using new_node = basic_node<optional_node<repeated_node<last_node>>>;
 
             using tree = typename tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
@@ -90,7 +87,7 @@ namespace e_regex
     struct tree_builder_helper<last_node, std::tuple<pack_string<'+'>, tail...>>
     {
             // + operator found
-            using new_node = set_repetition_t<last_node, true>;
+            using new_node = basic_node<repeated_node<last_node>>;
 
             using tree = typename tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
@@ -102,9 +99,8 @@ namespace e_regex
             using substring = extract_delimited_content_t<'(', ')', std::tuple<tail...>>;
 
             using subregex = typename tree_builder_helper<void, typename substring::result>::tree;
-            using new_node =
-                typename tree_builder_helper<tree_node<subregex, false, false, true, std::tuple<>>,
-                                             typename substring::remaining>::tree;
+            using new_node = typename tree_builder_helper<basic_node<grouping_node<subregex>>,
+                                                          typename substring::remaining>::tree;
 
             using tree = add_child_t<last_node, new_node>;
     };
@@ -117,9 +113,8 @@ namespace e_regex
             using substring = extract_delimited_content_t<'(', ')', std::tuple<tail...>>;
 
             using subregex = typename tree_builder_helper<void, typename substring::result>::tree;
-            using new_node =
-                typename tree_builder_helper<tree_node<subregex, false, false, false, std::tuple<>>,
-                                             typename substring::remaining>::tree;
+            using new_node = typename tree_builder_helper<basic_node<subregex, std::tuple<>>,
+                                                          typename substring::remaining>::tree;
 
             using tree = add_child_t<last_node, new_node>;
     };
@@ -131,11 +126,10 @@ namespace e_regex
             using substring = extract_delimited_content_t<'[', ']', std::tuple<tail...>>;
 
             using subregex =
-                typename square_bracker_tree_builder_helper<tree_node<void, false, false, false, std::tuple<>>,
+                typename square_bracker_tree_builder_helper<basic_node<void, std::tuple<>>,
                                                             typename substring::result>::tree;
-            using new_node =
-                typename tree_builder_helper<tree_node<subregex, false, false, false, std::tuple<>>,
-                                             typename substring::remaining>::tree;
+            using new_node = typename tree_builder_helper<basic_node<subregex, std::tuple<>>,
+                                                          typename substring::remaining>::tree;
 
             using tree = add_child_t<last_node, new_node>;
     };
@@ -147,11 +141,11 @@ namespace e_regex
             using substring = extract_delimited_content_t<'[', ']', std::tuple<tail...>>;
 
             using subregex =
-                typename square_bracker_tree_builder_helper<tree_node<void, false, false, false, std::tuple<>>,
+                typename square_bracker_tree_builder_helper<basic_node<void, std::tuple<>>,
                                                             typename substring::result>::tree;
-            using new_node = typename tree_builder_helper<
-                tree_node<negated_terminal<subregex>, false, false, false, std::tuple<>>,
-                typename substring::remaining>::tree;
+            using new_node =
+                typename tree_builder_helper<basic_node<negated_terminal<subregex>, std::tuple<>>,
+                                             typename substring::remaining>::tree;
 
             using tree = add_child_t<last_node, new_node>;
     };
@@ -161,9 +155,8 @@ namespace e_regex
     {
             // Simple case, iterate
 
-            using new_node =
-                typename tree_builder_helper<tree_node<terminal<head>, false, false, false, std::tuple<>>,
-                                             std::tuple<tail...>>::tree;
+            using new_node = typename tree_builder_helper<basic_node<terminal<head>, std::tuple<>>,
+                                                          std::tuple<tail...>>::tree;
 
             using tree = add_child_t<last_node, new_node>;
     };
@@ -175,7 +168,7 @@ namespace e_regex
     struct tree_builder_branches<std::tuple<subregexes...>>
     {
             using branches = std::tuple<typename tree_builder_helper<void, subregexes>::tree...>;
-            using tree     = tree_node<void, false, false, false, branches>;
+            using tree     = basic_node<void, branches>;
     };
 
     template<typename regex>

@@ -29,11 +29,18 @@ namespace e_regex
     struct exact_matcher<pack_string<identifier>>
     {
             template<typename Iterator>
-            static constexpr auto match(Iterator query_iterator, Iterator, auto result)
+            static constexpr auto match(Iterator query_iterator, Iterator end, auto result)
             {
-                result = identifier == *query_iterator;
+                if (query_iterator < end)
+                {
+                    result = identifier == *query_iterator;
 
-                result.actual_iterator_end++;
+                    result.actual_iterator_end++;
+                }
+                else
+                {
+                    result = false;
+                }
 
                 return result;
             }
@@ -51,12 +58,19 @@ namespace e_regex
     struct terminal<pack_string<'\\', 'w'>>
     {
             template<typename Iterator>
-            static constexpr auto match(Iterator query_iterator, Iterator, auto result)
+            static constexpr auto match(Iterator query_iterator, Iterator end, auto result)
             {
-                result = (*query_iterator >= 'A' && *query_iterator <= 'Z')
-                         || (*query_iterator >= 'a' && *query_iterator <= 'z');
+                if (query_iterator < end)
+                {
+                    result = (*query_iterator >= 'A' && *query_iterator <= 'Z')
+                             || (*query_iterator >= 'a' && *query_iterator <= 'z');
 
-                result.actual_iterator_end++;
+                    result.actual_iterator_end++;
+                }
+                else
+                {
+                    result = false;
+                }
 
                 return result;
             }
@@ -66,11 +80,18 @@ namespace e_regex
     struct terminal<pack_string<'\\', 'd'>>
     {
             template<typename Iterator>
-            static constexpr auto match(Iterator query_iterator, Iterator, auto result)
+            static constexpr auto match(Iterator query_iterator, Iterator end, auto result)
             {
-                result = (*query_iterator >= '0' && *query_iterator <= '9');
+                if (query_iterator < end)
+                {
+                    result = (*query_iterator >= '0' && *query_iterator <= '9');
 
-                result.actual_iterator_end++;
+                    result.actual_iterator_end++;
+                }
+                else
+                {
+                    result = false;
+                }
 
                 return result;
             }
@@ -80,13 +101,21 @@ namespace e_regex
     struct terminal<pack_string<'\\', 's'>>
     {
             template<typename Iterator>
-            static constexpr auto match(Iterator query_iterator, Iterator, auto result)
+            static constexpr auto match(Iterator query_iterator, Iterator end, auto result)
             {
-                static constexpr std::array matched {' ', '\t', '\n', '\r', '\f'};
+                if (query_iterator < end)
+                {
+                    static constexpr std::array matched {' ', '\t', '\n', '\r', '\f'};
 
-                result = std::find(matched.begin(), matched.end(), *query_iterator) != matched.end();
+                    result = std::find(matched.begin(), matched.end(), *query_iterator)
+                             != matched.end();
 
-                result.actual_iterator_end++;
+                    result.actual_iterator_end++;
+                }
+                else
+                {
+                    result = false;
+                }
 
                 return result;
             }
@@ -111,11 +140,18 @@ namespace e_regex
     struct terminal<pack_string<'\\', identifier>>
     {
             template<typename Iterator>
-            static constexpr auto match(Iterator query_iterator, Iterator, auto result)
+            static constexpr auto match(Iterator query_iterator, Iterator end, auto result)
             {
-                result = *query_iterator == identifier;
+                if (query_iterator < end)
+                {
+                    result = *query_iterator == identifier;
 
-                result.actual_iterator_end++;
+                    result.actual_iterator_end++;
+                }
+                else
+                {
+                    result = false;
+                }
 
                 return result;
             }
@@ -125,9 +161,17 @@ namespace e_regex
     struct terminal<pack_string<'.'>>
     {
             template<typename Iterator>
-            static constexpr auto match(Iterator, Iterator, auto result)
+            static constexpr auto match(Iterator query_iterator, Iterator end, auto result)
             {
-                result.actual_iterator_end++;
+                if (query_iterator < end)
+                {
+                    result.actual_iterator_end++;
+                }
+                else
+                {
+                    result = false;
+                }
+
                 return result;
             }
     };
@@ -139,13 +183,20 @@ namespace e_regex
     struct range_terminal<pack_string<start>, pack_string<end>>
     {
             template<typename Iterator>
-            static constexpr auto match(Iterator query_iterator, Iterator, auto result)
+            static constexpr auto match(Iterator query_iterator, Iterator end_, auto result)
             {
                 static_assert(end >= start, "Range [a-b] must respect b >= a");
 
-                result = *query_iterator >= start && *query_iterator <= end;
+                if (query_iterator < end_)
+                {
+                    result = *query_iterator >= start && *query_iterator <= end;
 
-                result.actual_iterator_end++;
+                    result.actual_iterator_end++;
+                }
+                else
+                {
+                    result = false;
+                }
 
                 return result;
             }

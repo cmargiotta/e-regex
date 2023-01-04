@@ -9,7 +9,7 @@ namespace e_regex
     template<char... data>
     struct pack_string
     {
-            static constexpr std::array<char, sizeof...(data)> string = {data...};
+            static constexpr auto size = sizeof...(data);
     };
 
     template<typename S1, typename S2>
@@ -30,7 +30,7 @@ namespace e_regex
             static constexpr auto  size = size_ - 1;
             std::array<char, size> data;
 
-            constexpr explicit static_string(const char (&data)[size_]) noexcept
+            constexpr static_string(const char (&data)[size_]) noexcept
             {
                 std::copy(data, data + size, this->data.begin());
             }

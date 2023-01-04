@@ -1,22 +1,20 @@
 #ifndef E_REGEX
 #define E_REGEX
 
+#include <string_view>
+
 #include "tree_builder.hpp"
 
 namespace e_regex
 {
-    template<auto regex>
-    auto match(auto expression)
+    template<static_string regex>
+    constexpr auto match = [](std::string_view expression)
     {
-        using packed = build_pack_string_t<regex>;
-        return tree_builder<packed>::tree::match(expression);
-    }
-}// namespace e_regex
+        using packed  = build_pack_string_t<regex>;
+        using matcher = typename tree_builder<packed>::tree;
 
-template<typename T, T... regex>
-constexpr auto operator"" _regex()
-{
-    return typename e_regex::tree_builder<e_regex::pack_string<regex...>>::tree {};
-}
+        return match_result<matcher> {expression};
+    };
+}// namespace e_regex
 
 #endif /* E_REGEX */

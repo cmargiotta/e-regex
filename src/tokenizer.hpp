@@ -8,7 +8,6 @@
 
 namespace e_regex
 {
-
     template<typename current, typename string>
     struct tokenizer;
 
