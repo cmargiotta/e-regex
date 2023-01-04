@@ -1,11 +1,13 @@
 #ifndef MATCHER
 #define MATCHER
 
+#include <algorithm>
 #include <string_view>
 #include <tuple>
 #include <type_traits>
 
 #include "match_result.hpp"
+#include "utility.hpp"
 
 namespace e_regex
 {
@@ -56,7 +58,7 @@ namespace e_regex
             };
 
             static constexpr std::size_t groups
-                = group_getter<matcher>::value + (0 + ... + children::groups);
+                = group_getter<matcher>::value + max(children::groups...);
 
             template<typename Iterator>
             static constexpr auto match(Iterator query_iterator, Iterator end, auto result)

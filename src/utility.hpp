@@ -179,6 +179,21 @@ namespace e_regex
             static constexpr std::size_t value = 0;
     };
 
+    consteval auto max()
+    {
+        return 0;
+    }
+
+    consteval auto max(auto n)
+    {
+        return n;
+    }
+
+    consteval auto max(auto n1, auto n2, auto... n3)
+    {
+        return max(std::max(n1, n2), n3...);
+    }
+
 }// namespace e_regex
 
 #endif /* UTILITY */
