@@ -75,6 +75,15 @@ namespace e_regex
                 return operator bool();
             }
 
+            template<std::size_t index>
+            constexpr auto get() const noexcept
+            {
+                static_assert(index <= matcher::groups,
+                              "Group index is greater than the number of groups.");
+
+                return get_group(index);
+            }
+
             constexpr auto get_group(std::size_t index) const noexcept
             {
                 if (index == 0)
@@ -135,5 +144,28 @@ namespace e_regex
             }
     };
 }// namespace e_regex
+
+// For structured decomposition
+namespace std
+{
+    template<typename matcher>
+    struct tuple_size<e_regex::match_result<matcher>>
+    {
+            static const std::size_t value = matcher::groups + 1;
+    };
+
+    template<std::size_t N, typename matcher>
+    struct tuple_element<N, e_regex::match_result<matcher>>
+    {
+            using type = std::string_view;
+    };
+
+    template<std::size_t N, typename matcher>
+    auto get(e_regex::match_result<matcher>&& t)
+    {
+        return t.template get<N>();
+    }
+
+}// namespace std
 
 #endif /* MATCH_RESULT */

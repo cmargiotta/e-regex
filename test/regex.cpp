@@ -162,6 +162,18 @@ TEST_CASE("Negated matchers")
     REQUIRE(matcher("baggn").is_accepted());
 }
 
+TEST_CASE("Structured binding")
+{
+    constexpr auto matcher = e_regex::match<R"((\d+)-(\d+)-(\d+))">;
+
+    auto [string, year, month, day] = matcher("2023-01-01");
+
+    REQUIRE(string == "2023-01-01");
+    REQUIRE(year == "2023");
+    REQUIRE(month == "01");
+    REQUIRE(day == "01");
+}
+
 TEST_CASE("General use")
 {
     constexpr auto matcher = e_regex::match<R"([\w.\-]+@[\w\-]+\.[\w.]+)">;
