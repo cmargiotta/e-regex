@@ -103,6 +103,53 @@ namespace e_regex
     template<char separator, typename tokens>
     using split_t = typename split<separator, tokens>::type;
 
+    template<typename... T>
+    struct last;
+
+    template<typename head, typename... tail>
+    struct last<head, tail...> : public last<tail...>
+    {
+    };
+
+    template<typename head>
+    struct last<head>
+    {
+            using type = head;
+    };
+
+    template<>
+    struct last<>
+    {
+            using type = void;
+    };
+
+    template<typename... T>
+    using last_t = typename last<T...>::type;
+
+    template<typename current, typename... T>
+    struct remove_last;
+
+    template<typename... current, typename head, typename... tail>
+    struct remove_last<std::tuple<current...>, head, tail...>
+        : public remove_last<std::tuple<current..., head>, tail...>
+    {
+    };
+
+    template<typename current, typename last>
+    struct remove_last<current, last>
+    {
+            using type = current;
+    };
+
+    template<typename current>
+    struct remove_last<current>
+    {
+            using type = void;
+    };
+
+    template<typename... T>
+    using remove_last_t = typename remove_last<std::tuple<>, T...>::type;
+
 }// namespace e_regex
 
 #endif /* UTILITY */
