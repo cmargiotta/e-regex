@@ -159,12 +159,22 @@ namespace e_regex
             using tree = add_child_t<last_node, new_node>;
     };
 
+    template<typename tokens>
+    struct tree_builder_branches;
+
+    template<typename... subregexes>
+    struct tree_builder_branches<std::tuple<subregexes...>>
+    {
+            using branches = std::tuple<typename tree_builder_helper<void, subregexes>::tree...>;
+            using tree     = tree_node<void, false, false, false, branches>;
+    };
+
     template<typename regex>
     struct tree_builder;
 
     template<char... regex>
     struct tree_builder<pack_string<regex...>>
-        : public tree_builder_helper<void, tokenize<pack_string<regex...>>>
+        : public tree_builder_branches<split_t<'|', tokenize<pack_string<regex...>>>>
     {
     };
 

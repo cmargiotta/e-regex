@@ -132,6 +132,23 @@ TEST_CASE("Range matchers")
     REQUIRE(aabacb.get_group(0) == "aaba");
 }
 
+TEST_CASE("Multiple branches")
+{
+    constexpr e_regex::static_string regex {"a|bc|cd|d"};
+
+    auto match = e_regex::match<regex>("abcd");
+    REQUIRE(match.is_accepted());
+    REQUIRE(match.get_group(0) == "a");
+
+    REQUIRE(match.next());
+    REQUIRE(match.get_group(0) == "bc");
+
+    REQUIRE(match.next());
+    REQUIRE(match.get_group(0) == "d");
+
+    REQUIRE(!match.next());
+}
+
 TEST_CASE("Negated matchers")
 {
     constexpr e_regex::static_string regex {"a[^a-fh]+"};
