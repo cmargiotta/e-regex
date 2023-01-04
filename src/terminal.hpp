@@ -9,11 +9,24 @@
 
 namespace e_regex
 {
+    template<typename terminal>
+    struct negated_terminal
+    {
+            template<typename Iterator>
+            static constexpr auto match(Iterator query_iterator, Iterator end, auto result)
+            {
+                result = terminal::match(query_iterator, end, std::move(result));
+                result = !result.accepted;
+
+                return result;
+            }
+    };
+
     template<typename identifier>
     struct exact_matcher;
 
     template<char identifier>
-    struct exact_matcher<static_string<identifier>>
+    struct exact_matcher<pack_string<identifier>>
     {
             template<typename Iterator>
             static constexpr auto match(Iterator query_iterator, Iterator, auto result)
@@ -35,7 +48,7 @@ namespace e_regex
     };
 
     template<>
-    struct terminal<static_string<'\\', 'w'>>
+    struct terminal<pack_string<'\\', 'w'>>
     {
             template<typename Iterator>
             static constexpr auto match(Iterator query_iterator, Iterator, auto result)
@@ -50,7 +63,21 @@ namespace e_regex
     };
 
     template<>
-    struct terminal<static_string<'\\', 's'>>
+    struct terminal<pack_string<'\\', 'd'>>
+    {
+            template<typename Iterator>
+            static constexpr auto match(Iterator query_iterator, Iterator, auto result)
+            {
+                result = (*query_iterator >= '0' && *query_iterator <= '9');
+
+                result.actual_iterator_end++;
+
+                return result;
+            }
+    };
+
+    template<>
+    struct terminal<pack_string<'\\', 's'>>
     {
             template<typename Iterator>
             static constexpr auto match(Iterator query_iterator, Iterator, auto result)
@@ -65,8 +92,18 @@ namespace e_regex
             }
     };
 
+    template<>
+    struct terminal<pack_string<'\\', 'S'>> : public negated_terminal<terminal<pack_string<'\\', 's'>>>
+    {
+    };
+
+    template<>
+    struct terminal<pack_string<'\\', 'D'>> : public negated_terminal<terminal<pack_string<'\\', 'd'>>>
+    {
+    };
+
     template<char identifier>
-    struct terminal<static_string<'\\', identifier>>
+    struct terminal<pack_string<'\\', identifier>>
     {
             template<typename Iterator>
             static constexpr auto match(Iterator query_iterator, Iterator, auto result)
@@ -80,7 +117,7 @@ namespace e_regex
     };
 
     template<>
-    struct terminal<static_string<'.'>>
+    struct terminal<pack_string<'.'>>
     {
             template<typename Iterator>
             static constexpr auto match(Iterator, Iterator, auto result)
@@ -94,7 +131,7 @@ namespace e_regex
     struct range_terminal;
 
     template<char start, char end>
-    struct range_terminal<static_string<start>, static_string<end>>
+    struct range_terminal<pack_string<start>, pack_string<end>>
     {
             template<typename Iterator>
             static constexpr auto match(Iterator query_iterator, Iterator, auto result)
@@ -109,18 +146,6 @@ namespace e_regex
             }
     };
 
-    template<typename terminal>
-    struct negated_terminal
-    {
-            template<typename Iterator>
-            static constexpr auto match(Iterator query_iterator, Iterator end, auto result)
-            {
-                result = terminal::match(query_iterator, end, std::move(result));
-                result = !result.accepted;
-
-                return result;
-            }
-    };
 }// namespace e_regex
 
 #endif /* REGEX_NODE */
