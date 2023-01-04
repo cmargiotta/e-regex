@@ -45,6 +45,15 @@ TEST_CASE("Star operator")
     REQUIRE(aab.get_group(0) == "aa");
 }
 
+TEST_CASE("Optional operator")
+{
+    constexpr e_regex::static_string regex {"a[a-f]?"};
+
+    REQUIRE(e_regex::match<regex>("aaa").is_accepted());
+    REQUIRE(e_regex::match<regex>("a").is_accepted());
+    REQUIRE(e_regex::match<regex>("af").is_accepted());
+}
+
 TEST_CASE("Plus operator")
 {
     constexpr e_regex::static_string regex {"aa+"};
