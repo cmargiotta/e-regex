@@ -36,23 +36,20 @@ namespace e_regex
     template<typename matcher, bool repeat, bool optional, typename... children>
     struct group_counter<tree_node<matcher, repeat, optional, false, std::tuple<children...>>>
     {
-            static constexpr std::size_t value = group_counter<children...>::value;
+            static constexpr std::size_t value
+                = group_counter<children...>::value + group_counter<matcher>::value;
     };
 
-    template<bool repeat, bool optional, typename... children, typename matcher, bool repeat_, bool optional_, bool group_, typename tuple>
-    struct group_counter<
-        tree_node<tree_node<matcher, repeat_, optional_, group_, tuple>, repeat, optional, true, std::tuple<children...>>>
+    template<typename matcher, bool repeat, bool optional, typename... children>
+    struct group_counter<tree_node<matcher, repeat, optional, true, std::tuple<children...>>>
     {
             static constexpr std::size_t value
-                = 1 + group_counter<tree_node<matcher, repeat_, optional_, group_, tuple>>::value
-                  + group_counter<children...>::value;
+                = 1 + group_counter<children...>::value + group_counter<matcher>::value;
     };
 
     template<typename matcher, bool repeat, bool optional, bool group, typename... children>
     struct tree_node<matcher, repeat, optional, group, std::tuple<children...>>
     {
-            static constexpr std::size_t groups = group_counter<tree_node>::value;
-
             template<typename Iterator>
             static constexpr auto dfs(Iterator /*unused*/, Iterator, auto result)
             {
@@ -145,7 +142,7 @@ namespace e_regex
 
             static constexpr auto match(std::string_view query)
             {
-                return match_result<tree_node, groups> {query};
+                return match_result<tree_node, group_counter<tree_node>::value> {query};
             }
     };
 

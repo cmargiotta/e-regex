@@ -79,6 +79,17 @@ TEST_CASE("Group matching")
     REQUIRE(match.get_group(2) == "b");
 }
 
+TEST_CASE("Non-capturing round brackts")
+{
+    constexpr e_regex::static_string regex {"a(?:a(b))cd"};
+
+    auto match = e_regex::match<regex>("aabcdef");
+
+    REQUIRE(match.is_accepted());
+    REQUIRE(match.get_group(0) == "aabcd");
+    REQUIRE(match.get_group(1) == "b");
+}
+
 TEST_CASE("Iterating matches")
 {
     constexpr e_regex::static_string regex {"ab"};
