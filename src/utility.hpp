@@ -77,21 +77,27 @@ namespace e_regex
     using extract_delimited_content_t
         = extract_delimited_content<open, closing, 0, std::tuple<>, string>;
 
-    template<char separator, typename tokens, typename current = std::tuple<>>
+    template<char separator, typename tokens, typename current = std::tuple<std::tuple<>>>
     struct split;
+
+    template<char separator, typename... tail, typename... current_tokens, typename... currents>
+    struct split<separator, std::tuple<pack_string<'|'>, tail...>, std::tuple<std::tuple<current_tokens...>, currents...>>
+    {
+            using current = std::tuple<std::tuple<>, std::tuple<current_tokens...>, currents...>;
+            using type    = typename split<separator, std::tuple<tail...>, current>::type;
+    };
 
     template<char separator, typename head, typename... tail, typename... current_tokens, typename... currents>
     struct split<separator, std::tuple<head, tail...>, std::tuple<std::tuple<current_tokens...>, currents...>>
     {
-            using current = std::tuple<std::tuple<head, current_tokens...>, currents...>;
-            using type    = split<separator, std::tuple<tail...>, current>;
+            using current = std::tuple<std::tuple<current_tokens..., head>, currents...>;
+            using type    = typename split<separator, std::tuple<tail...>, current>::type;
     };
 
-    template<char separator, typename... tail, typename... currents>
-    struct split<separator, std::tuple<static_string<'|'>, tail...>, std::tuple<currents...>>
+    template<char separator, typename current>
+    struct split<separator, std::tuple<>, current>
     {
-            using current = std::tuple<std::tuple<>, currents...>;
-            using type    = split<separator, std::tuple<tail...>, current>;
+            using type = current;
     };
 
     template<char separator, typename tokens>
