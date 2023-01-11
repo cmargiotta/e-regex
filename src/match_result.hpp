@@ -94,6 +94,11 @@ namespace e_regex
                 return data.match_groups[index - 1];
             }
 
+            constexpr auto operator[](std::size_t index) const noexcept
+            {
+                return get_group(index);
+            }
+
             constexpr auto to_view() const noexcept
             {
                 if (!is_accepted())
