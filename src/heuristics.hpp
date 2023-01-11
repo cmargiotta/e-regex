@@ -5,7 +5,7 @@
 
 #include "matcher.hpp"
 #include "static_string.hpp"
-#include "terminal.hpp"
+#include "terminals/terminal.hpp"
 
 namespace e_regex
 {

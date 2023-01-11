@@ -6,7 +6,7 @@
 #include "heuristics.hpp"
 #include "matcher.hpp"
 #include "static_string.hpp"
-#include "terminal.hpp"
+#include "terminals/terminal.hpp"
 #include "tokenizer.hpp"
 #include "utility.hpp"
 
