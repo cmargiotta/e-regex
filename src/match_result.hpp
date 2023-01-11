@@ -50,7 +50,7 @@ namespace e_regex
             }
 
         public:
-            constexpr match_result(std::string_view query)
+            constexpr match_result(std::string_view query) noexcept
             {
                 data.query                 = query;
                 data.actual_iterator_start = query.begin();
@@ -166,7 +166,7 @@ namespace std
     };
 
     template<std::size_t N, typename matcher>
-    auto get(e_regex::match_result<matcher>&& t)
+    auto get(e_regex::match_result<matcher>&& t) noexcept
     {
         return t.template get<N>();
     }
