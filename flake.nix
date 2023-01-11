@@ -22,12 +22,12 @@
             {
               name = "build";
               help = "Automatically configure build folder and run build";
-              command = "meson build --buildtype=debug --reconfigure; meson compile -C build";
+              command = "meson setup -C build --buildtype=debug; meson compile -C build";
             }
             {
-              name = "test";
+              name = "run_tests";
               help = "Run tests";
-              command = "meson test -C build";
+              command = "ninja -C build test";
             }
           ];
           env = [
