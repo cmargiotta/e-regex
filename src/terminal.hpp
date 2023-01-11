@@ -10,13 +10,18 @@
 namespace e_regex
 {
     template<typename terminal>
-    struct negated_terminal
+    struct terminal_common
     {
-            template<typename Iterator>
-            static constexpr auto match(Iterator query_iterator, Iterator end, auto result)
+            static constexpr auto match(auto result)
             {
-                result = terminal::match(query_iterator, end, std::move(result));
-                result = !result.accepted;
+                if (result.actual_iterator_end >= result.query.end())
+                {
+                    result = false;
+                }
+                else
+                {
+                    return terminal::match_(std::move(result));
+                }
 
                 return result;
             }
@@ -27,27 +32,35 @@ namespace e_regex
 
     template<char identifier>
     struct exact_matcher<pack_string<identifier>>
+        : public terminal_common<exact_matcher<pack_string<identifier>>>
     {
-            template<typename Iterator>
-            static constexpr auto match(Iterator query_iterator, Iterator end, auto result)
+            static constexpr auto match_(auto result)
             {
-                if (query_iterator < end)
-                {
-                    result = identifier == *query_iterator;
-
-                    result.actual_iterator_end++;
-                }
-                else
-                {
-                    result = false;
-                }
+                result = identifier == *result.actual_iterator_end;
+                result.actual_iterator_end++;
 
                 return result;
             }
     };
 
-    template<typename... identifier>
+    template<typename... identifiers>
     struct terminal;
+
+    template<typename head, typename... tail>
+    struct terminal<head, tail...>
+    {
+            static constexpr auto match(auto result)
+            {
+                result = terminal<head>::match(std::move(result));
+
+                if (result)
+                {
+                    return terminal<tail...>::match(std::move(result));
+                }
+
+                return result;
+            }
+    };
 
     template<typename identifier>
     struct terminal<identifier> : public exact_matcher<identifier>
@@ -55,67 +68,56 @@ namespace e_regex
     };
 
     template<>
-    struct terminal<pack_string<'\\', 'w'>>
+    struct terminal<pack_string<'\\', 'w'>> : public terminal_common<terminal<pack_string<'\\', 'w'>>>
     {
-            template<typename Iterator>
-            static constexpr auto match(Iterator query_iterator, Iterator end, auto result)
+            static constexpr auto match_(auto result)
             {
-                if (query_iterator < end)
-                {
-                    result = (*query_iterator >= 'A' && *query_iterator <= 'Z')
-                             || (*query_iterator >= 'a' && *query_iterator <= 'z');
+                auto current = result.actual_iterator_end;
 
-                    result.actual_iterator_end++;
-                }
-                else
-                {
-                    result = false;
-                }
+                result = (*current >= 'A' && *current <= 'Z') || (*current >= 'a' && *current <= 'z');
+                result.actual_iterator_end++;
 
                 return result;
             }
     };
 
     template<>
-    struct terminal<pack_string<'\\', 'd'>>
+    struct terminal<pack_string<'\\', 'd'>> : public terminal_common<terminal<pack_string<'\\', 'd'>>>
     {
-            template<typename Iterator>
-            static constexpr auto match(Iterator query_iterator, Iterator end, auto result)
+            static constexpr auto match_(auto result)
             {
-                if (query_iterator < end)
-                {
-                    result = (*query_iterator >= '0' && *query_iterator <= '9');
+                auto current = result.actual_iterator_end;
 
-                    result.actual_iterator_end++;
-                }
-                else
-                {
-                    result = false;
-                }
+                result = (*current >= '0' && *current <= '9');
+                result.actual_iterator_end++;
 
                 return result;
             }
     };
 
     template<>
-    struct terminal<pack_string<'\\', 's'>>
+    struct terminal<pack_string<'\\', 's'>> : public terminal_common<terminal<pack_string<'\\', 's'>>>
     {
-            template<typename Iterator>
-            static constexpr auto match(Iterator query_iterator, Iterator end, auto result)
+            static constexpr auto match_(auto result)
             {
-                if (query_iterator < end)
-                {
-                    static constexpr std::array matched {' ', '\t', '\n', '\r', '\f'};
+                static constexpr std::array matched {' ', '\t', '\n', '\r', '\f'};
 
-                    result = std::find(matched.begin(), matched.end(), *query_iterator)
-                             != matched.end();
+                result = std::find(matched.begin(), matched.end(), *result.actual_iterator_end)
+                         != matched.end();
 
-                    result.actual_iterator_end++;
-                }
-                else
-                {
-                    result = false;
-                }
+                result.actual_iterator_end++;
+
+                return result;
+            }
+    };
+
+    template<typename terminal>
+    struct negated_terminal
+    {
+            static constexpr auto match(auto result)
+            {
+                result = terminal::match_(std::move(result));
+                result = !result.accepted;
 
                 return result;
             }
@@ -138,39 +140,24 @@ namespace e_regex
 
     template<char identifier>
     struct terminal<pack_string<'\\', identifier>>
+        : public terminal_common<terminal<pack_string<'\\', identifier>>>
     {
-            template<typename Iterator>
-            static constexpr auto match(Iterator query_iterator, Iterator end, auto result)
+            static constexpr auto match_(auto result)
             {
-                if (query_iterator < end)
-                {
-                    result = *query_iterator == identifier;
+                result = *result.actual_iterator_end == identifier;
 
-                    result.actual_iterator_end++;
-                }
-                else
-                {
-                    result = false;
-                }
+                result.actual_iterator_end++;
 
                 return result;
             }
     };
 
     template<>
-    struct terminal<pack_string<'.'>>
+    struct terminal<pack_string<'.'>> : public terminal_common<terminal<pack_string<'.'>>>
     {
-            template<typename Iterator>
-            static constexpr auto match(Iterator query_iterator, Iterator end, auto result)
+            static constexpr auto match_(auto result)
             {
-                if (query_iterator < end)
-                {
-                    result.actual_iterator_end++;
-                }
-                else
-                {
-                    result = false;
-                }
+                result.actual_iterator_end++;
 
                 return result;
             }
@@ -181,22 +168,16 @@ namespace e_regex
 
     template<char start, char end>
     struct range_terminal<pack_string<start>, pack_string<end>>
+        : public terminal_common<range_terminal<pack_string<start>, pack_string<end>>>
     {
-            template<typename Iterator>
-            static constexpr auto match(Iterator query_iterator, Iterator end_, auto result)
+            static constexpr auto match(auto result)
             {
                 static_assert(end >= start, "Range [a-b] must respect b >= a");
 
-                if (query_iterator < end_)
-                {
-                    result = *query_iterator >= start && *query_iterator <= end;
+                auto current = result.actual_iterator_end;
 
-                    result.actual_iterator_end++;
-                }
-                else
-                {
-                    result = false;
-                }
+                result = *current >= start && *current <= end;
+                result.actual_iterator_end++;
 
                 return result;
             }

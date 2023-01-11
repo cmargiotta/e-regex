@@ -46,7 +46,7 @@ namespace e_regex
                 data.actual_iterator_end = data.actual_iterator_start;
                 data.accepted            = true;
 
-                data = matcher::match(data.actual_iterator_start, data.query.end(), std::move(data));
+                data = matcher::match(std::move(data));
             }
 
         public:

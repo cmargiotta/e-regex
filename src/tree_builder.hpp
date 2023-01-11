@@ -3,6 +3,7 @@
 
 #include <tuple>
 
+#include "heuristics.hpp"
 #include "matcher.hpp"
 #include "static_string.hpp"
 #include "terminal.hpp"
@@ -144,7 +145,7 @@ namespace e_regex
                 typename square_bracker_tree_builder_helper<basic_node<void, std::tuple<>>,
                                                             typename substring::result>::tree;
             using new_node =
-                typename tree_builder_helper<basic_node<negated_terminal<subregex>, std::tuple<>>,
+                typename tree_builder_helper<basic_node<negated_node<subregex>, std::tuple<>>,
                                              typename substring::remaining>::tree;
 
             using tree = add_child_t<last_node, new_node>;

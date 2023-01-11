@@ -181,6 +181,7 @@ TEST_CASE("General use")
     constexpr std::string_view email = "Test email <first.last@learnxinyminutes.com>";
 
     auto match = matcher(email);
+
     REQUIRE(match.is_accepted());
     REQUIRE(match.get_group(0) == "first.last@learnxinyminutes.com");
 }
