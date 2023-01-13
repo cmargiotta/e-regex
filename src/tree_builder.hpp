@@ -1,7 +1,8 @@
 #ifndef TREE_BUILDER
 #define TREE_BUILDER
 
-#include "operators/operators.hpp"
+#include <operators/operators.hpp>
+#include <utilities/split.hpp>
 
 namespace e_regex
 {

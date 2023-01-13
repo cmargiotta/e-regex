@@ -4,7 +4,8 @@
 
 #include <static_string.hpp>
 #include <tokenizer.hpp>
-#include <utility.hpp>
+#include <utilities/extract_delimited_content.hpp>
+#include <utilities/split.hpp>
 
 TEST_CASE("Split")
 {

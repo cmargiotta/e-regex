@@ -3,8 +3,8 @@
 
 #include <tuple>
 
-#include "static_string.hpp"
-#include "utility.hpp"
+#include <static_string.hpp>
+#include <utilities/tuple_cat.hpp>
 
 namespace e_regex
 {

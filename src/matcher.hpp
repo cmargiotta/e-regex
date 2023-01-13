@@ -6,9 +6,9 @@
 #include <tuple>
 #include <type_traits>
 
-#include "heuristics.hpp"
-#include "match_result.hpp"
-#include "utility.hpp"
+#include <heuristics.hpp>
+#include <match_result.hpp>
+#include <utilities/max.hpp>
 
 namespace e_regex
 {
