@@ -1,7 +1,7 @@
 #ifndef UTILITIES_PACK_STRING_TO_NUMBER
 #define UTILITIES_PACK_STRING_TO_NUMBER
 
-#include <static_string.hpp>
+#include "static_string.hpp"
 
 namespace e_regex
 {

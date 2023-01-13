@@ -1,7 +1,7 @@
 #ifndef TERMINALS_COMMON
 #define TERMINALS_COMMON
 
-#include <static_string.hpp>
+#include "static_string.hpp"
 
 namespace e_regex
 {

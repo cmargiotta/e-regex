@@ -3,7 +3,7 @@
 
 #include <tuple>
 
-#include <static_string.hpp>
+#include "static_string.hpp"
 
 namespace e_regex
 {

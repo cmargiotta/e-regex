@@ -13,7 +13,7 @@ namespace e_regex
     {
             static constexpr auto match_(auto result)
             {
-                static constexpr std::array matched {' ', '\t', '\n', '\r', '\f'};
+                constexpr std::array matched {' ', '\t', '\n', '\r', '\f'};
 
                 result = std::find(matched.begin(), matched.end(), *result.actual_iterator_end)
                          != matched.end();
