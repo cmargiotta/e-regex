@@ -5,7 +5,7 @@
 
 namespace e_regex
 {
-    template<typename string, std::size_t index = string::size>
+    template<typename string, std::size_t index = string::size - 1>
     struct pack_string_to_number;
 
     template<char head, char... tail, std::size_t index>

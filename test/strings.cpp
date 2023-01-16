@@ -5,6 +5,7 @@
 #include <static_string.hpp>
 #include <tokenizer.hpp>
 #include <utilities/extract_delimited_content.hpp>
+#include <utilities/pack_string_to_number.hpp>
 #include <utilities/split.hpp>
 
 TEST_CASE("Split")
@@ -37,4 +38,16 @@ TEST_CASE("Brackets")
         = std::tuple<pack_string<'b'>, pack_string<'b'>, pack_string<'('>, pack_string<'a'>, pack_string<')'>, pack_string<'c'>>;
 
     REQUIRE(std::is_same_v<typename extract_delimited_content_t<'(', ')', tokens>::result, expected>);
+}
+
+TEST_CASE("pack_string to number")
+{
+    using namespace e_regex;
+
+    constexpr static_string regex {"150"};
+
+    using test            = e_regex::build_pack_string_t<regex>;
+    constexpr auto number = e_regex::pack_string_to_number<test>::value;
+
+    REQUIRE(number == 150);
 }
