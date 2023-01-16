@@ -86,6 +86,15 @@ TEST_CASE("Group matching")
     REQUIRE(match[2] == "b");
 }
 
+TEST_CASE("Group matching order")
+{
+    auto match = e_regex::match<"a(a[a-g])+">("aabacad");
+
+    REQUIRE(match.is_accepted());
+    REQUIRE(match[0] == "aabacad");
+    REQUIRE(match[1] == "ad");
+}
+
 TEST_CASE("Non-capturing round brackts")
 {
     auto match = e_regex::match<"a(?:a(b))cd">("aabcdef");
