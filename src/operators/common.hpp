@@ -3,10 +3,10 @@
 
 #include <tuple>
 
-#include <heuristics.hpp>
-#include <static_string.hpp>
-#include <terminals/terminal.hpp>
-#include <tokenizer.hpp>
+#include "heuristics.hpp"
+#include "static_string.hpp"
+#include "terminals/terminal.hpp"
+#include "tokenizer.hpp"
 
 namespace e_regex
 {

@@ -1,9 +1,8 @@
 #ifndef OPERATORS_ROUND_BRACKETS
 #define OPERATORS_ROUND_BRACKETS
 
-#include <utilities/extract_delimited_content.hpp>
-
 #include "common.hpp"
+#include "utilities/extract_delimited_content.hpp"
 
 namespace e_regex
 {

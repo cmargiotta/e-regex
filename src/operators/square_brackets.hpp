@@ -2,6 +2,7 @@
 #define OPERATORS_SQUARE_BRACKETS
 
 #include "common.hpp"
+#include "utilities/extract_delimited_content.hpp"
 
 namespace e_regex
 {

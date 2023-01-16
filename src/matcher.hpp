@@ -6,7 +6,6 @@
 #include <tuple>
 #include <type_traits>
 
-#include "heuristics.hpp"
 #include "match_result.hpp"
 #include "utilities/max.hpp"
 
