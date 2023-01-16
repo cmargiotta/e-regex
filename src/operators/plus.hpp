@@ -5,6 +5,36 @@
 
 namespace e_regex
 {
+    template<typename matcher>
+    struct repeated_node
+    {
+            static constexpr std::size_t groups = matcher::groups;
+
+            static constexpr auto match(auto result)
+            {
+                unsigned matches = 0;
+
+                while (result.actual_iterator_end < result.query.end())
+                {
+                    auto res = matcher::match(result);
+
+                    if (res)
+                    {
+                        result = std::move(res);
+                        matches++;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                result = matches > 0;
+
+                return result;
+            }
+    };
+
     template<typename last_node, typename... tail>
     struct tree_builder_helper<last_node, std::tuple<pack_string<'+'>, tail...>>
     {

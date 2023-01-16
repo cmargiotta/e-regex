@@ -12,34 +12,6 @@
 
 namespace e_regex
 {
-    struct base_tree_matcher
-    {
-            static constexpr auto dfs(auto result) noexcept
-            {
-                return result;
-            }
-
-            template<typename Child, typename... Children>
-            static constexpr auto dfs(auto match_result) noexcept
-            {
-                if constexpr (sizeof...(Children) == 0)
-                {
-                    return Child::match(std::move(match_result));
-                }
-                else
-                {
-                    auto result = Child::match(match_result);
-
-                    if (!result)
-                    {
-                        return dfs<Children...>(std::move(match_result));
-                    }
-
-                    return result;
-                }
-            }
-    };
-
     template<typename T>
     concept has_groups = requires(T t)
     {
@@ -67,6 +39,26 @@ namespace e_regex
             static constexpr std::size_t groups
                 = group_getter<matcher>::value + max(children::groups...);
 
+            template<typename Child, typename... Children>
+            static constexpr auto dfs(auto match_result) noexcept
+            {
+                if constexpr (sizeof...(Children) == 0)
+                {
+                    return Child::match(std::move(match_result));
+                }
+                else
+                {
+                    auto result = Child::match(match_result);
+
+                    if (!result)
+                    {
+                        return dfs<Children...>(std::move(match_result));
+                    }
+
+                    return result;
+                }
+            }
+
             static constexpr auto match(auto result)
             {
                 if constexpr (!std::is_same_v<matcher, void>)
@@ -74,99 +66,18 @@ namespace e_regex
                     result = matcher::match(std::move(result));
                 }
 
-                if (result)
+                if constexpr (sizeof...(children) != 0)
                 {
-                    return base_tree_matcher::dfs<children...>(std::move(result));
-                }
-
-                return result;
-            }
-    };
-
-    template<typename matcher>
-    struct repeated_node
-    {
-            static constexpr std::size_t groups = matcher::groups;
-
-            static constexpr auto match(auto result)
-            {
-                unsigned matches = 0;
-
-                while (result.actual_iterator_end < result.query.end())
-                {
-                    auto res = matcher::match(result);
-
-                    if (res)
+                    if (result)
                     {
-                        result = std::move(res);
-                        matches++;
-                    }
-                    else
-                    {
-                        break;
+                        return dfs<children...>(std::move(result));
                     }
                 }
 
-                result = matches > 0;
-
                 return result;
             }
     };
 
-    template<typename matcher>
-    struct optional_node
-    {
-            static constexpr std::size_t groups = matcher::groups;
-
-            static constexpr auto match(auto result)
-            {
-                auto res = matcher::match(result);
-
-                if (res)
-                {
-                    return res;
-                }
-
-                return result;
-            }
-    };
-
-    template<typename matcher>
-    struct negated_node
-    {
-            static constexpr std::size_t groups = matcher::groups;
-
-            static constexpr auto match(auto result)
-            {
-                result = matcher::match(std::move(result));
-
-                result = !static_cast<bool>(result);
-
-                return result;
-            }
-    };
-
-    template<typename matcher>
-    struct grouping_node
-    {
-            static constexpr std::size_t groups = 1 + matcher::groups;
-
-            static constexpr auto match(auto result)
-            {
-                auto begin       = result.actual_iterator_end;
-                auto match_index = result.matches;
-                result.matches++;
-                result = matcher::match(std::move(result));
-
-                if (result)
-                {
-                    result.match_groups[match_index]
-                        = std::string_view {begin, result.actual_iterator_end};
-                }
-
-                return result;
-            }
-    };
 }// namespace e_regex
 
 #endif /* MATCHER */

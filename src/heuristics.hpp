@@ -21,6 +21,7 @@ namespace e_regex
     template<typename... terminals, typename... terminals_to_add>
     struct add_child<basic_node<terminal<terminals...>, std::tuple<>>, basic_node<terminal<terminals_to_add...>>>
     {
+            // Terminal sequence found, aggregate them
             using type = basic_node<terminal<terminals..., terminals_to_add...>, std::tuple<>>;
     };
 

@@ -2,6 +2,8 @@
 #define OPERATORS_STAR
 
 #include "common.hpp"
+#include "optional.hpp"
+#include "plus.hpp"
 
 namespace e_regex
 {

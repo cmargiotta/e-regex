@@ -7,6 +7,28 @@
 
 namespace e_regex
 {
+    template<typename matcher>
+    struct grouping_node
+    {
+            static constexpr std::size_t groups = 1 + matcher::groups;
+
+            static constexpr auto match(auto result)
+            {
+                auto begin       = result.actual_iterator_end;
+                auto match_index = result.matches;
+                result.matches++;
+                result = matcher::match(std::move(result));
+
+                if (result)
+                {
+                    result.match_groups[match_index]
+                        = std::string_view {begin, result.actual_iterator_end};
+                }
+
+                return result;
+            }
+    };
+
     template<typename last_node, typename... tail>
     struct tree_builder_helper<last_node, std::tuple<pack_string<'('>, tail...>>
     {

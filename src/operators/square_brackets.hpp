@@ -51,7 +51,7 @@ namespace e_regex
     template<typename last_node, typename... tail>
     struct tree_builder_helper<last_node, std::tuple<pack_string<'['>, tail...>>
     {
-            // ( found
+            // [ found
             using substring = extract_delimited_content_t<'[', ']', std::tuple<tail...>>;
 
             using subregex =
@@ -66,7 +66,7 @@ namespace e_regex
     template<typename last_node, typename... tail>
     struct tree_builder_helper<last_node, std::tuple<pack_string<'['>, pack_string<'^'>, tail...>>
     {
-            // ( found
+            // [ found
             using substring = extract_delimited_content_t<'[', ']', std::tuple<tail...>>;
 
             using subregex =
