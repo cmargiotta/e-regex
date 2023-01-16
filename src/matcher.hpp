@@ -30,7 +30,7 @@ namespace e_regex
                 {
                     auto result = Child::match(match_result);
 
-                    if (!result && sizeof...(Children) > 0)
+                    if (!result)
                     {
                         return dfs<Children...>(std::move(match_result));
                     }
@@ -124,7 +124,7 @@ namespace e_regex
 
                 if (res)
                 {
-                    result = res;
+                    return res;
                 }
 
                 return result;

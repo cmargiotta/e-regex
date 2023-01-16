@@ -11,7 +11,9 @@ namespace e_regex
     struct split;
 
     template<char separator, typename... tail, typename... current_tokens, typename... currents>
-    struct split<separator, std::tuple<pack_string<'|'>, tail...>, std::tuple<std::tuple<current_tokens...>, currents...>>
+    struct split<separator,
+                 std::tuple<pack_string<separator>, tail...>,
+                 std::tuple<std::tuple<current_tokens...>, currents...>>
     {
             using current = std::tuple<std::tuple<>, std::tuple<current_tokens...>, currents...>;
             using type    = typename split<separator, std::tuple<tail...>, current>::type;
