@@ -11,18 +11,53 @@ namespace e_regex
     template<typename matches, char... string>
     struct extract_braces_numbers;
 
+    template<char... current, char... tail>
+    struct extract_braces_numbers<std::tuple<pack_string<current...>>, ',', tail...>
+        : public extract_braces_numbers<
+              tuple_cat_t<std::tuple<pack_string<current...>>, std::tuple<pack_string<','>>>,
+              tail...>
+    {
+            // ',' found, first number done
+    };
+
     template<char... current, char head, char... tail>
     struct extract_braces_numbers<std::tuple<pack_string<current...>>, head, tail...>
-        : public extract_braces_numbers<pack_string<current..., head>, tail...>
+        : public extract_braces_numbers<std::tuple<pack_string<current..., head>>, tail...>
     {
             // Populating first number
     };
 
-    template<typename first, char... tail>
-    struct extract_braces_numbers<std::tuple<first>, '-', tail...>
-        : public extract_braces_numbers<std::tuple<first, pack_string<'-'>>, tail...>
+    // Probably gcc bug -> ambiguous template instantiation if compact
+    template<typename first, typename second, char... current, char... tail>
+    struct extract_braces_numbers<std::tuple<first, second, pack_string<current...>>, '}', tail...>
     {
-            // '-' found, first number done
+            // '}' found, finishing
+            using numbers
+                = std::tuple<pack_string<'{'>, first, second, pack_string<current...>, pack_string<'}'>>;
+            using remaining = pack_string<tail...>;
+    };
+
+    template<typename first, typename second, char... tail>
+    struct extract_braces_numbers<std::tuple<first, second>, '}', tail...>
+    {
+            // '}' found, finishing
+            using numbers   = std::tuple<pack_string<'{'>, first, second, pack_string<'}'>>;
+            using remaining = pack_string<tail...>;
+    };
+
+    template<char... current, char... tail>
+    struct extract_braces_numbers<std::tuple<pack_string<current...>>, '}', tail...>
+    {
+            // '}' found, finishing
+            using numbers = std::tuple<pack_string<'{'>, pack_string<current...>, pack_string<'}'>>;
+            using remaining = pack_string<tail...>;
+    };
+
+    template<typename first, typename second, char head, char... tail>
+    struct extract_braces_numbers<std::tuple<first, second>, head, tail...>
+        : public extract_braces_numbers<std::tuple<first, second, pack_string<head>>, tail...>
+    {
+            // Populating second number
     };
 
     template<char... current, typename first, typename second, char head, char... tail>
@@ -30,14 +65,6 @@ namespace e_regex
         : public extract_braces_numbers<std::tuple<first, second, pack_string<current..., head>>, tail...>
     {
             // Populating second number
-    };
-
-    template<typename match, char... tail>
-    struct extract_braces_numbers<match, '}', tail...>
-    {
-            // '}' found, finishing
-            using numbers   = match;
-            using remaining = pack_string<tail...>;
     };
 
     template<char... string>

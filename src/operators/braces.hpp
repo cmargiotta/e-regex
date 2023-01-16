@@ -48,14 +48,23 @@ namespace e_regex
 
     template<typename matcher, typename first>
     struct quantified_node_builder<matcher, std::tuple<first>>
-        : public quantified_node<matcher, pack_string_to_number<first>::value>
+
     {
+            static constexpr auto value = pack_string_to_number<first>::value;
+            using type                  = quantified_node<matcher, value, value>;
+    };
+
+    template<typename matcher, typename first>
+    struct quantified_node_builder<matcher, std::tuple<first, pack_string<','>>>
+    {
+            using type = quantified_node<matcher, pack_string_to_number<first>::value>;
     };
 
     template<typename matcher, typename first, typename second>
-    struct quantified_node_builder<matcher, std::tuple<first, pack_string<'-'>, second>>
-        : public quantified_node<matcher, pack_string_to_number<first>::value, pack_string_to_number<second>::value>
+    struct quantified_node_builder<matcher, std::tuple<first, pack_string<','>, second>>
     {
+            using type
+                = quantified_node<matcher, pack_string_to_number<first>::value, pack_string_to_number<second>::value>;
     };
 
     template<typename last_node, typename... tail>
@@ -64,9 +73,10 @@ namespace e_regex
             // { found
             using substring = extract_delimited_content_t<'{', '}', std::tuple<tail...>>;
 
-            using new_node = basic_node<quantified_node_builder<last_node, substring>>;
+            using new_node
+                = basic_node<typename quantified_node_builder<last_node, typename substring::result>::type>;
 
-            using tree = typename tree_builder_helper<new_node, std::tuple<tail...>>::tree;
+            using tree = typename tree_builder_helper<new_node, typename substring::remaining>::tree;
     };
 }// namespace e_regex
 

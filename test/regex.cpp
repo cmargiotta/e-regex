@@ -76,6 +76,28 @@ TEST_CASE("Round brackets")
     REQUIRE(matcher("aabab").to_view() == "aabab");
 }
 
+TEST_CASE("Braces")
+{
+    auto matcher = e_regex::match<"ab{2,10}c">;
+
+    REQUIRE(matcher("abbc").is_accepted());
+    REQUIRE(matcher("abbbbbbbbbbc").is_accepted());
+    REQUIRE(!matcher("abbbbbbbbbbbc").is_accepted());
+    REQUIRE(!matcher("abc").is_accepted());
+
+    auto matcher1 = e_regex::match<"ab{2,}c">;
+
+    REQUIRE(matcher1("abbc").is_accepted());
+    REQUIRE(matcher1("abbbbbbbbbbc").is_accepted());
+    REQUIRE(!matcher1("abc").is_accepted());
+
+    auto matcher2 = e_regex::match<"ab{2}c">;
+
+    REQUIRE(matcher2("abbc").is_accepted());
+    REQUIRE(!matcher2("abbbbbbbbbbc").is_accepted());
+    REQUIRE(!matcher2("abc").is_accepted());
+}
+
 TEST_CASE("Group matching")
 {
     auto match = e_regex::match<"a(a(b))cd">("aabcdef");
