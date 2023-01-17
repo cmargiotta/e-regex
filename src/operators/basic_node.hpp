@@ -14,7 +14,8 @@ namespace e_regex
     enum class policy
     {
         GREEDY,
-        LAZY
+        LAZY,
+        POSSESSIVE
     };
 
     template<typename Child, typename... Children>
@@ -98,7 +99,7 @@ namespace e_regex
     template<typename matcher, std::size_t min, std::size_t max, policy policy_>
     using set_node_range_t = typename set_node_range<matcher, min, max, policy_>::type;
 
-    template<typename matcher, typename children = std::tuple<>, policy policy_ = policy::GREEDY>
+    template<typename matcher, typename children = std::tuple<>, policy policy_ = matcher::backtracking_policy>
     using grouping_node = basic_node<matcher, children, 1, 1, policy_, true>;
 
     template<typename matcher, typename children = std::tuple<>, policy policy_ = policy::GREEDY>

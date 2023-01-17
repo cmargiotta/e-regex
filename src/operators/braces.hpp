@@ -17,13 +17,15 @@ namespace e_regex
     template<typename head, typename... tail>
     struct first_type<std::tuple<head, tail...>>
     {
-            using type = head;
+            using type      = head;
+            using remaining = std::tuple<tail...>;
     };
 
     template<>
     struct first_type<std::tuple<>>
     {
-            using type = void;
+            using type      = void;
+            using remaining = std::tuple<>;
     };
 
     template<typename data>
@@ -60,15 +62,24 @@ namespace e_regex
     {
             // { found
             using substring = extract_delimited_content_t<'{', '}', std::tuple<tail...>>;
+
+            using remaining_head = first_type<typename substring::remaining>;
+
             static constexpr auto policy_
-                = std::is_same_v<first_type_t<typename substring::remaining>, pack_string<'?'>>
+                = std::is_same_v<typename remaining_head::type, pack_string<'?'>>
                       ? policy::LAZY
-                      : policy::GREEDY;
+                      : (std::is_same_v<typename remaining_head::type, pack_string<'+'>>
+                             ? policy::POSSESSIVE
+                             : policy::GREEDY);
+
+            using remaining = std::conditional_t<policy_ != policy::GREEDY,
+                                                 typename remaining_head::remaining,
+                                                 typename substring::remaining>;
 
             using new_node =
                 typename quantified_node_builder<last_node, typename substring::result, policy_>::type;
 
-            using tree = typename tree_builder_helper<new_node, typename substring::remaining>::tree;
+            using tree = typename tree_builder_helper<new_node, remaining>::tree;
     };
 }// namespace e_regex
 

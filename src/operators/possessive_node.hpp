@@ -1,14 +1,14 @@
-#ifndef OPERATORS_LAZY_NODE_HPP
-#define OPERATORS_LAZY_NODE_HPP
+#ifndef OPERATORS_POSSESSIVE_NODE_HPP
+#define OPERATORS_POSSESSIVE_NODE_HPP
 
 #include "basic_node.hpp"
 
 namespace e_regex
 {
     template<typename matcher, typename... children, std::size_t repetitions_min, std::size_t repetitions_max, bool grouping>
-    struct basic_node<matcher, std::tuple<children...>, repetitions_min, repetitions_max, policy::LAZY, grouping>
+    struct basic_node<matcher, std::tuple<children...>, repetitions_min, repetitions_max, policy::POSSESSIVE, grouping>
     {
-            static constexpr auto backtracking_policy = policy::LAZY;
+            static constexpr auto backtracking_policy = policy::POSSESSIVE;
 
             static constexpr std::size_t groups
                 = group_getter<matcher>::value + max(children::groups...) + (grouping ? 1 : 0);
@@ -25,17 +25,25 @@ namespace e_regex
 
                     auto last_res = result;
 
-                    auto res = matcher::match(last_res);
-
-                    if (res)
+                    while (last_res.actual_iterator_end < result.query.end() && matches < repetitions_max)
                     {
-                        if constexpr (grouping)
-                        {
-                            res.last_group_start = last_res.actual_iterator_end;
-                        }
+                        last_res.matches = result.matches;// Only last group is considered
+                        auto res         = matcher::match(last_res);
 
-                        last_res = std::move(res);
-                        matches++;
+                        if (res)
+                        {
+                            if constexpr (grouping)
+                            {
+                                res.last_group_start = last_res.actual_iterator_end;
+                            }
+
+                            last_res = std::move(res);
+                            matches++;
+                        }
+                        else
+                        {
+                            break;
+                        }
                     }
 
                     if (result.actual_iterator_end == last_res.actual_iterator_end
@@ -58,7 +66,7 @@ namespace e_regex
             {
                 auto match_index = result.matches;
                 auto end         = result.last_group_start;
-                auto begin       = result.actual_iterator_end;
+                auto begin       = end;
 
                 if constexpr (grouping)
                 {
@@ -75,44 +83,14 @@ namespace e_regex
                 }
                 else
                 {
-                    std::size_t total_matches = 0;
+                    result.last_group_start = result.actual_iterator_end;
+                    result                  = self_match(std::move(result));
 
-                    if constexpr (repetitions_min == 0)
+                    if (result)
                     {
-                        // First try, only dfs
+                        begin  = result.last_group_start;
+                        end    = result.actual_iterator_end;
                         result = dfs<children...>(std::move(result));
-                        end    = begin;
-                    }
-
-                    if (!result || repetitions_min > 0)
-                    {
-                        // Lazy backtracking
-                        do
-                        {
-                            result = true;
-
-                            do
-                            {
-                                result = self_match(std::move(result));
-                                total_matches++;
-                            } while (total_matches < repetitions_min);
-
-                            if (!result)
-                            {
-                                break;
-                            }
-
-                            begin  = result.last_group_start;
-                            end    = result.actual_iterator_end;
-                            result = dfs<children...>(std::move(result));
-
-                            if (!result)
-                            {
-                                result.actual_iterator_end++;
-                            }
-
-                        } while (!result && result.actual_iterator_end <= result.query.end()
-                                 && total_matches < repetitions_max);
                     }
                 }
 
@@ -124,14 +102,9 @@ namespace e_regex
                     }
                 }
 
-                if constexpr (repetitions_min == 0)
-                {
-                    result = true;
-                }
-
                 return result;
             }
     };
 }// namespace e_regex
 
-#endif /* OPERATORS_LAZY_NODE_HPP */
+#endif /* OPERATORS_POSSESSIVE_NODE_HPP */

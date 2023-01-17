@@ -78,7 +78,7 @@ TEST_CASE("Round brackets")
 
 TEST_CASE("Braces")
 {
-    constexpr auto matcher = e_regex::match<"ab{2,10}c">;
+    auto matcher = e_regex::match<"ab{2,10}c">;
 
     REQUIRE(matcher("abbc").is_accepted());
     REQUIRE(matcher("abbbbbbbbbbc").is_accepted());
@@ -250,7 +250,7 @@ TEST_CASE("Lazy and greedy plus")
     REQUIRE(match_lazy[1] == "a");
 }
 
-TEST_CASE("Lazy and greedy optional")
+TEST_CASE("Lazy, greedy and possessive optional")
 {
     constexpr auto matcher_greedy = e_regex::match<"a?a">;
 
@@ -263,18 +263,25 @@ TEST_CASE("Lazy and greedy optional")
 
     constexpr auto matcher_lazy = e_regex::match<"a??a">;
 
-    std::string_view test1 = "aa";
-
-    auto match_lazy = matcher_lazy(test1);
+    auto match_lazy = matcher_lazy(test);
 
     REQUIRE(match_lazy.is_accepted());
     REQUIRE(match_lazy[0] == "a");
     match_lazy.next();
     REQUIRE(match_lazy.is_accepted());
     REQUIRE(match_lazy[0] == "a");
+
+    constexpr auto matcher_possessive = e_regex::match<"a?+a">;
+
+    auto match_possessive = matcher_possessive(test);
+
+    REQUIRE(match_possessive.is_accepted());
+    REQUIRE(match_possessive[0] == "aa");
+
+    REQUIRE(!matcher_possessive("a").is_accepted());
 }
 
-TEST_CASE("Lazy and greedy braces")
+TEST_CASE("Lazy, greedy and possessive braces")
 {
     constexpr auto matcher_greedy = e_regex::match<"(a{1,})a">;
 
@@ -288,11 +295,15 @@ TEST_CASE("Lazy and greedy braces")
 
     constexpr auto matcher_lazy = e_regex::match<"(a{1,}?)a">;
 
-    std::string_view test1 = "aaaa";
-
-    auto match_lazy = matcher_lazy(test1);
+    auto match_lazy = matcher_lazy(test);
 
     REQUIRE(match_lazy.is_accepted());
     REQUIRE(match_lazy[0] == "aa");
     REQUIRE(match_lazy[1] == "a");
+
+    constexpr auto matcher_possessive = e_regex::match<"(a{1,}+)a">;
+
+    auto match_possessive = matcher_possessive(test);
+
+    REQUIRE(!match_possessive.is_accepted());
 }

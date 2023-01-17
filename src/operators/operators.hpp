@@ -6,6 +6,7 @@
 #include "lazy_node.hpp"
 #include "optional.hpp"
 #include "plus.hpp"
+#include "possessive_node.hpp"
 #include "round_brackets.hpp"
 #include "square_brackets.hpp"
 #include "star.hpp"
