@@ -215,17 +215,84 @@ TEST_CASE("General use")
 
     REQUIRE(match.is_accepted());
     REQUIRE(match[0] == "first.last@learnxinyminutes.com");
-}
 
-TEST_CASE("Greedy use")
-{
-    constexpr auto matcher = e_regex::match<"\"(.*)\"">;
+    constexpr auto matcher1 = e_regex::match<"\"(.*)\"">;
 
     constexpr std::string_view test = "wrong \"match\"";
 
-    auto match = matcher(test);
+    auto match1 = matcher1(test);
 
-    REQUIRE(match.is_accepted());
-    REQUIRE(match[0] == "\"match\"");
-    REQUIRE(match[1] == "match");
+    REQUIRE(match1.is_accepted());
+    REQUIRE(match1[0] == "\"match\"");
+    REQUIRE(match1[1] == "match");
+}
+
+TEST_CASE("Lazy and greedy plus")
+{
+    constexpr auto matcher_greedy = e_regex::match<"(a+)a">;
+
+    std::string_view test = "aaaa";
+
+    auto match_greedy = matcher_greedy(test);
+
+    REQUIRE(match_greedy.is_accepted());
+    REQUIRE(match_greedy[0] == "aaaa");
+    REQUIRE(match_greedy[1] == "aaa");
+
+    constexpr auto matcher_lazy = e_regex::match<"(a+?)a">;
+
+    std::string_view test1 = "aaaa";
+
+    auto match_lazy = matcher_lazy(test1);
+
+    REQUIRE(match_lazy.is_accepted());
+    REQUIRE(match_lazy[0] == "aa");
+    REQUIRE(match_lazy[1] == "a");
+}
+
+TEST_CASE("Lazy and greedy optional")
+{
+    constexpr auto matcher_greedy = e_regex::match<"a?a">;
+
+    std::string_view test = "aa";
+
+    auto match_greedy = matcher_greedy(test);
+
+    REQUIRE(match_greedy.is_accepted());
+    REQUIRE(match_greedy[0] == "aa");
+
+    constexpr auto matcher_lazy = e_regex::match<"a??a">;
+
+    std::string_view test1 = "aa";
+
+    auto match_lazy = matcher_lazy(test1);
+
+    REQUIRE(match_lazy.is_accepted());
+    REQUIRE(match_lazy[0] == "a");
+    match_lazy.next();
+    REQUIRE(match_lazy.is_accepted());
+    REQUIRE(match_lazy[0] == "a");
+}
+
+TEST_CASE("Lazy and greedy braces")
+{
+    constexpr auto matcher_greedy = e_regex::match<"(a{1,})a">;
+
+    std::string_view test = "aaaa";
+
+    auto match_greedy = matcher_greedy(test);
+
+    REQUIRE(match_greedy.is_accepted());
+    REQUIRE(match_greedy[0] == "aaaa");
+    REQUIRE(match_greedy[1] == "aaa");
+
+    constexpr auto matcher_lazy = e_regex::match<"(a{1,}?)a">;
+
+    std::string_view test1 = "aaaa";
+
+    auto match_lazy = matcher_lazy(test1);
+
+    REQUIRE(match_lazy.is_accepted());
+    REQUIRE(match_lazy[0] == "aa");
+    REQUIRE(match_lazy[1] == "a");
 }

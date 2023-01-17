@@ -3,6 +3,7 @@
 
 #include "basic_node.hpp"
 #include "braces.hpp"
+#include "lazy_node.hpp"
 #include "optional.hpp"
 #include "plus.hpp"
 #include "round_brackets.hpp"

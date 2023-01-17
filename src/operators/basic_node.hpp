@@ -63,55 +63,6 @@ namespace e_regex
              bool        grouping          = false>
     struct basic_node;
 
-    // template<typename matcher, typename... children, bool grouping>
-    // struct basic_node<matcher, std::tuple<children...>, 0, 0, policy::GREEDY, grouping>
-    // {
-    //         static constexpr std::size_t groups
-    //             = group_getter<matcher>::value + max(children::groups...) + (grouping ? 1 : 0);
-
-    //         static constexpr auto match(auto result)
-    //         {
-    //             auto begin       = result.actual_iterator_end;
-    //             auto match_index = result.matches;
-    //             auto end         = begin;
-
-    //             if constexpr (grouping)
-    //             {
-    //                 result.matches++;
-    //             }
-
-    //             if constexpr (!std::is_same_v<matcher, void>)
-    //             {
-    //                 result = matcher::match(std::move(result));
-    //                 end    = result.actual_iterator_end;
-    //             }
-
-    //             if constexpr (sizeof...(children) != 0)
-    //             {
-    //                 if (result)
-    //                 {
-    //                     result = dfs<children...>(std::move(result));
-    //                 }
-    //             }
-
-    //             if constexpr (grouping)
-    //             {
-    //                 if (result)
-    //                 {
-    //                     result.match_groups[match_index] = std::string_view {begin, end};
-    //                 }
-    //             }
-
-    //             return result;
-    //         }
-    // };
-
-    // template<typename matcher, typename... children>
-    // struct basic_node<matcher, std::tuple<children...>, 0, 0, policy::LAZY>
-    //     : public basic_node<matcher, std::tuple<children...>, 0, 0, policy::GREEDY>
-    // {
-    // };
-
     template<typename matcher, bool grouping_>
     struct set_node_grouping;
 
