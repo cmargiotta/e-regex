@@ -12,6 +12,7 @@ namespace e_regex
             std::string_view                     query;
             std::string_view::const_iterator     actual_iterator_start;
             std::string_view::const_iterator     actual_iterator_end;
+            std::string_view::const_iterator     last_group_start;
             std::array<std::string_view, groups> match_groups;
             std::size_t                          matches  = 0;
             bool                                 accepted = true;
@@ -44,6 +45,7 @@ namespace e_regex
                 data.matches             = 0;
                 data.match_groups        = {};
                 data.actual_iterator_end = data.actual_iterator_start;
+                data.last_group_start    = data.actual_iterator_start;
                 data.accepted            = true;
 
                 data = matcher::match(std::move(data));
@@ -131,13 +133,13 @@ namespace e_regex
                     if (initialized)
                     {
                         // This is not the first call
-                        if (!data.accepted)
+                        if (data.accepted)
                         {
-                            data.actual_iterator_start++;
+                            data.actual_iterator_start = data.actual_iterator_end;
                         }
                         else
                         {
-                            data.actual_iterator_start = data.actual_iterator_end;
+                            data.actual_iterator_start++;
                         }
                     }
 

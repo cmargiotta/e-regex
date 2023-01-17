@@ -3,7 +3,7 @@
 
 #include <tuple>
 
-#include "matcher.hpp"
+#include "operators/basic_node.hpp"
 #include "static_string.hpp"
 #include "terminals/terminal.hpp"
 
@@ -12,18 +12,30 @@ namespace e_regex
     template<typename node, typename child>
     struct add_child;
 
-    template<typename matcher, typename... children, typename child>
-    struct add_child<basic_node<matcher, std::tuple<children...>>, child>
+    template<typename matcher,
+             typename... children,
+             std::size_t repetitions_min,
+             std::size_t repetitions_max,
+             policy      repetition_policy,
+             bool        grouping,
+             typename child>
+    struct add_child<basic_node<matcher, std::tuple<children...>, repetitions_min, repetitions_max, repetition_policy, grouping>,
+                     child>
     {
-            using type = basic_node<matcher, std::tuple<children..., child>>;
+            using type
+                = basic_node<matcher, std::tuple<children..., child>, repetitions_min, repetitions_max, repetition_policy, grouping>;
     };
 
-    template<typename... terminals, typename... terminals_to_add>
-    struct add_child<basic_node<terminal<terminals...>, std::tuple<>>, basic_node<terminal<terminals_to_add...>>>
-    {
-            // Terminal sequence found, aggregate them
-            using type = basic_node<terminal<terminals..., terminals_to_add...>, std::tuple<>>;
-    };
+    //     template<typename... terminals, std::size_t repetitions_min, std::size_t repetitions_max,
+    //     policy repetition_policy, typename... terminals_to_add> struct
+    //     add_child<basic_node<terminal<terminals...>, std::tuple<>, repetitions_min,
+    //     repetitions_max, repetition_policy>,
+    //                      basic_node<terminal<terminals_to_add...>>>
+    //     {
+    //             // Terminal sequence found, aggregate them
+    //             using type = basic_node<terminal<terminals..., terminals_to_add...>,
+    //             std::tuple<>>;
+    //     };
 
     template<typename child>
     struct add_child<void, child>

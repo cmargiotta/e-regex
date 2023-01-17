@@ -4,67 +4,39 @@
 #include <limits>
 
 #include "common.hpp"
+#include "greedy_node.hpp"
+#include "operators/basic_node.hpp"
 #include "utilities/extract_delimited_content.hpp"
 #include "utilities/pack_string_to_number.hpp"
 
 namespace e_regex
 {
-    template<typename matcher, std::size_t begin, std::size_t end = std::numeric_limits<std::size_t>::max()>
-    struct quantified_node
-    {
-            static constexpr std::size_t groups = matcher::groups;
-
-            static constexpr auto match(auto result)
-            {
-                unsigned matches = 0;
-
-                auto last_res = result;
-
-                while (last_res.actual_iterator_end < result.query.end())
-                {
-                    last_res.matches = result.matches;// Only last group is considered
-                    auto res         = matcher::match(last_res);
-
-                    if (res)
-                    {
-                        last_res = std::move(res);
-                        matches++;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                result = std::move(last_res);
-                result = matches >= begin && matches <= end;
-
-                return result;
-            }
-    };
-
     template<typename matcher, typename data>
     struct quantified_node_builder;
 
     template<typename matcher, typename first>
     struct quantified_node_builder<matcher, std::tuple<first>>
-
     {
             static constexpr auto value = pack_string_to_number<first>::value;
-            using type                  = quantified_node<matcher, value, value>;
+            using type                  = set_node_range_t<matcher, value, value, policy::GREEDY>;
     };
 
     template<typename matcher, typename first>
     struct quantified_node_builder<matcher, std::tuple<first, pack_string<','>>>
     {
-            using type = quantified_node<matcher, pack_string_to_number<first>::value>;
+            using type = set_node_range_t<matcher,
+                                          pack_string_to_number<first>::value,
+                                          std::numeric_limits<std::size_t>::max(),
+                                          policy::GREEDY>;
     };
 
     template<typename matcher, typename first, typename second>
     struct quantified_node_builder<matcher, std::tuple<first, pack_string<','>, second>>
     {
-            using type
-                = quantified_node<matcher, pack_string_to_number<first>::value, pack_string_to_number<second>::value>;
+            using type = set_node_range_t<matcher,
+                                          pack_string_to_number<first>::value,
+                                          pack_string_to_number<second>::value,
+                                          policy::GREEDY>;
     };
 
     template<typename last_node, typename... tail>
@@ -73,8 +45,8 @@ namespace e_regex
             // { found
             using substring = extract_delimited_content_t<'{', '}', std::tuple<tail...>>;
 
-            using new_node
-                = basic_node<typename quantified_node_builder<last_node, typename substring::result>::type>;
+            using new_node =
+                typename quantified_node_builder<last_node, typename substring::result>::type;
 
             using tree = typename tree_builder_helper<new_node, typename substring::remaining>::tree;
     };

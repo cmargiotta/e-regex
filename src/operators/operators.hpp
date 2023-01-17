@@ -1,6 +1,7 @@
 #ifndef OPERATORS_OPERATORS
 #define OPERATORS_OPERATORS
 
+#include "basic_node.hpp"
 #include "braces.hpp"
 #include "optional.hpp"
 #include "plus.hpp"

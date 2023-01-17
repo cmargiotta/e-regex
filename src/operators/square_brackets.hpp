@@ -58,8 +58,8 @@ namespace e_regex
             using subregex =
                 typename square_bracker_tree_builder_helper<basic_node<void, std::tuple<>>,
                                                             typename substring::result>::tree;
-            using new_node = typename tree_builder_helper<basic_node<subregex, std::tuple<>>,
-                                                          typename substring::remaining>::tree;
+            using new_node =
+                typename tree_builder_helper<subregex, typename substring::remaining>::tree;
 
             using tree = add_child_t<last_node, new_node>;
     };
