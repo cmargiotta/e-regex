@@ -10,6 +10,7 @@ namespace e_regex
     {
             static constexpr auto match_(auto result)
             {
+                result = *result.actual_iterator_end != '\n';
                 result.actual_iterator_end++;
 
                 return result;
