@@ -152,6 +152,14 @@ TEST_CASE("Square brackets")
     REQUIRE(aabacb.to_view() == "aaba");
 }
 
+TEST_CASE("Hex matching")
+{
+    constexpr auto matcher = e_regex::match<"a\\041">;
+
+    REQUIRE(matcher("aA").to_view() == "aA");
+    REQUIRE(!matcher("a").is_accepted());
+}
+
 TEST_CASE("Range matchers")
 {
     constexpr auto matcher = e_regex::match<"a[a-fhm-o]+">;
