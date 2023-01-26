@@ -4,6 +4,7 @@
 #include "alarm.hpp"
 #include "any.hpp"
 #include "digit_characters.hpp"
+#include "escape.hpp"
 #include "escaped.hpp"
 #include "exact_matcher.hpp"
 #include "range.hpp"
