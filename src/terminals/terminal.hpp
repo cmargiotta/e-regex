@@ -12,6 +12,7 @@
 #include "new_line.hpp"
 #include "range.hpp"
 #include "space_characters.hpp"
+#include "tab.hpp"
 #include "word_characters.hpp"
 
 #endif /* TERMINALS_TERMINAL */
