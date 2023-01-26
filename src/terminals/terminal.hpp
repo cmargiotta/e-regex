@@ -3,6 +3,7 @@
 
 #include "alarm.hpp"
 #include "any.hpp"
+#include "carriage_return.hpp"
 #include "digit_characters.hpp"
 #include "escape.hpp"
 #include "escaped.hpp"
