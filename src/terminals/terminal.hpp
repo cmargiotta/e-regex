@@ -8,6 +8,7 @@
 #include "escaped.hpp"
 #include "exact_matcher.hpp"
 #include "form_feed.hpp"
+#include "new_line.hpp"
 #include "range.hpp"
 #include "space_characters.hpp"
 #include "word_characters.hpp"
