@@ -154,7 +154,15 @@ TEST_CASE("Square brackets")
 
 TEST_CASE("Hex matching")
 {
-    constexpr auto matcher = e_regex::match<"a\\041">;
+    constexpr auto matcher = e_regex::match<"a\\x41">;
+
+    REQUIRE(matcher("aA").to_view() == "aA");
+    REQUIRE(!matcher("a").is_accepted());
+}
+
+TEST_CASE("Octal matching")
+{
+    constexpr auto matcher = e_regex::match<"a\\101">;
 
     REQUIRE(matcher("aA").to_view() == "aA");
     REQUIRE(!matcher("a").is_accepted());

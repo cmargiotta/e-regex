@@ -5,6 +5,7 @@
 #include "braces.hpp"
 #include "hex.hpp"
 #include "lazy_node.hpp"
+#include "octal.hpp"
 #include "optional.hpp"
 #include "plus.hpp"
 #include "possessive_node.hpp"
