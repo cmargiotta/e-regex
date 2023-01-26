@@ -5,13 +5,15 @@
 
 namespace e_regex
 {
+    template<char C>
+    concept hex = C >= '0' && C <= 'F';
+
     template<typename last_node, char first_nibble, char second_nibble, typename... tail>
     struct tree_builder_helper<
         last_node,
-        std::tuple<pack_string<'\\', '0'>, pack_string<first_nibble>, pack_string<second_nibble>, tail...>>
+        std::tuple<pack_string<'\\', 'x'>, pack_string<first_nibble>, pack_string<second_nibble>, tail...>>
     {
-            static_assert(first_nibble >= '0' && first_nibble <= 'F' && second_nibble >= '0'
-                              && second_nibble <= 'F',
+            static_assert(hex<first_nibble> && hex<second_nibble>,
                           "Hex characters must be included between 0 and F");
 
             static consteval auto hex_to_bin(char v) -> char
