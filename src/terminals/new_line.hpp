@@ -10,6 +10,11 @@ namespace e_regex
     struct terminal<pack_string<'\\', 'n'>> : public exact_matcher<pack_string<'\n'>>
     {
     };
+
+    template<>
+    struct terminal<pack_string<'\\', 'N'>> : public negated_terminal<terminal<pack_string<'\\', 'n'>>>
+    {
+    };
 }// namespace e_regex
 
 #endif /* TERMINALS_NEW_LINE */
