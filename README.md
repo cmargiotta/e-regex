@@ -14,7 +14,7 @@ result.to_view(); //"aaa"
 result[1]; //group 1: "aa"
 ```
 
-Invoking the matcher with an `std::string_view` return an `e_regex::match_result`.
+Invoking the matcher with an `std::string_view` returns an `e_regex::match_result`.
 
 `result[n]` and `result.get_group(n)` can be used to read the `n`th group. When `n` is 0, the whole match is returned.
 
