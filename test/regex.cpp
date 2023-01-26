@@ -160,6 +160,14 @@ TEST_CASE("Hex matching")
     REQUIRE(!matcher("a").is_accepted());
 }
 
+TEST_CASE("Hex string matching")
+{
+    constexpr auto matcher = e_regex::match<"a\\x{414141}">;
+
+    REQUIRE(matcher("aAAA").to_view() == "aAAA");
+    REQUIRE(!matcher("aAA").is_accepted());
+}
+
 TEST_CASE("Octal matching")
 {
     constexpr auto matcher = e_regex::match<"a\\101">;

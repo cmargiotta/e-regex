@@ -9,7 +9,8 @@ namespace e_regex
     template<char... data>
     struct pack_string
     {
-            static constexpr auto size = sizeof...(data);
+            static constexpr auto       size   = sizeof...(data);
+            static constexpr std::array string = {data...};
     };
 
     template<typename S1, typename S2>
