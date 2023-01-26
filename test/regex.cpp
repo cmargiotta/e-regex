@@ -176,6 +176,14 @@ TEST_CASE("Octal matching")
     REQUIRE(!matcher("a").is_accepted());
 }
 
+TEST_CASE("Octal string matching")
+{
+    constexpr auto matcher = e_regex::match<"a\\o{101101101}">;
+
+    REQUIRE(matcher("aAAA").to_view() == "aAAA");
+    REQUIRE(!matcher("aAA").is_accepted());
+}
+
 TEST_CASE("Range matchers")
 {
     constexpr auto matcher = e_regex::match<"a[a-fhm-o]+">;
