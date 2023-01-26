@@ -2,19 +2,13 @@
 #define TERMINALS_ALARM
 
 #include "common.hpp"
+#include "exact_matcher.hpp"
 
 namespace e_regex
 {
     template<>
-    struct terminal<pack_string<'\\', 'a'>> : public terminal_common<terminal<pack_string<'\\', 'a'>>>
+    struct terminal<pack_string<'\\', 'a'>> : public exact_matcher<pack_string<0x07>>
     {
-            static constexpr auto match_(auto result)
-            {
-                result = *result.actual_iterator_end == 0x07;
-                result.actual_iterator_end++;
-
-                return result;
-            }
     };
 }// namespace e_regex
 
