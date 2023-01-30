@@ -3,6 +3,7 @@
 
 #include "basic_node.hpp"
 #include "braces.hpp"
+#include "end_anchor.hpp"
 #include "hex.hpp"
 #include "lazy_node.hpp"
 #include "octal.hpp"

@@ -188,10 +188,17 @@ TEST_CASE("Start anchor")
 {
     constexpr auto matcher = e_regex::match<"^a">;
 
-    // decltype(matcher("abc")) a = 10;
-
     REQUIRE(matcher("abc").is_accepted());
-    REQUIRE(!matcher("aabc").is_accepted());
+    REQUIRE(!matcher("bc").is_accepted());
+}
+
+TEST_CASE("End anchor")
+{
+    constexpr auto matcher = e_regex::match<"a$">;
+
+    REQUIRE(matcher("a").is_accepted());
+    REQUIRE(!matcher("abc").is_accepted());
+    REQUIRE(matcher("aabca").is_accepted());
 }
 
 TEST_CASE("Range matchers")

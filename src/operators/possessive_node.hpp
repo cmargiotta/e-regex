@@ -25,7 +25,8 @@ namespace e_regex
 
                     auto last_res = result;
 
-                    while (last_res.actual_iterator_end < result.query.end() && matches < repetitions_max)
+                    while (last_res.actual_iterator_end <= result.query.end()
+                           && matches < repetitions_max)
                     {
                         last_res.matches = result.matches;// Only last group is considered
                         auto res         = matcher::match(last_res);
@@ -46,16 +47,7 @@ namespace e_regex
                         }
                     }
 
-                    if (result.actual_iterator_end == last_res.actual_iterator_end
-                        && repetitions_min != 0)
-                    {
-                        result.actual_iterator_end++;
-                    }
-                    else
-                    {
-                        result = std::move(last_res);
-                    }
-
+                    result = std::move(last_res);
                     result = matches >= repetitions_min && matches <= repetitions_max;
 
                     return result;
