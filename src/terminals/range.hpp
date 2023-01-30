@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 
-namespace e_regex
+namespace e_regex::terminals
 {
     template<typename start, typename end>
     struct range_terminal;
@@ -24,6 +24,6 @@ namespace e_regex
                 return result;
             }
     };
-}// namespace e_regex
+}// namespace e_regex::terminals
 
 #endif /* TERMINALS_RANGE */

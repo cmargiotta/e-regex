@@ -12,5 +12,6 @@
 #include "round_brackets.hpp"
 #include "square_brackets.hpp"
 #include "star.hpp"
+#include "start_anchor.hpp"
 
 #endif /* OPERATORS_OPERATORS */

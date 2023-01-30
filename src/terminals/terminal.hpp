@@ -2,6 +2,7 @@
 #define TERMINALS_TERMINAL
 
 #include "alarm.hpp"
+#include "anchors/anchors.hpp"
 #include "any.hpp"
 #include "carriage_return.hpp"
 #include "digit_characters.hpp"

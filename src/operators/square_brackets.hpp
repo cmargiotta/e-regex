@@ -22,7 +22,8 @@ namespace e_regex
     {
             // Simple case, iterate
 
-            using new_node = add_child_t<last_node, basic_node<exact_matcher<head>, std::tuple<>>>;
+            using new_node
+                = add_child_t<last_node, basic_node<terminals::exact_matcher<head>, std::tuple<>>>;
             using tree =
                 typename square_bracker_tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
@@ -33,7 +34,8 @@ namespace e_regex
             // Simple case, iterate
 
             using new_node
-                = add_child_t<last_node, basic_node<terminal<pack_string<'\\', identifier>>, std::tuple<>>>;
+                = add_child_t<last_node,
+                              basic_node<terminals::terminal<pack_string<'\\', identifier>>, std::tuple<>>>;
             using tree =
                 typename square_bracker_tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
@@ -44,7 +46,7 @@ namespace e_regex
             // Range found
 
             using new_node
-                = add_child_t<last_node, basic_node<range_terminal<start, end>, std::tuple<>>>;
+                = add_child_t<last_node, basic_node<terminals::range_terminal<start, end>, std::tuple<>>>;
             using tree =
                 typename square_bracker_tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };

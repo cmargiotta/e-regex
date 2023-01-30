@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 
-namespace e_regex
+namespace e_regex::terminals
 {
     template<>
     struct terminal<pack_string<'\\', 'w'>> : public terminal_common<terminal<pack_string<'\\', 'w'>>>
@@ -23,6 +23,6 @@ namespace e_regex
     struct terminal<pack_string<'\\', 'W'>> : public negated_terminal<terminal<pack_string<'\\', 'w'>>>
     {
     };
-}// namespace e_regex
+}// namespace e_regex::terminals
 
 #endif /* TERMINALS_WORD_CHARACTERS */

@@ -3,7 +3,7 @@
 
 #include "static_string.hpp"
 
-namespace e_regex
+namespace e_regex::terminals
 {
     template<typename terminal>
     struct terminal_common
@@ -53,6 +53,6 @@ namespace e_regex
                 return result;
             }
     };
-}// namespace e_regex
+}// namespace e_regex::terminals
 
 #endif /* TERMINALS_COMMON */

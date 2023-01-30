@@ -6,7 +6,7 @@
 
 #include "common.hpp"
 
-namespace e_regex
+namespace e_regex::terminals
 {
     template<>
     struct terminal<pack_string<'\\', 's'>> : public terminal_common<terminal<pack_string<'\\', 's'>>>
@@ -28,6 +28,6 @@ namespace e_regex
     struct terminal<pack_string<'\\', 'S'>> : public negated_terminal<terminal<pack_string<'\\', 's'>>>
     {
     };
-}// namespace e_regex
+}// namespace e_regex::terminals
 
 #endif /* TERMINALS_SPACE_CHARACTERS */

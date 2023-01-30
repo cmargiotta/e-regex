@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 
-namespace e_regex
+namespace e_regex::terminals
 {
     template<char identifier>
     struct terminal<pack_string<'\\', identifier>>
@@ -18,6 +18,6 @@ namespace e_regex
                 return result;
             }
     };
-}// namespace e_regex
+}// namespace e_regex::terminals
 
 #endif /* TERMINALS_ESCAPED */

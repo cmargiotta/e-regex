@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 
-namespace e_regex
+namespace e_regex::terminals
 {
     template<>
     struct terminal<pack_string<'.'>> : public terminal_common<terminal<pack_string<'.'>>>
@@ -16,6 +16,6 @@ namespace e_regex
                 return result;
             }
     };
-}// namespace e_regex
+}// namespace e_regex::terminals
 
 #endif /* TERMINALS_ANY */

@@ -33,8 +33,7 @@ namespace e_regex
             static constexpr char current        = ((first - '0') << (4)) | (second - '0');
             static constexpr char current_second = (third - '0') << 4;
 
-            using result
-                = merge_pack_strings_t<pack_string<current>, typename hex_to_bin<tail...>::result>;
+            using result = pack_string<current>;
     };
 
     template<char first>
@@ -71,7 +70,7 @@ namespace e_regex
             using value = typename hex_to_bin<first_nibble, second_nibble>::result;
 
             using new_node =
-                typename tree_builder_helper<basic_node<exact_matcher<value>, std::tuple<>>,
+                typename tree_builder_helper<basic_node<terminals::exact_matcher<value>, std::tuple<>>,
                                              std::tuple<tail...>>::tree;
             using tree = add_child_t<last_node, new_node>;
     };
@@ -83,7 +82,7 @@ namespace e_regex
             using value = typename hex_to_bin<nibble>::result;
 
             using new_node =
-                typename tree_builder_helper<basic_node<exact_matcher<value>, std::tuple<>>,
+                typename tree_builder_helper<basic_node<terminals::exact_matcher<value>, std::tuple<>>,
                                              std::tuple<tail...>>::tree;
             using tree = add_child_t<last_node, new_node>;
     };
@@ -96,7 +95,7 @@ namespace e_regex
             using value = typename hex_tuple_to_bin<typename substring::result>::result;
 
             using new_node =
-                typename tree_builder_helper<basic_node<exact_matcher<value>, std::tuple<>>,
+                typename tree_builder_helper<basic_node<terminals::exact_matcher<value>, std::tuple<>>,
                                              typename substring::remaining>::tree;
 
             using tree = add_child_t<last_node, new_node>;

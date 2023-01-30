@@ -4,7 +4,7 @@
 #include "common.hpp"
 #include "static_string.hpp"
 
-namespace e_regex
+namespace e_regex::terminals
 {
     template<typename identifier>
     struct exact_matcher;
@@ -47,6 +47,6 @@ namespace e_regex
     struct terminal<identifier> : public exact_matcher<identifier>
     {
     };
-}// namespace e_regex
+}// namespace e_regex::terminals
 
 #endif /* TERMINALS_EXACT_MATCHER */
