@@ -184,6 +184,16 @@ TEST_CASE("Octal string matching")
     REQUIRE(!matcher("aAA").is_accepted());
 }
 
+TEST_CASE("Start anchor")
+{
+    constexpr auto matcher = e_regex::match<"^a">;
+
+    // decltype(matcher("abc")) a = 10;
+
+    REQUIRE(matcher("abc").is_accepted());
+    REQUIRE(!matcher("aabc").is_accepted());
+}
+
 TEST_CASE("Range matchers")
 {
     constexpr auto matcher = e_regex::match<"a[a-fhm-o]+">;
