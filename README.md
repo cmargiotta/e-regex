@@ -1,5 +1,7 @@
 # E(mpowered)-regex
 
+![Alla pugna!](https://img.shields.io/badge/ALLA-PUGNA-F70808?style=for-the-badge)
+
 Extremely fast regular expression library, with full matching support, even at compile time!
 
 **Not complete! Not the whole [pcre](https://www.pcre.org/current/doc/html/pcre2syntax.html) syntax is implemented**
