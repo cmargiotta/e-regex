@@ -18,6 +18,8 @@ TEST_CASE("Tokenization by space")
         tokens.push_back(token);
     }
 
-    REQUIRE(tokens.size() == 1);
-    REQUIRE(tokens[0] == "");
+    REQUIRE(tokens.size() == 3);
+    REQUIRE(tokens[0] == "a");
+    REQUIRE(tokens[1] == "abc");
+    REQUIRE(tokens[2] == "def");
 }

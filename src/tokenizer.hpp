@@ -71,42 +71,42 @@ namespace e_regex
     using extract_braces_numbers_t = extract_braces_numbers<std::tuple<pack_string<>>, string...>;
 
     template<typename current, typename string>
-    struct tokenizer_tr;
+    struct tokenizer;
 
     template<typename current, char head, char... tail>
-    struct tokenizer_tr<current, pack_string<head, tail...>>
+    struct tokenizer<current, pack_string<head, tail...>>
     {
             // Simple iteration
             using current_ = tuple_cat_t<current, std::tuple<pack_string<head>>>;
-            using tokens   = typename tokenizer_tr<current_, pack_string<tail...>>::tokens;
+            using tokens   = typename tokenizer<current_, pack_string<tail...>>::tokens;
     };
 
     template<typename current, char head, char... tail>
-    struct tokenizer_tr<current, pack_string<'\\', head, tail...>>
+    struct tokenizer<current, pack_string<'\\', head, tail...>>
     {
             // Escaped character
             using current_ = tuple_cat_t<current, std::tuple<pack_string<'\\', head>>>;
-            using tokens   = typename tokenizer_tr<current_, pack_string<tail...>>::tokens;
+            using tokens   = typename tokenizer<current_, pack_string<tail...>>::tokens;
     };
 
     template<typename current, char... tail>
-    struct tokenizer_tr<current, pack_string<'{', tail...>>
+    struct tokenizer<current, pack_string<'{', tail...>>
     {
             // Number inside braces
             using numbers  = extract_braces_numbers_t<tail...>;
             using current_ = tuple_cat_t<current, typename numbers::numbers>;
-            using tokens   = typename tokenizer_tr<current_, typename numbers::remaining>::tokens;
+            using tokens   = typename tokenizer<current_, typename numbers::remaining>::tokens;
     };
 
     template<typename current>
-    struct tokenizer_tr<current, pack_string<>>
+    struct tokenizer<current, pack_string<>>
     {
             // Base case
             using tokens = current;
     };
 
     template<typename string>
-    using tokenizer_t = typename tokenizer_tr<std::tuple<>, string>::tokens;
+    using tokenizer_t = typename tokenizer<std::tuple<>, string>::tokens;
 }// namespace e_regex
 
 #endif /* TOKENIZER */

@@ -14,11 +14,11 @@ namespace e_regex
                 private:
                     match_result       res;
                     std::string_view   current;
-                    separator_matcher& separator;
+                    separator_matcher& separator_verifier;
 
                 public:
-                    constexpr explicit iterator(match_result res, separator_matcher& separator)
-                        : res {std::move(res)}, current {res.to_view()}, separator {separator}
+                    constexpr explicit iterator(match_result res, separator_matcher& separator_verifier)
+                        : res {std::move(res)}, current {res.to_view()}, separator_verifier {separator_verifier}
                     {
                     }
 
@@ -37,8 +37,15 @@ namespace e_regex
 
                         if (current.begin() != last.end())
                         {
-                            // Non-consecutive tokens, syntax error
-                            current = {};
+                            // Non-consecutive tokens, possible syntax error
+                            std::string_view separator {last.end(), current.begin()};
+
+                            if (!separator_verifier(separator).is_accepted())
+                            {
+                                // Separator is not accepted from the given separator matcher,
+                                // syntax error found!
+                                current = {};
+                            }
                         }
 
                         return *this;
@@ -46,7 +53,8 @@ namespace e_regex
 
                     constexpr auto operator==(const iterator& other) const noexcept -> bool
                     {
-                        return current.begin() == other.current.begin();
+                        return current.begin() == other.current.begin()
+                               || (current.empty() && other.current.empty());
                     }
 
                     constexpr auto operator!=(const iterator& other) const noexcept -> bool
@@ -72,20 +80,21 @@ namespace e_regex
 
         private:
             match_result      matcher;
-            separator_matcher separator;
+            separator_matcher separator_verifier;
 
         public:
-            constexpr explicit tokenization_result(match_result matcher, separator_matcher separator)
-                : matcher {matcher}, separator {std::move(separator)} {};
+            constexpr explicit tokenization_result(match_result      matcher,
+                                                   separator_matcher separator_verifier)
+                : matcher {matcher}, separator_verifier {std::move(separator_verifier)} {};
 
             constexpr auto begin() noexcept -> iterator
             {
-                return iterator {matcher, separator};
+                return iterator {matcher, separator_verifier};
             }
 
             constexpr auto end() noexcept -> iterator
             {
-                iterator res {matcher, separator};
+                iterator res {matcher, separator_verifier};
                 res.invalidate();
 
                 return res;
