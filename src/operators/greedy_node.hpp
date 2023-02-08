@@ -11,7 +11,7 @@ namespace e_regex
             static constexpr auto backtracking_policy = policy::GREEDY;
 
             static constexpr std::size_t groups
-                = group_getter<matcher>::value + max(children::groups...) + (grouping ? 1 : 0);
+                = group_getter<matcher>::value + sum(children::groups...) + (grouping ? 1 : 0);
 
             static constexpr auto self_match(auto result)
             {
@@ -49,6 +49,7 @@ namespace e_regex
                     if (result.actual_iterator_end == last_res.actual_iterator_end
                         && repetitions_min != 0)
                     {
+                        // No matching characters found and this node is not optional, increase iterator
                         result.actual_iterator_end++;
                     }
                     else

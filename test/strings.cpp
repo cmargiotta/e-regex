@@ -18,9 +18,9 @@ TEST_CASE("Split")
     using tokens = tokenize<test>;
     using split_ = split_t<'|', tokens>;
 
-    using expected = std::tuple<std::tuple<pack_string<'d'>>,
+    using expected = std::tuple<std::tuple<pack_string<'a'>>,
                                 std::tuple<pack_string<'b'>, pack_string<'\\', '|'>, pack_string<'c'>>,
-                                std::tuple<pack_string<'a'>>>;
+                                std::tuple<pack_string<'d'>>>;
 
     REQUIRE(std::is_same_v<split_, expected>);
 }

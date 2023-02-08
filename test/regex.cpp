@@ -117,6 +117,23 @@ TEST_CASE("Group matching order")
     REQUIRE(match[1] == "ad");
 }
 
+TEST_CASE("Group matching with more branches")
+{
+    constexpr auto matcher = e_regex::match<"a(a[a-g]+)|([h-z]+)">;
+
+    auto [full, first, second] = matcher("aaaa");
+
+    REQUIRE(full == "aaaa");
+    REQUIRE(first == "aaa");
+    REQUIRE(second.empty());
+
+    auto [full1, first1, second1] = matcher("hhhh");
+
+    REQUIRE(full1 == "hhhh");
+    REQUIRE(first1.empty());
+    REQUIRE(second1 == "hhhh");
+}
+
 TEST_CASE("Non-capturing round brackts")
 {
     constexpr auto match = e_regex::match<"a(?:a(b))cd">("aabcdef");

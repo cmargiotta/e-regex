@@ -3,6 +3,7 @@
 
 #include <tuple>
 
+#include "reverse.hpp"
 #include "static_string.hpp"
 
 namespace e_regex
@@ -29,7 +30,7 @@ namespace e_regex
     template<char separator, typename current>
     struct split<separator, std::tuple<>, current>
     {
-            using type = current;
+            using type = reverse_t<current>;
     };
 
     template<char separator, typename tokens>

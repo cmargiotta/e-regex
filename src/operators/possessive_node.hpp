@@ -11,7 +11,7 @@ namespace e_regex
             static constexpr auto backtracking_policy = policy::POSSESSIVE;
 
             static constexpr std::size_t groups
-                = group_getter<matcher>::value + max(children::groups...) + (grouping ? 1 : 0);
+                = group_getter<matcher>::value + sum(children::groups...) + (grouping ? 1 : 0);
 
             static constexpr auto self_match(auto result)
             {

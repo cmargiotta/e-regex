@@ -4,8 +4,6 @@
 
 Extremely fast regular expression library, with full matching support, even at compile time!
 
-**Not complete! Not the whole [pcre](https://www.pcre.org/current/doc/html/pcre2syntax.html) syntax is implemented**
-
 ## Basic usage
 
 ```cpp

@@ -7,7 +7,7 @@
 #include <type_traits>
 
 #include "match_result.hpp"
-#include "utilities/max.hpp"
+#include "utilities/sum.hpp"
 
 namespace e_regex
 {
@@ -31,6 +31,7 @@ namespace e_regex
 
             if (!result)
             {
+                match_result.matches += Child::groups;
                 return dfs<Children...>(std::move(match_result));
             }
 
