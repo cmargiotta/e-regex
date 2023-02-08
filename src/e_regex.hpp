@@ -5,6 +5,7 @@
 
 #include "match_result.hpp"
 #include "static_string.hpp"
+#include "tokenization_result.hpp"
 #include "tree_builder.hpp"
 
 namespace e_regex
@@ -16,6 +17,17 @@ namespace e_regex
         using matcher = typename tree_builder<packed>::tree;
 
         return match_result<matcher> {expression};
+    };
+
+    template<static_string regex, static_string separator = static_string {".*"}>
+    constexpr auto tokenize = [](std::string_view expression)
+    {
+        auto matcher           = match<regex>;
+        auto separator_matcher = match<separator>;
+
+        auto result = matcher(expression);
+
+        return tokenization_result {result, separator_matcher};
     };
 }// namespace e_regex
 

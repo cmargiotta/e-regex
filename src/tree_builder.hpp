@@ -21,7 +21,7 @@ namespace e_regex
 
     template<char... regex>
     struct tree_builder<pack_string<regex...>>
-        : public tree_builder_branches<split_t<'|', tokenize<pack_string<regex...>>>>
+        : public tree_builder_branches<split_t<'|', tokenizer_t<pack_string<regex...>>>>
     {
     };
 

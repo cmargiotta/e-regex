@@ -10,7 +10,7 @@ TEST_CASE("Tokenization")
     constexpr e_regex::static_string regex {R"(bb(a\)c)zz)"};
 
     using test   = e_regex::build_pack_string_t<regex>;
-    using tokens = e_regex::tokenize<test>;
+    using tokens = e_regex::tokenizer_t<test>;
 
     using expected = std::tuple<e_regex::pack_string<'b'>,
                                 e_regex::pack_string<'b'>,

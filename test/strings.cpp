@@ -15,7 +15,7 @@ TEST_CASE("Split")
     constexpr static_string regex {"a|b\\|c|d"};
 
     using test   = e_regex::build_pack_string_t<regex>;
-    using tokens = tokenize<test>;
+    using tokens = tokenizer_t<test>;
     using split_ = split_t<'|', tokens>;
 
     using expected = std::tuple<std::tuple<pack_string<'a'>>,
@@ -32,7 +32,7 @@ TEST_CASE("Brackets")
     constexpr static_string regex {"bb(a)c)zz"};
 
     using test   = e_regex::build_pack_string_t<regex>;
-    using tokens = tokenize<test>;
+    using tokens = tokenizer_t<test>;
 
     using expected
         = std::tuple<pack_string<'b'>, pack_string<'b'>, pack_string<'('>, pack_string<'a'>, pack_string<')'>, pack_string<'c'>>;
