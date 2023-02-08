@@ -29,10 +29,12 @@ namespace e_regex
         {
             auto result = Child::match(match_result);
 
-            if (!result)
+            match_result.matches += Child::groups;
+            match_result = dfs<Children...>(std::move(match_result));
+
+            if (!result || (result.actual_iterator_end < match_result.actual_iterator_end))
             {
-                match_result.matches += Child::groups;
-                return dfs<Children...>(std::move(match_result));
+                return match_result;
             }
 
             return result;
@@ -40,10 +42,7 @@ namespace e_regex
     }
 
     template<typename T>
-    concept has_groups = requires(T t)
-    {
-        t.groups;
-    };
+    concept has_groups = requires(T t) { t.groups; };
 
     template<typename T>
     struct group_getter

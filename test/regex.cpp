@@ -134,6 +134,15 @@ TEST_CASE("Group matching with more branches")
     REQUIRE(second1 == "hhhh");
 }
 
+TEST_CASE("Branches collisions handling")
+{
+    constexpr auto matcher = e_regex::match<"aaa|a+">;
+
+    auto res = matcher("aaaa");
+
+    REQUIRE(res.to_view() == "aaaa");
+}
+
 TEST_CASE("Non-capturing round brackts")
 {
     constexpr auto match = e_regex::match<"a(?:a(b))cd">("aabcdef");
