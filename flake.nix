@@ -1,8 +1,8 @@
 {
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-unstable";
-    flake-utils.url = "github:numtide/flake-utils/master";
-    devshell.url = "github:numtide/devshell/master";
+    flake-utils.url = "github:numtide/flake-utils";
+    devshell.url = "github:numtide/devshell";
     mach-nix.url = "mach-nix/3.5.0";
   };
   outputs = { self, nixpkgs, flake-utils, devshell, mach-nix }:
@@ -40,7 +40,7 @@
             [
               meson
               ninja
-              gcc12
+              clang_15
 
               (
                 mach-nix.lib."${system}".mkPython {
