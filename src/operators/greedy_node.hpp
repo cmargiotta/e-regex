@@ -49,7 +49,8 @@ namespace e_regex
                     if (result.actual_iterator_end == last_res.actual_iterator_end
                         && repetitions_min != 0)
                     {
-                        // No matching characters found and this node is not optional, increase iterator
+                        // No matching characters found and this node is not optional, increase
+                        // iterator
                         result.actual_iterator_end++;
                     }
                     else
@@ -116,7 +117,7 @@ namespace e_regex
                 {
                     if (result)
                     {
-                        result.match_groups[match_index] = std::string_view {begin, end};
+                        result.match_groups[match_index] = literal_string_view {begin, end};
                     }
                 }
 

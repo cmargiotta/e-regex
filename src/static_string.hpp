@@ -4,6 +4,8 @@
 #include <array>
 #include <utility>
 
+#include "utilities/literal_string_view.hpp"
+
 namespace e_regex
 {
     template<char... data>
@@ -36,6 +38,15 @@ namespace e_regex
                 std::copy(data, data + size, this->data.begin());
             }
     };
+
+    template<literal_string_view string>
+    constexpr auto to_static_string() noexcept
+    {
+        static_string<string.size> result;
+        std::copy(string.begin(), string.end(), result.data.begin());
+
+        return result;
+    }
 
     template<auto instance, typename indices = std::make_index_sequence<instance.size>>
     struct build_pack_string;

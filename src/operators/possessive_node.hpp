@@ -90,7 +90,7 @@ namespace e_regex
                 {
                     if (result)
                     {
-                        result.match_groups[match_index] = std::string_view {begin, end};
+                        result.match_groups[match_index] = literal_string_view {begin, end};
                     }
                 }
 

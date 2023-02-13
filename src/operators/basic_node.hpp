@@ -2,7 +2,6 @@
 #define OPERATORS_BASIC_NODE
 
 #include <algorithm>
-#include <string_view>
 #include <tuple>
 #include <type_traits>
 
@@ -42,7 +41,10 @@ namespace e_regex
     }
 
     template<typename T>
-    concept has_groups = requires(T t) { t.groups; };
+    concept has_groups = requires(T t)
+    {
+        t.groups;
+    };
 
     template<typename T>
     struct group_getter

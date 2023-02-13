@@ -2,20 +2,21 @@
 #define MATCH_RESULT
 
 #include <array>
-#include <string_view>
+
+#include "utilities/literal_string_view.hpp"
 
 namespace e_regex
 {
-    template<std::size_t groups>
+    template<std::size_t groups, typename Char_Type>
     struct match_result_data
     {
-            std::string_view                     query;
-            std::string_view::const_iterator     actual_iterator_start;
-            std::string_view::const_iterator     actual_iterator_end;
-            std::string_view::const_iterator     last_group_start;
-            std::array<std::string_view, groups> match_groups;
-            std::size_t                          matches  = 0;
-            bool                                 accepted = true;
+            literal_string_view<Char_Type>                     query;
+            typename literal_string_view<Char_Type>::iterator  actual_iterator_start;
+            typename literal_string_view<Char_Type>::iterator  actual_iterator_end;
+            typename literal_string_view<Char_Type>::iterator  last_group_start;
+            std::array<literal_string_view<Char_Type>, groups> match_groups;
+            std::size_t                                        matches  = 0;
+            bool                                               accepted = true;
 
             constexpr auto operator=(bool accepted) noexcept -> match_result_data&
             {
@@ -30,15 +31,16 @@ namespace e_regex
             }
     };
 
-    template<typename matcher>
+    template<typename matcher, typename Char_Type = char>
     class match_result
     {
             friend matcher;
 
-        private:
-            match_result_data<matcher::groups> data;
-            bool                               initialized = false;
+        public:
+            match_result_data<matcher::groups, Char_Type> data;
+            bool                                          initialized = false;
 
+        private:
             constexpr void init()
             {
                 initialized              = true;
@@ -52,7 +54,7 @@ namespace e_regex
             }
 
         public:
-            constexpr match_result(std::string_view query) noexcept
+            constexpr match_result(literal_string_view<> query) noexcept
             {
                 data.query                 = query;
                 data.actual_iterator_start = query.begin();
@@ -93,7 +95,7 @@ namespace e_regex
                     return to_view();
                 }
 
-                return data.match_groups[index - 1];
+                return static_cast<std::string_view>(data.match_groups[index - 1]);
             }
 
             constexpr auto operator[](std::size_t index) const noexcept
@@ -111,7 +113,7 @@ namespace e_regex
                 return std::string_view {data.actual_iterator_start, data.actual_iterator_end};
             }
 
-            constexpr operator std::string_view() const noexcept
+            constexpr operator literal_string_view<Char_Type>() const noexcept
             {
                 return to_view();
             }
@@ -161,8 +163,8 @@ namespace std
             static const std::size_t value = matcher::groups + 1;
     };
 
-    template<std::size_t N, typename matcher>
-    struct tuple_element<N, e_regex::match_result<matcher>>
+    template<std::size_t N, typename matcher, typename Char_Type>
+    struct tuple_element<N, e_regex::match_result<matcher, Char_Type>>
     {
             using type = std::string_view;
     };
