@@ -37,6 +37,11 @@ namespace e_regex
             {
                 std::copy(data, data + size, this->data.begin());
             }
+
+            constexpr operator literal_string_view<char>() const noexcept
+            {
+                return literal_string_view<char> {data.begin(), data.end()};
+            }
     };
 
     template<literal_string_view string>

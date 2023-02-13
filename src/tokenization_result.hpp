@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "static_string.hpp"
 #include "utilities/literal_string_view.hpp"
 
 namespace e_regex
@@ -89,7 +90,7 @@ namespace e_regex
                     }
             };
 
-        public:
+        private:
             match_result      matcher;
             separator_matcher separator_verifier;
 
@@ -126,34 +127,40 @@ namespace e_regex
             }
     };
 
-    // template<tokenization_result result>
-    // class prebuilt_tokenization_result
-    // {
-    //     private:
-    //         std::array<literal_string_view, result.count()> tokens;
+    template<literal_string_view... data>
+    struct token_container
+    {
+            static constexpr std::array tokens {data...};
+    };
 
-    //     public:
-    //         constexpr prebuilt_tokenization_result()
-    //         {
-    //             auto tokens_iterator = tokens.begin();
+    template<typename tokens1, typename tokens2>
+    struct merge_tokens;
 
-    //             for (auto i: result)
-    //             {
-    //                 *tokens_iterator = *i;
-    //                 ++tokens_iterator;
-    //             }
-    //         }
+    template<literal_string_view... data1, literal_string_view... data2>
+    struct merge_tokens<token_container<data1...>, token_container<data2...>>
+    {
+            using type = token_container<data1..., data2...>;
+    };
 
-    //         constexpr auto begin() const noexcept
-    //         {
-    //             return tokens.begin();
-    //         }
+    template<auto matcher, auto separator_matcher, literal_string_view string>
+    struct prebuilt_tokenization_result
+    {
+            static constexpr auto res   = tokenization_result {matcher(string), separator_matcher};
+            static constexpr auto token = *(res.begin());
 
-    //         constexpr auto end() const noexcept
-    //         {
-    //             return tokens.end();
-    //         }
-    // };
+            using tokens =
+                typename merge_tokens<token_container<token>,
+                                      typename prebuilt_tokenization_result<
+                                          matcher,
+                                          separator_matcher,
+                                          literal_string_view<> {token.end(), string.end()}>::tokens>::type;
+    };
+
+    template<auto matcher, auto separator_matcher, literal_string_view string>
+    requires(string.empty()) struct prebuilt_tokenization_result<matcher, separator_matcher, string>
+    {
+            using tokens = token_container<>;
+    };
 }// namespace e_regex
 
 #endif /* TOKENIZATION_RESULT */

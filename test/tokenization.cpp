@@ -24,16 +24,14 @@ TEST_CASE("Tokenization by space")
     REQUIRE(tokens[2] == "def");
 }
 
-// TEST_CASE("Tokenization at compile time")
-// {
-//     constexpr auto tokenizer = e_regex::tokenize<"[^\\s]+", "\\s">;
+TEST_CASE("Tokenization at compile time")
+{
+    using t = e_regex::token_t<"[^\\s]+", "a abc def", "\\s">;
 
-//     constexpr auto res = tokenizer("a abc def");
+    constexpr auto tokens = t::tokens::tokens;
 
-//     constexpr auto tokens = res.get_tokens();
-
-//     REQUIRE(tokens.size() == 3);
-//     REQUIRE(tokens[0] == "a");
-//     REQUIRE(tokens[1] == "abc");
-//     REQUIRE(tokens[2] == "def");
-// }
+    REQUIRE(tokens.size() == 3);
+    REQUIRE(tokens[0] == "a");
+    REQUIRE(tokens[1] == "abc");
+    REQUIRE(tokens[2] == "def");
+}

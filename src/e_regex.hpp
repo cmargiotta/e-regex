@@ -5,6 +5,7 @@
 #include "static_string.hpp"
 #include "tokenization_result.hpp"
 #include "tree_builder.hpp"
+#include "utilities/literal_string_view.hpp"
 
 namespace e_regex
 {
@@ -25,6 +26,10 @@ namespace e_regex
 
         return tokenization_result {matcher(expression), separator_matcher};
     };
+
+    template<static_string regex, static_string data, static_string separator = static_string {".*"}>
+    using token_t
+        = prebuilt_tokenization_result<match<regex>, match<separator>, static_cast<literal_string_view<char>>(data)>;
 }// namespace e_regex
 
 #endif /* E_REGEX */
