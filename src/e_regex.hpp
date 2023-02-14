@@ -18,18 +18,20 @@ namespace e_regex
         return match_result<matcher> {expression};
     };
 
-    template<static_string regex, static_string separator = static_string {".*"}>
+    template<static_string regex, static_string separator = static_string {""}, typename token_type = void>
     constexpr auto tokenize = [](literal_string_view<> expression)
     {
         auto matcher           = match<regex>;
         auto separator_matcher = match<separator>;
 
-        return tokenization_result {matcher(expression), separator_matcher};
+        return tokenization_result<matcher, separator_matcher, token_type> {expression};
     };
 
-    template<static_string regex, static_string data, static_string separator = static_string {".*"}>
-    using token_t
-        = prebuilt_tokenization_result<match<regex>, match<separator>, static_cast<literal_string_view<char>>(data)>;
+    template<static_string regex, static_string data, static_string separator = static_string {""}, typename token_type = void>
+    using token_t = prebuilt_tokenization_result<match<regex>,
+                                                 match<separator>,
+                                                 static_cast<literal_string_view<char>>(data),
+                                                 token_type>;
 }// namespace e_regex
 
 #endif /* E_REGEX */

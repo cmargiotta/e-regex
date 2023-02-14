@@ -123,6 +123,11 @@ namespace e_regex
                 return data.matches;
             }
 
+            static constexpr auto groups() noexcept
+            {
+                return matcher::groups;
+            }
+
             /**
              * @brief Iterate matches
              *

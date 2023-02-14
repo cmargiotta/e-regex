@@ -10,22 +10,65 @@
 
 namespace e_regex
 {
-    template<typename match_result, typename separator_matcher, typename Char_Type = char>
+    template<typename Token_Type, typename Char_Type = char>
+    struct token
+    {
+            Token_Type                     type;
+            literal_string_view<Char_Type> string;
+    };
+
+    template<typename Char_Type>
+    struct token<void, Char_Type>
+    {
+            literal_string_view<Char_Type> string;
+    };
+
+    // If Token_Type is an enum, it MUST contain at least the number of groups of regex of
+    // consecutive values starting from 0
+    template<auto matcher, auto separator_verifier, typename Token_Type_, typename Char_Type = char>
     class tokenization_result
     {
+        private:
+            using match_result = decltype(matcher(std::declval<literal_string_view<>>()));
+
         public:
+            using token_type = token<Token_Type_, Char_Type>;
+
             class iterator
             {
                 private:
-                    match_result                   res;
-                    literal_string_view<Char_Type> current;
-                    separator_matcher              separator_verifier;
+                    match_result res;
+                    token_type   current;
+
+                    [[nodiscard]] static constexpr auto build_token(const match_result& res) noexcept
+                    {
+                        if constexpr (std::is_same_v<Token_Type_, void>)
+                        {
+                            // void token type, no need to match a group
+                            return decltype(current) {res.to_view()};
+                        }
+                        else
+                        {
+                            std::size_t index = 0;
+
+                            if constexpr (match_result::groups() != 0)
+                            {
+                                index = 1;
+                                while (res[index].empty())
+                                {
+                                    ++index;
+                                }
+                                index--;
+                            }
+
+                            return decltype(current) {.type   = static_cast<Token_Type_>(index),
+                                                      .string = res.to_view()};
+                        }
+                    }
 
                 public:
-                    constexpr explicit iterator(match_result res, separator_matcher separator_verifier)
-                        : res {std::move(res)},
-                          current {res.to_view()},
-                          separator_verifier {std::move(separator_verifier)}
+                    constexpr explicit iterator(match_result res)
+                        : res {std::move(res)}, current {build_token(res)}
                     {
                     }
 
@@ -40,18 +83,18 @@ namespace e_regex
                         auto last = res.to_view();
 
                         res.next();
-                        current = res.to_view();
+                        current = build_token(res);
 
-                        if (current.begin() != last.end())
+                        if (current.string.begin() != last.end())
                         {
                             // Non-consecutive tokens, possible syntax error
-                            literal_string_view separator {last.end(), current.begin()};
+                            literal_string_view separator {last.end(), current.string.begin()};
 
                             if (!separator_verifier(separator).is_accepted())
                             {
                                 // Separator is not accepted from the given separator matcher,
                                 // syntax error found!
-                                current = {};
+                                invalidate();
                             }
                         }
 
@@ -60,8 +103,8 @@ namespace e_regex
 
                     constexpr auto operator==(const iterator& other) const noexcept -> bool
                     {
-                        return current.begin() == other.current.begin()
-                               || (current.empty() && other.current.empty());
+                        return current.string.begin() == other.current.string.begin()
+                               || (current.string.empty() && other.current.string.empty());
                     }
 
                     constexpr auto operator!=(const iterator& other) const noexcept -> bool
@@ -69,19 +112,21 @@ namespace e_regex
                         return !operator==(other);
                     }
 
-                    constexpr auto operator*() noexcept
-                    {
-                        return current;
-                    }
-
                     constexpr auto operator*() const noexcept
                     {
-                        return current;
+                        if constexpr (std::is_same_v<Token_Type_, void>)
+                        {
+                            return current.string;
+                        }
+                        else
+                        {
+                            return current;
+                        }
                     }
 
                     constexpr operator bool() const noexcept
                     {
-                        return !current.empty();
+                        return !current.string.empty();
                     }
 
                     constexpr void invalidate() noexcept
@@ -91,22 +136,20 @@ namespace e_regex
             };
 
         private:
-            match_result      matcher;
-            separator_matcher separator_verifier;
+            match_result regex_result;
 
         public:
-            constexpr explicit tokenization_result(match_result      matcher,
-                                                   separator_matcher separator_verifier)
-                : matcher {matcher}, separator_verifier {std::move(separator_verifier)} {};
+            constexpr explicit tokenization_result(literal_string_view<> expression)
+                : regex_result {matcher(expression)} {};
 
             constexpr auto begin() const noexcept -> iterator
             {
-                return iterator {matcher, separator_verifier};
+                return iterator {regex_result};
             }
 
             constexpr auto end() const noexcept -> iterator
             {
-                iterator res {matcher, separator_verifier};
+                iterator res {regex_result};
                 res.invalidate();
 
                 return res;
@@ -127,39 +170,67 @@ namespace e_regex
             }
     };
 
-    template<literal_string_view... data>
+    template<typename Token_Type, Token_Type... data>
     struct token_container
     {
             static constexpr std::array tokens {data...};
     };
 
+    template<typename Char_Type, token<void, Char_Type>... data>
+    struct token_container<token<void, Char_Type>, data...>
+    {
+            static constexpr std::array tokens {data.string...};
+    };
+
     template<typename tokens1, typename tokens2>
     struct merge_tokens;
 
-    template<literal_string_view... data1, literal_string_view... data2>
-    struct merge_tokens<token_container<data1...>, token_container<data2...>>
+    template<typename Token_Type, Token_Type... data1, Token_Type... data2>
+    struct merge_tokens<token_container<Token_Type, data1...>, token_container<Token_Type, data2...>>
     {
-            using type = token_container<data1..., data2...>;
+            using type = token_container<Token_Type, data1..., data2...>;
     };
 
-    template<auto matcher, auto separator_matcher, literal_string_view string>
+    template<auto d>
+    concept has_end = requires
+    {
+        d.end();
+    };
+
+    template<auto matcher, auto separator_matcher, literal_string_view string, typename Token_Type>
     struct prebuilt_tokenization_result
     {
-            static constexpr auto res   = tokenization_result {matcher(string), separator_matcher};
-            static constexpr auto token = *(res.begin());
+            static constexpr auto res
+                = tokenization_result<matcher, separator_matcher, Token_Type> {string};
+            using token_t = e_regex::token<Token_Type>;
+            using token   = token_container<token_t, token_t {*(res.begin())}>;
+
+            template<auto token>
+            static consteval auto get_end() noexcept
+            {
+                if constexpr (has_end<token>)
+                {
+                    return token.end();
+                }
+                else
+                {
+                    return token.string.end();
+                }
+            }
 
             using tokens =
-                typename merge_tokens<token_container<token>,
+                typename merge_tokens<token,
                                       typename prebuilt_tokenization_result<
                                           matcher,
                                           separator_matcher,
-                                          literal_string_view<> {token.end(), string.end()}>::tokens>::type;
+                                          literal_string_view<> {get_end<token::tokens[0]>(), string.end()},
+                                          Token_Type>::tokens>::type;
     };
 
-    template<auto matcher, auto separator_matcher, literal_string_view string>
-    requires(string.empty()) struct prebuilt_tokenization_result<matcher, separator_matcher, string>
+    template<auto matcher, auto separator_matcher, literal_string_view string, typename Token_Type>
+    requires(string.empty()) struct prebuilt_tokenization_result<matcher, separator_matcher, string, Token_Type>
     {
-            using tokens = token_container<>;
+            using tokens = token_container<token<Token_Type>>;
     };
 }// namespace e_regex
 
