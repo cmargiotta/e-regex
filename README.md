@@ -57,6 +57,67 @@ auto result = e_regex::match<"a(a*)">("zaaa1");
 
 Both are totally identical.
 
+### Tokenization
+
+Regexes with different branches (at least one) can be used to easily build tokenizers.
+
+`e_regex::tokenize<token_regex, separator_regex>` will produce a `constexpr` functor capable of tokenizing a string; `token_regex` is the regex that matches tokens, `separator_regex` is the **optional** regex that matches separators, if it is not provided it is assumed that tokens are not separated.
+
+```cpp
+constexpr auto tokenizer = e_regex::tokenize<"\\s+|\\d+", "\\s">;
+
+auto res = tokenizer("a abc def");
+
+for (auto token: res)
+{
+    ...
+}
+```
+
+In this example, `tokenizer` will tokenize words and numbers separated by spaces. The `token` in the range loop will be `"a"`, `"abc"` and `"def"`.
+
+In a `consteval` contest it is possible to prebuild a token array using:
+
+```cpp
+using t = e_regex::token_t<"\\s+|\\d+", "a abc def", "\\s">;
+
+constexpr auto tokens = t::tokens::tokens;
+```
+
+`tokens` will be a prebuilt `std::array` of `string_view` of size `3`.
+
+`t::tokens` is a `std::integer_sequence`-like type of tokens, useful in template-heavy code.
+
+#### **Typed tokenization**
+
+It is possible to define an `enum class` with categories of tokens. This syntax requires a regex where every branch contains **exactly** one group and an enum with only consecutive values, starting from 0, and at least the same number of values and groups in the regex.
+
+```cpp
+enum class type
+{
+    WORD,
+    NUMBER
+};
+
+constexpr auto tokenizer = e_regex::tokenize<"(\\w+)|(\\d+)", "\\s", type>;
+
+constexpr auto res = tokenizer("a abc 123");
+
+// Or, for prebuilding
+using t = e_regex::token_t<"(\\w+)|(\\d+)", "a abc 123", "\\s", type>;
+```
+
+Here every generated token will a structure containing tha matching type:
+
+```cpp
+t::tokens::tokens[0].type == type::WORD;
+t::tokens::tokens[0].string == "a";
+
+t::tokens::tokens[2].type == type::NUMBER;
+t::tokens::tokens[2].string == "123";
+```
+
+
 ## Building and testing
 
 This project is based on `meson`, `ninja` and `C++20`. If `quom` is available, a single include header will be automatically built by meson.
