@@ -42,7 +42,7 @@ The four variables will be `std::string_view` and `match` will be `"1970-01-01"`
 
 When a match is not found, this will only produce empty strings.
 
-The number of variables in the decomposition must be **exactly** the number of groups in the regex, otherwise a static assertion will fail. If the regex contains `|` operators, then the number of variables must be the maximum number of groups in the branches.
+The number of variables in the decomposition must be **exactly** the number of groups in the regex, otherwise a static assertion will fail. If the regex contains `|` operators, then the number of variables must be the sum of groups in the branches.
 
 ### Lambdas
 
