@@ -76,7 +76,7 @@ for (auto token: res)
 
 In this example, `tokenizer` will tokenize words and numbers separated by spaces. The `token` in the range loop will be `"a"`, `"abc"` and `"def"`.
 
-In a `consteval` contest it is possible to prebuild a token array using:
+In a `consteval` context it is possible to prebuild a token array using:
 
 ```cpp
 using t = e_regex::token_t<"\\s+|\\d+", "a abc def", "\\s">;
