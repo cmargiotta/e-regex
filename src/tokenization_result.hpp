@@ -10,17 +10,17 @@
 
 namespace e_regex
 {
-    template<typename Token_Type, typename Char_Type = char>
+    template<typename Token_Type, typename String_Type = literal_string_view<char>>
     struct token
     {
-            Token_Type                     type;
-            literal_string_view<Char_Type> string;
+            Token_Type  type;
+            String_Type string;
     };
 
-    template<typename Char_Type>
-    struct token<void, Char_Type>
+    template<typename String_Type>
+    struct token<void, String_Type>
     {
-            literal_string_view<Char_Type> string;
+            String_Type string;
     };
 
     // If Token_Type is an enum, it MUST contain at least the number of groups of regex of
@@ -32,7 +32,7 @@ namespace e_regex
             using match_result = decltype(matcher(std::declval<literal_string_view<>>()));
 
         public:
-            using token_type = token<Token_Type_, Char_Type>;
+            using token_type = token<Token_Type_, literal_string_view<Char_Type>>;
 
             class iterator
             {
@@ -170,67 +170,84 @@ namespace e_regex
             }
     };
 
-    template<typename Token_Type, Token_Type... data>
+    template<typename Token_Type, auto... data>
     struct token_container
     {
-            static constexpr std::array tokens {data...};
+            static constexpr std::array tokens {token<Token_Type> {data.type, data.string.to_view()}...};
     };
 
-    template<typename Char_Type, token<void, Char_Type>... data>
-    struct token_container<token<void, Char_Type>, data...>
+    template<auto... data>
+    struct token_container<void, data...>
     {
-            static constexpr std::array tokens {data.string...};
+            static constexpr std::array tokens {data.to_view()...};
     };
 
     template<typename tokens1, typename tokens2>
     struct merge_tokens;
 
-    template<typename Token_Type, Token_Type... data1, Token_Type... data2>
+    template<typename Token_Type, auto... data1, auto... data2>
     struct merge_tokens<token_container<Token_Type, data1...>, token_container<Token_Type, data2...>>
     {
             using type = token_container<Token_Type, data1..., data2...>;
     };
 
-    template<auto d>
-    concept has_end = requires
+    template<typename T>
+    concept has_end = requires(T d)
     {
         d.end();
     };
 
-    template<auto matcher, auto separator_matcher, literal_string_view string, typename Token_Type>
+    template<typename Token_Type, static_string string>
+    consteval auto build_token(auto token_with_literal) requires(!std::is_same_v<Token_Type, void>)
+    {
+        return e_regex::token<Token_Type, decltype(string)> {token_with_literal.type, string};
+    };
+
+    template<std::same_as<void> Token_Type, static_string string>
+    consteval auto build_token(auto /*unused*/)
+    {
+        return string;
+    };
+
+    template<auto matcher, auto separator_matcher, static_string string, typename Token_Type>
     struct prebuilt_tokenization_result
     {
-            static constexpr auto res
-                = tokenization_result<matcher, separator_matcher, Token_Type> {string};
-            using token_t = e_regex::token<Token_Type>;
-            using token   = token_container<token_t, token_t {*(res.begin())}>;
-
-            template<auto token>
-            static consteval auto get_end() noexcept
+            static consteval auto get_string(auto token) noexcept
             {
-                if constexpr (has_end<token>)
+                if constexpr (has_end<decltype(token)>)
                 {
-                    return token.end();
+                    return token;
                 }
                 else
                 {
-                    return token.string.end();
+                    return token.string;
                 }
             }
 
-            using tokens =
-                typename merge_tokens<token,
-                                      typename prebuilt_tokenization_result<
-                                          matcher,
-                                          separator_matcher,
-                                          literal_string_view<> {get_end<token::tokens[0]>(), string.end()},
-                                          Token_Type>::tokens>::type;
+            static constexpr auto query = string.to_view();
+            static constexpr auto res
+                = tokenization_result<matcher, separator_matcher, Token_Type> {query};
+
+            static constexpr auto token_data   = *(res.begin());
+            static constexpr auto token_string = get_string(token_data);
+            static constexpr auto token_end    = token_string.end() - string.data.begin();
+            static constexpr auto token_static_string
+                = to_static_string<token_string.size()>(token_string);
+
+            static constexpr auto token {build_token<Token_Type, token_static_string>(token_data)};
+
+            using tokens = typename merge_tokens<
+                token_container<Token_Type, token>,
+                typename prebuilt_tokenization_result<matcher,
+                                                      separator_matcher,
+                                                      string.template substring<token_end>(),
+                                                      Token_Type>::tokens>::type;
     };
 
-    template<auto matcher, auto separator_matcher, literal_string_view string, typename Token_Type>
+    template<auto matcher, auto separator_matcher, static_string string, typename Token_Type>
     requires(string.empty()) struct prebuilt_tokenization_result<matcher, separator_matcher, string, Token_Type>
     {
-            using tokens = token_container<token<Token_Type>>;
+            using tokens = token_container<Token_Type>;
     };
 }// namespace e_regex
 

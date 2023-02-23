@@ -27,7 +27,7 @@ namespace e_regex
     template<typename S1, typename S2>
     using merge_pack_strings_t = typename merge_pack_strings<S1, S2>::type;
 
-    template<std::size_t size_>
+    template<std::size_t size_, typename Char_Type = char>
     struct static_string
     {
             static constexpr auto  size = size_ - 1;
@@ -38,16 +38,47 @@ namespace e_regex
                 std::copy(data, data + size, this->data.begin());
             }
 
-            constexpr operator literal_string_view<char>() const noexcept
+            constexpr static_string() noexcept = default;
+
+            constexpr operator literal_string_view<Char_Type>() const noexcept
             {
-                return literal_string_view<char> {data.begin(), data.end()};
+                return to_view();
+            }
+
+            constexpr auto to_view() const noexcept
+            {
+                return literal_string_view<Char_Type> {data.begin(), data.end()};
+            }
+
+            [[nodiscard]] constexpr bool empty() const noexcept
+            {
+                return size == 0;
+            }
+
+            template<std::size_t begin, std::size_t end = size>
+            constexpr auto substring() const noexcept
+            {
+                static_string<end - begin + 1> result;
+
+                std::copy(data.begin() + begin, data.begin() + end, result.data.begin());
+                return result;
             }
     };
 
     template<literal_string_view string>
     constexpr auto to_static_string() noexcept
     {
-        static_string<string.size> result;
+        static_string<string.size() + 1> result;
+        std::copy(string.begin(), string.end(), result.data.begin());
+
+        return result;
+    }
+
+    template<std::size_t size>
+    constexpr auto to_static_string(auto string) noexcept
+    {
+        static_string<size + 1> result;
+
         std::copy(string.begin(), string.end(), result.data.begin());
 
         return result;

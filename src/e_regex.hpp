@@ -28,10 +28,7 @@ namespace e_regex
     };
 
     template<static_string regex, static_string data, static_string separator = static_string {""}, typename token_type = void>
-    using token_t = prebuilt_tokenization_result<match<regex>,
-                                                 match<separator>,
-                                                 static_cast<literal_string_view<char>>(data),
-                                                 token_type>;
+    using token_t = prebuilt_tokenization_result<match<regex>, match<separator>, data, token_type>;
 }// namespace e_regex
 
 #endif /* E_REGEX */
