@@ -3,7 +3,6 @@
 
 #include <tuple>
 
-#include "common_defines.hpp"
 #include "heuristics.hpp"
 #include "static_string.hpp"
 #include "terminals/terminal.hpp"

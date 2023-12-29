@@ -6,6 +6,17 @@
 
 namespace e_regex::terminals
 {
+    namespace _private
+    {
+        constexpr auto exact_match(char identifier, auto result)
+        {
+            result = identifier == *result.actual_iterator_end;
+            result.actual_iterator_end++;
+
+            return result;
+        }
+    }// namespace _private
+
     template<typename identifier>
     struct exact_matcher;
 
@@ -15,10 +26,7 @@ namespace e_regex::terminals
     {
             static constexpr auto match_(auto result)
             {
-                result = identifier == *result.actual_iterator_end;
-                result.actual_iterator_end++;
-
-                return result;
+                return _private::exact_match(identifier, std::move(result));
             }
     };
 
@@ -46,6 +54,7 @@ namespace e_regex::terminals
     template<typename identifier>
     struct terminal<identifier> : public exact_matcher<identifier>
     {
+            static constexpr bool exact = true;
     };
 }// namespace e_regex::terminals
 
