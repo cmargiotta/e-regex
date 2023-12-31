@@ -2,40 +2,26 @@
 #define STATIC_STRING
 
 #include <array>
+#include <string_view>
 #include <utility>
 
 #include "utilities/literal_string_view.hpp"
 
 namespace e_regex
 {
-    template<char... data>
-    struct pack_string
-    {
-            static constexpr auto       size   = sizeof...(data);
-            static constexpr std::array string = {data...};
-    };
-
-    template<typename S1, typename S2>
-    struct merge_pack_strings;
-
-    template<char... data1, char... data2>
-    struct merge_pack_strings<pack_string<data1...>, pack_string<data2...>>
-    {
-            using type = pack_string<data1..., data2...>;
-    };
-
-    template<typename S1, typename S2>
-    using merge_pack_strings_t = typename merge_pack_strings<S1, S2>::type;
-
     template<std::size_t size_, typename Char_Type = char>
     struct static_string
     {
             static constexpr auto  size = size_ - 1;
             std::array<char, size> data;
 
-            constexpr static_string(const char (&data)[size_]) noexcept
+            constexpr static_string(const Char_Type (&data)[size_]) noexcept
             {
                 std::copy(data, data + size, this->data.begin());
+            }
+
+            constexpr static_string(const std::array<Char_Type, size>& data) noexcept: data {data}
+            {
             }
 
             constexpr static_string() noexcept = default;
@@ -64,6 +50,46 @@ namespace e_regex
                 return result;
             }
     };
+
+    template<char... data>
+    struct pack_string
+    {
+            static constexpr auto size   = sizeof...(data);
+            static constexpr auto string = static_string<size + 1> {std::array {data...}};
+    };
+
+    template<typename S1, typename S2>
+    struct merge_pack_strings;
+
+    template<char... data1, char... data2>
+    struct merge_pack_strings<pack_string<data1...>, pack_string<data2...>>
+    {
+            using type = pack_string<data1..., data2...>;
+    };
+
+    template<typename S1, typename S2>
+    using merge_pack_strings_t = typename merge_pack_strings<S1, S2>::type;
+
+    template<typename separator, typename... strings>
+    struct concatenate_pack_strings;
+
+    template<typename separator, typename string>
+    struct concatenate_pack_strings<separator, string>
+    {
+            using type = string;
+    };
+
+    template<typename separator, typename string, typename... strings>
+    struct concatenate_pack_strings<separator, string, strings...>
+    {
+            using first_part = merge_pack_strings_t<string, separator>;
+            using type
+                = merge_pack_strings_t<first_part,
+                                       typename concatenate_pack_strings<separator, strings...>::type>;
+    };
+
+    template<typename separator, typename... strings>
+    using concatenate_pack_strings_t = typename concatenate_pack_strings<separator, strings...>::type;
 
     template<literal_string_view string>
     constexpr auto to_static_string() noexcept
