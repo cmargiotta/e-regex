@@ -298,38 +298,24 @@ namespace std
 #define STATIC_STRING
 
 #include <array>
+#include <string_view>
 #include <utility>
 
 namespace e_regex
 {
-    template<char... data>
-    struct pack_string
-    {
-            static constexpr auto       size   = sizeof...(data);
-            static constexpr std::array string = {data...};
-    };
-
-    template<typename S1, typename S2>
-    struct merge_pack_strings;
-
-    template<char... data1, char... data2>
-    struct merge_pack_strings<pack_string<data1...>, pack_string<data2...>>
-    {
-            using type = pack_string<data1..., data2...>;
-    };
-
-    template<typename S1, typename S2>
-    using merge_pack_strings_t = typename merge_pack_strings<S1, S2>::type;
-
     template<std::size_t size_, typename Char_Type = char>
     struct static_string
     {
             static constexpr auto  size = size_ - 1;
             std::array<char, size> data;
 
-            constexpr static_string(const char (&data)[size_]) noexcept
+            constexpr static_string(const Char_Type (&data)[size_]) noexcept
             {
                 std::copy(data, data + size, this->data.begin());
+            }
+
+            constexpr static_string(const std::array<Char_Type, size>& data) noexcept: data {data}
+            {
             }
 
             constexpr static_string() noexcept = default;
@@ -358,6 +344,47 @@ namespace e_regex
                 return result;
             }
     };
+
+    template<char... data>
+    struct pack_string
+    {
+            static constexpr auto       size    = sizeof...(data);
+            static constexpr std::array string  = {data...};
+            static constexpr auto       string_ = static_string<size + 1> {string};
+    };
+
+    template<typename S1, typename S2>
+    struct merge_pack_strings;
+
+    template<char... data1, char... data2>
+    struct merge_pack_strings<pack_string<data1...>, pack_string<data2...>>
+    {
+            using type = pack_string<data1..., data2...>;
+    };
+
+    template<typename S1, typename S2>
+    using merge_pack_strings_t = typename merge_pack_strings<S1, S2>::type;
+
+    template<typename separator, typename... strings>
+    struct concatenate_pack_strings;
+
+    template<typename separator, typename string>
+    struct concatenate_pack_strings<separator, string>
+    {
+            using type = string;
+    };
+
+    template<typename separator, typename string, typename... strings>
+    struct concatenate_pack_strings<separator, string, strings...>
+    {
+            using first_part = merge_pack_strings_t<string, separator>;
+            using type
+                = merge_pack_strings_t<first_part,
+                                       typename concatenate_pack_strings<separator, strings...>::type>;
+    };
+
+    template<typename separator, typename... strings>
+    using concatenate_pack_strings_t = typename concatenate_pack_strings<separator, strings...>::type;
 
     template<literal_string_view string>
     constexpr auto to_static_string() noexcept
@@ -652,12 +679,87 @@ namespace e_regex
 #ifndef OPERATORS_OPERATORS
 #define OPERATORS_OPERATORS
 
-#ifndef OPERATORS_BASIC_NODE
-#define OPERATORS_BASIC_NODE
+#ifndef OPERATORS_BASIC_NODE_HPP
+#define OPERATORS_BASIC_NODE_HPP
 
 #include <algorithm>
 #include <tuple>
 #include <type_traits>
+
+#ifndef TERMINALS_COMMON_HPP
+#define TERMINALS_COMMON_HPP
+
+namespace e_regex::terminals
+{
+    template<typename terminal>
+    struct terminal_common
+    {
+            static constexpr auto match(auto result)
+            {
+                if (result.actual_iterator_end >= result.query.end())
+                {
+                    result = false;
+                }
+                else
+                {
+                    return terminal::match_(std::move(result));
+                }
+
+                return result;
+            }
+    };
+
+    template<typename terminal>
+    struct negated_terminal
+    {
+            static constexpr auto match(auto result)
+            {
+                result = terminal::match_(std::move(result));
+                result = !result.accepted;
+
+                return result;
+            }
+    };
+
+    template<typename... identifiers>
+    struct terminal;
+
+    // Avoids instantiating nodes code for consecutive matchers
+    template<typename head, typename... tail>
+    struct terminal<head, tail...>
+    {
+            static constexpr auto match(auto result)
+            {
+                result = terminal<head>::match(std::move(result));
+
+                if (result)
+                {
+                    return terminal<tail...>::match(std::move(result));
+                }
+
+                return result;
+            }
+    };
+
+    template<typename terminal>
+    struct rebuild_expression;
+
+    template<char... chars>
+    struct rebuild_expression<terminal<pack_string<chars...>>>
+    {
+            using string = pack_string<chars...>;
+    };
+
+    template<char... chars, typename seq, typename... tail>
+    struct rebuild_expression<terminal<pack_string<chars...>, seq, tail...>>
+    {
+            using string
+                = merge_pack_strings_t<pack_string<chars...>,
+                                       typename rebuild_expression<terminal<tail...>>::string>;
+    };
+}// namespace e_regex::terminals
+
+#endif /* TERMINALS_COMMON_HPP */
 
 #ifndef UTILITIES_SUM
 #define UTILITIES_SUM
@@ -710,10 +812,7 @@ namespace e_regex
     }
 
     template<typename T>
-    concept has_groups = requires(T t)
-    {
-        t.groups;
-    };
+    concept has_groups = requires(T t) { t.groups; };
 
     template<typename T>
     struct group_getter
@@ -775,9 +874,56 @@ namespace e_regex
 
     template<typename matcher, typename children = std::tuple<>, policy policy_ = policy::GREEDY>
     using optional_node = basic_node<matcher, children, 0, 1, policy_, false>;
+
+    template<typename node>
+    struct get_expression;
+
+    template<typename... terminals>
+    struct get_expression<e_regex::terminals::terminal<terminals...>>
+    {
+            using type =
+                typename e_regex::terminals::rebuild_expression<e_regex::terminals::terminal<terminals...>>::string;
+    };
+
+    template<typename matcher, std::size_t repetitions_min, std::size_t repetitions_max, policy repetition_policy, bool grouping>
+    struct get_expression<
+        basic_node<matcher, std::tuple<>, repetitions_min, repetitions_max, repetition_policy, grouping>>
+    {
+            using type = typename get_expression<matcher>::type;
+    };
+
+    template<typename... children, std::size_t repetitions_min, std::size_t repetitions_max, policy repetition_policy, bool grouping>
+    struct get_expression<
+        basic_node<void, std::tuple<children...>, repetitions_min, repetitions_max, repetition_policy, grouping>>
+    {
+            using type
+                = concatenate_pack_strings_t<pack_string<'|'>, typename get_expression<children>::type...>;
+    };
+
+    template<typename... matchers,
+             typename child,
+             typename... children,
+             std::size_t repetitions_min,
+             std::size_t repetitions_max,
+             policy      repetition_policy,
+             bool        grouping>
+    struct get_expression<
+        basic_node<terminals::terminal<matchers...>, std::tuple<child, children...>, repetitions_min, repetitions_max, repetition_policy, grouping>>
+    {
+            using matcher_string =
+                typename terminals::rebuild_expression<terminals::terminal<matchers...>>::string;
+
+            using type = concatenate_pack_strings_t<pack_string<'|'>,
+                                                    matcher_string,
+                                                    typename get_expression<child>::type,
+                                                    typename get_expression<children>::type...>;
+    };
+
+    template<typename node>
+    using get_expression_t = typename get_expression<node>::type;
 }// namespace e_regex
 
-#endif /* OPERATORS_BASIC_NODE */
+#endif /* OPERATORS_BASIC_NODE_HPP */
 
 #ifndef OPERATORS_BRACES
 #define OPERATORS_BRACES
@@ -794,65 +940,16 @@ namespace e_regex
 
 #include <tuple>
 
+#ifndef HEURISTICS_EXACT_MATCHERS_HPP
+#define HEURISTICS_EXACT_MATCHERS_HPP
+
+#include <tuple>
+
+#ifndef HEURISTICS_COMMON_HPP
+#define HEURISTICS_COMMON_HPP
+
 #ifndef TERMINALS_EXACT_MATCHER
 #define TERMINALS_EXACT_MATCHER
-
-#ifndef TERMINALS_COMMON
-#define TERMINALS_COMMON
-
-namespace e_regex::terminals
-{
-    template<typename terminal>
-    struct terminal_common
-    {
-            static constexpr auto match(auto result)
-            {
-                if (result.actual_iterator_end >= result.query.end())
-                {
-                    result = false;
-                }
-                else
-                {
-                    return terminal::match_(std::move(result));
-                }
-
-                return result;
-            }
-    };
-
-    template<typename terminal>
-    struct negated_terminal
-    {
-            static constexpr auto match(auto result)
-            {
-                result = terminal::match_(std::move(result));
-                result = !result.accepted;
-
-                return result;
-            }
-    };
-
-    template<typename... identifiers>
-    struct terminal;
-
-    template<typename head, typename... tail>
-    struct terminal<head, tail...>
-    {
-            static constexpr auto match(auto result)
-            {
-                result = terminal<head>::match(std::move(result));
-
-                if (result)
-                {
-                    return terminal<tail...>::match(std::move(result));
-                }
-
-                return result;
-            }
-    };
-}// namespace e_regex::terminals
-
-#endif /* TERMINALS_COMMON */
 
 namespace e_regex::terminals
 {
@@ -1199,7 +1296,36 @@ namespace e_regex
 {
     template<typename node, typename child>
     struct add_child;
+}
 
+#endif /* HEURISTICS_COMMON_HPP */
+
+namespace e_regex
+{
+    /*
+        Regexes like "aaaaabc" become a single matcher with the whole string
+    */
+    template<char... identifiers, char... child_identifiers, typename... children, policy repetition_policy>
+        requires terminals::terminal<pack_string<identifiers...>>::exact
+                 && terminals::terminal<pack_string<child_identifiers...>>::exact
+    struct add_child<
+        basic_node<terminals::terminal<pack_string<identifiers...>>, std::tuple<>, 1, 1, repetition_policy, false>,
+        basic_node<terminals::terminal<pack_string<child_identifiers...>>, std::tuple<children...>, 1, 1, repetition_policy, false>>
+    {
+            using type
+                = basic_node<terminals::terminal<pack_string<identifiers..., child_identifiers...>>,
+                             std::tuple<children...>,
+                             1,
+                             1,
+                             repetition_policy,
+                             false>;
+    };
+}// namespace e_regex
+
+#endif /* HEURISTICS_EXACT_MATCHERS_HPP */
+
+namespace e_regex
+{
     template<typename matcher,
              typename... children,
              std::size_t repetitions_min,
@@ -1212,21 +1338,6 @@ namespace e_regex
     {
             using type
                 = basic_node<matcher, std::tuple<children..., child>, repetitions_min, repetitions_max, repetition_policy, grouping>;
-    };
-
-    template<typename... identifiers, typename... child_identifiers, typename... children, policy repetition_policy>
-        requires terminals::terminal<identifiers...>::exact
-                 && terminals::terminal<child_identifiers...>::exact
-    struct add_child<
-        basic_node<terminals::terminal<identifiers...>, std::tuple<>, 1, 1, repetition_policy, false>,
-        basic_node<terminals::terminal<child_identifiers...>, std::tuple<children...>, 1, 1, repetition_policy, false>>
-    {
-            using type = basic_node<terminals::terminal<identifiers..., child_identifiers...>,
-                                    std::tuple<children...>,
-                                    1,
-                                    1,
-                                    repetition_policy,
-                                    false>;
     };
 
     template<typename child>
