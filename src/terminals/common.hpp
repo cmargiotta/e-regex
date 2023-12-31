@@ -1,5 +1,5 @@
-#ifndef TERMINALS_COMMON
-#define TERMINALS_COMMON
+#ifndef TERMINALS_COMMON_HPP
+#define TERMINALS_COMMON_HPP
 
 #include "static_string.hpp"
 
@@ -38,6 +38,7 @@ namespace e_regex::terminals
     template<typename... identifiers>
     struct terminal;
 
+    // Avoids instantiating nodes code for consecutive matchers
     template<typename head, typename... tail>
     struct terminal<head, tail...>
     {
@@ -53,6 +54,23 @@ namespace e_regex::terminals
                 return result;
             }
     };
+
+    template<typename terminal>
+    struct rebuild_expression;
+
+    template<>
+    struct rebuild_expression<terminal<>>
+    {
+            using string = pack_string<>;
+    };
+
+    template<char... chars, typename... tail>
+    struct rebuild_expression<terminal<pack_string<chars...>, tail...>>
+    {
+            using string
+                = merge_pack_strings_t<pack_string<chars...>,
+                                       typename rebuild_expression<terminal<tail...>>::string>;
+    };
 }// namespace e_regex::terminals
 
-#endif /* TERMINALS_COMMON */
+#endif /* TERMINALS_COMMON_HPP */

@@ -1,5 +1,5 @@
-#ifndef TERMINALS_EXACT_MATCHER
-#define TERMINALS_EXACT_MATCHER
+#ifndef TERMINALS_EXACT_MATCHER_HPP
+#define TERMINALS_EXACT_MATCHER_HPP
 
 #include "common.hpp"
 #include "static_string.hpp"
@@ -36,7 +36,7 @@ namespace e_regex::terminals
     {
             static constexpr auto match_(auto result)
             {
-                for (auto c: pack_string<identifier...>::string)
+                for (auto c: pack_string<identifier...>::string.to_view())
                 {
                     result = c == *result.actual_iterator_end;
                     result.actual_iterator_end++;
@@ -58,4 +58,4 @@ namespace e_regex::terminals
     };
 }// namespace e_regex::terminals
 
-#endif /* TERMINALS_EXACT_MATCHER */
+#endif /* TERMINALS_EXACT_MATCHER_HPP */

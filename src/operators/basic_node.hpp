@@ -1,11 +1,13 @@
-#ifndef OPERATORS_BASIC_NODE
-#define OPERATORS_BASIC_NODE
+#ifndef OPERATORS_BASIC_NODE_HPP
+#define OPERATORS_BASIC_NODE_HPP
 
 #include <algorithm>
 #include <tuple>
 #include <type_traits>
 
 #include "match_result.hpp"
+#include "static_string.hpp"
+#include "terminals/common.hpp"
 #include "utilities/sum.hpp"
 
 namespace e_regex
@@ -41,10 +43,7 @@ namespace e_regex
     }
 
     template<typename T>
-    concept has_groups = requires(T t)
-    {
-        t.groups;
-    };
+    concept has_groups = requires(T t) { t.groups; };
 
     template<typename T>
     struct group_getter
@@ -106,6 +105,54 @@ namespace e_regex
 
     template<typename matcher, typename children = std::tuple<>, policy policy_ = policy::GREEDY>
     using optional_node = basic_node<matcher, children, 0, 1, policy_, false>;
+
+    template<typename node>
+    struct get_expression;
+
+    template<typename... terminals>
+    struct get_expression<e_regex::terminals::terminal<terminals...>>
+    {
+            using type =
+                typename e_regex::terminals::rebuild_expression<e_regex::terminals::terminal<terminals...>>::string;
+    };
+
+    template<typename matcher, std::size_t repetitions_min, std::size_t repetitions_max, policy repetition_policy, bool grouping>
+    struct get_expression<
+        basic_node<matcher, std::tuple<>, repetitions_min, repetitions_max, repetition_policy, grouping>>
+    {
+            using type = typename get_expression<matcher>::type;
+    };
+
+    template<typename... children, std::size_t repetitions_min, std::size_t repetitions_max, policy repetition_policy, bool grouping>
+    struct get_expression<
+        basic_node<void, std::tuple<children...>, repetitions_min, repetitions_max, repetition_policy, grouping>>
+    {
+            using type
+                = concatenate_pack_strings_t<pack_string<'|'>, typename get_expression<children>::type...>;
+    };
+
+    template<typename... matchers,
+             typename child,
+             typename... children,
+             std::size_t repetitions_min,
+             std::size_t repetitions_max,
+             policy      repetition_policy,
+             bool        grouping>
+    struct get_expression<
+        basic_node<terminals::terminal<matchers...>, std::tuple<child, children...>, repetitions_min, repetitions_max, repetition_policy, grouping>>
+    {
+            using matcher_string = merge_pack_strings_t<
+                typename terminals::rebuild_expression<terminals::terminal<matchers...>>::string,
+                typename get_expression<child>::type>;
+
+            using type = concatenate_pack_strings_t<pack_string<'|'>,
+                                                    matcher_string,
+
+                                                    typename get_expression<children>::type...>;
+    };
+
+    template<typename node>
+    using get_expression_t = typename get_expression<node>::type;
 }// namespace e_regex
 
-#endif /* OPERATORS_BASIC_NODE */
+#endif /* OPERATORS_BASIC_NODE_HPP */
