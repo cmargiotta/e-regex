@@ -1,9 +1,14 @@
 #ifndef OPERATORS_END_ANCHOR
 #define OPERATORS_END_ANCHOR
 
+#include <tuple>
+
+#include <heuristics.hpp>
+#include <nodes/basic_node.hpp>
+#include <static_string.hpp>
+#include <terminals/anchors/end.hpp>
+
 #include "common.hpp"
-#include "operators/basic_node.hpp"
-#include "terminals/anchors/end.hpp"
 
 namespace e_regex
 {

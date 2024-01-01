@@ -10,13 +10,13 @@
 
 TEST_CASE("Split")
 {
-    using namespace e_regex;
+    using e_regex::pack_string;
 
-    constexpr static_string regex {"a|b\\|c|d"};
+    constexpr e_regex::static_string regex {"a|b\\|c|d"};
 
     using test   = e_regex::build_pack_string_t<regex>;
-    using tokens = tokenizer_t<test>;
-    using split_ = split_t<'|', tokens>;
+    using tokens = e_regex::tokenizer_t<test>;
+    using split_ = e_regex::split_t<'|', tokens>;
 
     using expected = std::tuple<std::tuple<pack_string<'a'>>,
                                 std::tuple<pack_string<'b'>, pack_string<'\\', '|'>, pack_string<'c'>>,
@@ -27,24 +27,23 @@ TEST_CASE("Split")
 
 TEST_CASE("Brackets")
 {
-    using namespace e_regex;
+    using e_regex::pack_string;
 
-    constexpr static_string regex {"bb(a)c)zz"};
+    constexpr e_regex::static_string regex {"bb(a)c)zz"};
 
     using test   = e_regex::build_pack_string_t<regex>;
-    using tokens = tokenizer_t<test>;
+    using tokens = e_regex::tokenizer_t<test>;
 
     using expected
         = std::tuple<pack_string<'b'>, pack_string<'b'>, pack_string<'('>, pack_string<'a'>, pack_string<')'>, pack_string<'c'>>;
 
-    REQUIRE(std::is_same_v<typename extract_delimited_content_t<'(', ')', tokens>::result, expected>);
+    REQUIRE(
+        std::is_same_v<typename e_regex::extract_delimited_content_t<'(', ')', tokens>::result, expected>);
 }
 
 TEST_CASE("pack_string to number")
 {
-    using namespace e_regex;
-
-    constexpr static_string regex {"150"};
+    constexpr e_regex::static_string regex {"150"};
 
     using test            = e_regex::build_pack_string_t<regex>;
     constexpr auto number = e_regex::pack_string_to_number<test>::value;

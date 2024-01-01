@@ -1,8 +1,11 @@
-#ifndef OPERATORS_SQUARE_BRACKETS
-#define OPERATORS_SQUARE_BRACKETS
+#ifndef OPERATORS_SQUARE_BRACKETS_HPP
+#define OPERATORS_SQUARE_BRACKETS_HPP
+
+#include <terminals/exact_matcher.hpp>
+#include <utilities/extract_delimited_content.hpp>
 
 #include "common.hpp"
-#include "utilities/extract_delimited_content.hpp"
+#include "terminals/range.hpp"
 
 namespace e_regex
 {
@@ -84,4 +87,4 @@ namespace e_regex
 
 }// namespace e_regex
 
-#endif /* OPERATORS_SQUARE_BRACKETS */
+#endif /* OPERATORS_SQUARE_BRACKETS_HPP */

@@ -6,6 +6,13 @@ Checks: >-
   modernize-*,
   performance-*,
   readability-*,
+  -readability-identifier-naming,
+  -readability-identifier-length,
+  -misc-use-anonymous-namespace,
+  -unused-includes,
+  -misc-non-private-member-variables-in-classes,
+  -google-explicit-constructor,
+  -cppcoreguidelines-avoid-do-while
 
 CheckOptions:
   - key: readability-function-cognitive-complexity.Threshold

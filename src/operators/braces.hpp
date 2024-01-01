@@ -3,9 +3,9 @@
 
 #include <limits>
 
+#include <nodes.hpp>
+
 #include "common.hpp"
-#include "greedy_node.hpp"
-#include "operators/basic_node.hpp"
 #include "utilities/extract_delimited_content.hpp"
 #include "utilities/pack_string_to_number.hpp"
 

@@ -3,12 +3,10 @@
 
 #include <algorithm>
 #include <tuple>
-#include <type_traits>
 
-#include "match_result.hpp"
-#include "static_string.hpp"
+#include <static_string.hpp>
+
 #include "terminals/common.hpp"
-#include "utilities/sum.hpp"
 
 namespace e_regex
 {
@@ -109,11 +107,11 @@ namespace e_regex
     template<typename node>
     struct get_expression;
 
-    template<typename... terminals>
-    struct get_expression<e_regex::terminals::terminal<terminals...>>
+    template<typename... terminals_>
+    struct get_expression<terminals::terminal<terminals_...>>
     {
             using type =
-                typename e_regex::terminals::rebuild_expression<e_regex::terminals::terminal<terminals...>>::string;
+                typename e_regex::terminals::rebuild_expression<e_regex::terminals::terminal<terminals_...>>::string;
     };
 
     template<typename matcher, std::size_t repetitions_min, std::size_t repetitions_max, policy repetition_policy, bool grouping>

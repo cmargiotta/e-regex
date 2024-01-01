@@ -1,7 +1,10 @@
-#ifndef SRC_OPERATORS_GREEDY_NODE_HPP
-#define SRC_OPERATORS_GREEDY_NODE_HPP
+#ifndef NODES_GREEDY_NODE_HPP
+#define NODES_GREEDY_NODE_HPP
 
 #include <cstddef>
+
+#include <utilities/literal_string_view.hpp>
+#include <utilities/sum.hpp>
 
 #include "basic_node.hpp"
 
@@ -169,4 +172,4 @@ namespace e_regex
     };
 }// namespace e_regex
 
-#endif /* SRC_OPERATORS_GREEDY_NODE_HPP */
+#endif /* NODES_GREEDY_NODE_HPP */

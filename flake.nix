@@ -17,7 +17,7 @@
             [
               meson
               ninja
-              clang_17
+              gcc13
               clang-tools_17
 
               (

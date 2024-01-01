@@ -1,9 +1,10 @@
 #ifndef OPERATORS_START_ANCHOR
 #define OPERATORS_START_ANCHOR
 
+#include <nodes.hpp>
+#include <terminals.hpp>
+
 #include "common.hpp"
-#include "operators/basic_node.hpp"
-#include "terminals/anchors/start.hpp"
 
 namespace e_regex
 {

@@ -3,10 +3,7 @@
 
 #include <tuple>
 
-#include "heuristics.hpp"
-#include "static_string.hpp"
-#include "terminals/terminal.hpp"
-#include "tokenizer.hpp"
+#include <heuristics.hpp>
 
 namespace e_regex
 {
@@ -31,21 +28,6 @@ namespace e_regex
                                              std::tuple<tail...>>::tree;
 
             using tree = add_child_t<last_node, new_node>;
-    };
-
-    template<typename matcher>
-    struct negated_node
-    {
-            static constexpr std::size_t groups = matcher::groups;
-
-            static constexpr auto match(auto result)
-            {
-                result = matcher::match(std::move(result));
-
-                result = !static_cast<bool>(result);
-
-                return result;
-            }
     };
 }// namespace e_regex
 

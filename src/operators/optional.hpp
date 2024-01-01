@@ -1,8 +1,9 @@
 #ifndef OPERATORS_OPTIONAL
 #define OPERATORS_OPTIONAL
 
+#include <nodes.hpp>
+
 #include "common.hpp"
-#include "operators/basic_node.hpp"
 
 namespace e_regex
 {

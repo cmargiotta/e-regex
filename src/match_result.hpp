@@ -18,7 +18,7 @@ namespace e_regex
             std::size_t                                        matches  = 0;
             bool                                               accepted = true;
 
-            constexpr auto operator=(bool accepted) noexcept -> match_result_data&
+            constexpr auto operator=(bool accepted) noexcept -> match_result_data &
             {
                 this->accepted = accepted;
 
@@ -62,7 +62,7 @@ namespace e_regex
                 this->next();
             }
 
-            constexpr auto operator=(bool accepted) noexcept -> match_result&
+            constexpr auto operator=(bool accepted) noexcept -> match_result &
             {
                 this->accepted = accepted;
 
@@ -175,7 +175,7 @@ namespace std
     };
 
     template<std::size_t N, typename matcher>
-    auto get(e_regex::match_result<matcher>&& t) noexcept
+    auto get(e_regex::match_result<matcher> t) noexcept
     {
         return t.template get<N>();
     }

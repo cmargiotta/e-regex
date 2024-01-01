@@ -1,7 +1,8 @@
-#ifndef TREE_BUILDER
-#define TREE_BUILDER
+#ifndef TREE_BUILDER_HPP
+#define TREE_BUILDER_HPP
 
-#include "operators/operators.hpp"
+#include "operators.hpp"
+#include "tokenizer.hpp"
 #include "utilities/split.hpp"
 
 namespace e_regex
@@ -27,4 +28,4 @@ namespace e_regex
 
 }// namespace e_regex
 
-#endif /* TREE_BUILDER */
+#endif /* TREE_BUILDER_HPP */

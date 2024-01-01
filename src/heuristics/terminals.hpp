@@ -1,10 +1,11 @@
 #ifndef HEURISTICS_TERMINALS_HPP
 #define HEURISTICS_TERMINALS_HPP
 
+#include <nodes.hpp>
+#include <static_string.hpp>
+#include <terminals/common.hpp>
+
 #include "common.hpp"
-#include "static_string.hpp"
-#include "terminals/common.hpp"
-#include "utilities/tuple_cat.hpp"
 
 namespace e_regex
 {

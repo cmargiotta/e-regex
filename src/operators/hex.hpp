@@ -1,9 +1,11 @@
 #ifndef OPERATORS_HEX
 #define OPERATORS_HEX
 
+#include <static_string.hpp>
+#include <terminals.hpp>
+#include <utilities/extract_delimited_content.hpp>
+
 #include "common.hpp"
-#include "static_string.hpp"
-#include "utilities/extract_delimited_content.hpp"
 
 namespace e_regex
 {
@@ -62,7 +64,7 @@ namespace e_regex
     };
 
     template<typename last_node, char first_nibble, char second_nibble, typename... tail>
-    requires hex<first_nibble> && hex<second_nibble>
+        requires hex<first_nibble> && hex<second_nibble>
     struct tree_builder_helper<
         last_node,
         std::tuple<pack_string<'\\', 'x'>, pack_string<first_nibble>, pack_string<second_nibble>, tail...>>
@@ -76,7 +78,7 @@ namespace e_regex
     };
 
     template<typename last_node, char nibble, typename... tail>
-    requires hex<nibble>
+        requires hex<nibble>
     struct tree_builder_helper<last_node, std::tuple<pack_string<'\\', 'x'>, pack_string<nibble>, tail...>>
     {
             using value = typename hex_to_bin<nibble>::result;

@@ -348,9 +348,8 @@ namespace e_regex
     template<char... data>
     struct pack_string
     {
-            static constexpr auto       size    = sizeof...(data);
-            static constexpr std::array string  = {data...};
-            static constexpr auto       string_ = static_string<size + 1> {string};
+            static constexpr auto size   = sizeof...(data);
+            static constexpr auto string = static_string<size + 1> {std::array {data...}};
     };
 
     template<typename S1, typename S2>
@@ -744,14 +743,14 @@ namespace e_regex::terminals
     template<typename terminal>
     struct rebuild_expression;
 
-    template<char... chars>
-    struct rebuild_expression<terminal<pack_string<chars...>>>
+    template<>
+    struct rebuild_expression<terminal<>>
     {
-            using string = pack_string<chars...>;
+            using string = pack_string<>;
     };
 
-    template<char... chars, typename seq, typename... tail>
-    struct rebuild_expression<terminal<pack_string<chars...>, seq, tail...>>
+    template<char... chars, typename... tail>
+    struct rebuild_expression<terminal<pack_string<chars...>, tail...>>
     {
             using string
                 = merge_pack_strings_t<pack_string<chars...>,
@@ -910,12 +909,13 @@ namespace e_regex
     struct get_expression<
         basic_node<terminals::terminal<matchers...>, std::tuple<child, children...>, repetitions_min, repetitions_max, repetition_policy, grouping>>
     {
-            using matcher_string =
-                typename terminals::rebuild_expression<terminals::terminal<matchers...>>::string;
+            using matcher_string = merge_pack_strings_t<
+                typename terminals::rebuild_expression<terminals::terminal<matchers...>>::string,
+                typename get_expression<child>::type>;
 
             using type = concatenate_pack_strings_t<pack_string<'|'>,
                                                     matcher_string,
-                                                    typename get_expression<child>::type,
+
                                                     typename get_expression<children>::type...>;
     };
 
@@ -940,16 +940,106 @@ namespace e_regex
 
 #include <tuple>
 
-#ifndef HEURISTICS_EXACT_MATCHERS_HPP
-#define HEURISTICS_EXACT_MATCHERS_HPP
-
-#include <tuple>
+#ifndef HEURISTICS_TERMINALS_HPP
+#define HEURISTICS_TERMINALS_HPP
 
 #ifndef HEURISTICS_COMMON_HPP
 #define HEURISTICS_COMMON_HPP
 
-#ifndef TERMINALS_EXACT_MATCHER
-#define TERMINALS_EXACT_MATCHER
+namespace e_regex
+{
+    template<typename node, typename child>
+    struct add_child;
+}
+
+#endif /* HEURISTICS_COMMON_HPP */
+
+#ifndef UTILITIES_TUPLE_CAT
+#define UTILITIES_TUPLE_CAT
+
+#include <tuple>
+
+namespace e_regex
+{
+    template<typename T1, typename T2>
+    struct tuple_cat;
+
+    template<typename... T1, typename... T2>
+    struct tuple_cat<std::tuple<T1...>, std::tuple<T2...>>
+    {
+            using type = std::tuple<T1..., T2...>;
+    };
+
+    template<typename... T1, typename T2>
+    struct tuple_cat<std::tuple<T1...>, T2>
+    {
+            using type = std::tuple<T1..., T2>;
+    };
+
+    template<typename T1, typename T2>
+    using tuple_cat_t = typename tuple_cat<T1, T2>::type;
+}// namespace e_regex
+
+#endif /* UTILITIES_TUPLE_CAT */
+
+namespace e_regex
+{
+    namespace _private
+    {
+        template<typename string, typename terminal = terminals::terminal<string>>
+        concept exact = requires() { terminal::exact; };
+
+        template<typename matchers, typename current = std::tuple<>>
+        struct zip_matchers;
+
+        template<typename prev, typename matcher, typename matcher1, typename... matchers>
+            requires exact<matcher> && exact<matcher1>
+        struct zip_matchers<std::tuple<matcher, matcher1, matchers...>, prev>
+        {
+                using matcher_ = merge_pack_strings_t<matcher, matcher1>;
+
+                using type = typename zip_matchers<std::tuple<matcher_, matchers...>, prev>::type;
+        };
+
+        template<typename... prev, typename matcher, typename matcher1, typename... matchers>
+            requires(!exact<matcher> || !exact<matcher1>)
+        struct zip_matchers<std::tuple<matcher, matcher1, matchers...>, std::tuple<prev...>>
+        {
+                using type =
+                    typename zip_matchers<std::tuple<matcher1, matchers...>, std::tuple<prev..., matcher>>::type;
+        };
+
+        template<typename... prev, typename matcher>
+        struct zip_matchers<std::tuple<matcher>, std::tuple<prev...>>
+        {
+                using type = terminals::terminal<prev..., matcher>;
+        };
+
+        template<typename... prev>
+        struct zip_matchers<std::tuple<>, std::tuple<prev...>>
+        {
+                using type = terminals::terminal<prev...>;
+        };
+    }// namespace _private
+
+    /*
+        Avoid repeating node parameters if there are only terminals
+    */
+    template<typename... string, typename... child_strings, typename... children, policy repetition_policy>
+    struct add_child<
+        basic_node<terminals::terminal<string...>, std::tuple<>, 1, 1, repetition_policy, false>,
+        basic_node<terminals::terminal<child_strings...>, std::tuple<children...>, 1, 1, repetition_policy, false>>
+    {
+            using zipped =
+                typename _private::zip_matchers<std::tuple<string..., child_strings...>>::type;
+            using type = basic_node<zipped, std::tuple<children...>, 1, 1, repetition_policy, false>;
+    };
+}// namespace e_regex
+
+#endif /* HEURISTICS_TERMINALS_HPP */
+
+#ifndef TERMINALS_EXACT_MATCHER_HPP
+#define TERMINALS_EXACT_MATCHER_HPP
 
 namespace e_regex::terminals
 {
@@ -983,7 +1073,7 @@ namespace e_regex::terminals
     {
             static constexpr auto match_(auto result)
             {
-                for (auto c: pack_string<identifier...>::string)
+                for (auto c: pack_string<identifier...>::string.to_view())
                 {
                     result = c == *result.actual_iterator_end;
                     result.actual_iterator_end++;
@@ -1005,7 +1095,7 @@ namespace e_regex::terminals
     };
 }// namespace e_regex::terminals
 
-#endif /* TERMINALS_EXACT_MATCHER */
+#endif /* TERMINALS_EXACT_MATCHER_HPP */
 
 #ifndef TERMINALS_TERMINAL
 #define TERMINALS_TERMINAL
@@ -1294,38 +1384,6 @@ namespace e_regex::terminals
 
 namespace e_regex
 {
-    template<typename node, typename child>
-    struct add_child;
-}
-
-#endif /* HEURISTICS_COMMON_HPP */
-
-namespace e_regex
-{
-    /*
-        Regexes like "aaaaabc" become a single matcher with the whole string
-    */
-    template<char... identifiers, char... child_identifiers, typename... children, policy repetition_policy>
-        requires terminals::terminal<pack_string<identifiers...>>::exact
-                 && terminals::terminal<pack_string<child_identifiers...>>::exact
-    struct add_child<
-        basic_node<terminals::terminal<pack_string<identifiers...>>, std::tuple<>, 1, 1, repetition_policy, false>,
-        basic_node<terminals::terminal<pack_string<child_identifiers...>>, std::tuple<children...>, 1, 1, repetition_policy, false>>
-    {
-            using type
-                = basic_node<terminals::terminal<pack_string<identifiers..., child_identifiers...>>,
-                             std::tuple<children...>,
-                             1,
-                             1,
-                             repetition_policy,
-                             false>;
-    };
-}// namespace e_regex
-
-#endif /* HEURISTICS_EXACT_MATCHERS_HPP */
-
-namespace e_regex
-{
     template<typename matcher,
              typename... children,
              std::size_t repetitions_min,
@@ -1356,34 +1414,6 @@ namespace e_regex
 #define TOKENIZER
 
 #include <tuple>
-
-#ifndef UTILITIES_TUPLE_CAT
-#define UTILITIES_TUPLE_CAT
-
-#include <tuple>
-
-namespace e_regex
-{
-    template<typename T1, typename T2>
-    struct tuple_cat;
-
-    template<typename... T1, typename... T2>
-    struct tuple_cat<std::tuple<T1...>, std::tuple<T2...>>
-    {
-            using type = std::tuple<T1..., T2...>;
-    };
-
-    template<typename... T1, typename T2>
-    struct tuple_cat<std::tuple<T1...>, T2>
-    {
-            using type = std::tuple<T1..., T2>;
-    };
-
-    template<typename T1, typename T2>
-    using tuple_cat_t = typename tuple_cat<T1, T2>::type;
-}// namespace e_regex
-
-#endif /* UTILITIES_TUPLE_CAT */
 
 namespace e_regex
 {

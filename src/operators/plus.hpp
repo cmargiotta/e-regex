@@ -3,7 +3,6 @@
 
 #include <limits>
 
-#include "braces.hpp"
 #include "common.hpp"
 
 namespace e_regex
