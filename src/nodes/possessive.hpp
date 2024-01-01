@@ -1,12 +1,12 @@
-#ifndef OPERATORS_POSSESSIVE_NODE_HPP
-#define OPERATORS_POSSESSIVE_NODE_HPP
+#ifndef NODES_POSSESSIVE_HPP
+#define NODES_POSSESSIVE_HPP
 
 #include "basic.hpp"
 
 namespace e_regex::nodes
 {
     template<typename matcher, typename... children, std::size_t repetitions_min, std::size_t repetitions_max, bool grouping>
-    struct basic_node<matcher, std::tuple<children...>, repetitions_min, repetitions_max, nodes::policy::POSSESSIVE, grouping>
+    struct basic<matcher, std::tuple<children...>, repetitions_min, repetitions_max, nodes::policy::POSSESSIVE, grouping>
     {
             static constexpr auto backtracking_policy = nodes::policy::POSSESSIVE;
 
@@ -99,4 +99,4 @@ namespace e_regex::nodes
     };
 }// namespace e_regex::nodes
 
-#endif /* OPERATORS_POSSESSIVE_NODE_HPP */
+#endif /* NODES_POSSESSIVE_HPP */

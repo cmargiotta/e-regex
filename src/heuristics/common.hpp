@@ -17,12 +17,11 @@ namespace e_regex
              nodes::policy repetition_policy,
              bool          grouping,
              typename child>
-    struct add_child<
-        nodes::basic_node<matcher, std::tuple<children...>, repetitions_min, repetitions_max, repetition_policy, grouping>,
-        child>
+    struct add_child<nodes::basic<matcher, std::tuple<children...>, repetitions_min, repetitions_max, repetition_policy, grouping>,
+                     child>
     {
             using type
-                = nodes::basic_node<matcher, std::tuple<children..., child>, repetitions_min, repetitions_max, repetition_policy, grouping>;
+                = nodes::basic<matcher, std::tuple<children..., child>, repetitions_min, repetitions_max, repetition_policy, grouping>;
     };
 
     template<typename child>

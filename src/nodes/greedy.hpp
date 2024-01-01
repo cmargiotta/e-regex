@@ -133,7 +133,7 @@ namespace e_regex::nodes
     }// namespace _private
 
     template<typename matcher, typename... children, std::size_t repetitions_min, std::size_t repetitions_max, bool grouping>
-    struct basic_node<matcher, std::tuple<children...>, repetitions_min, repetitions_max, policy::GREEDY, grouping>
+    struct basic<matcher, std::tuple<children...>, repetitions_min, repetitions_max, policy::GREEDY, grouping>
     {
             static constexpr auto backtracking_policy = nodes::policy::GREEDY;
 

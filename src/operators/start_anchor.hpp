@@ -14,7 +14,7 @@ namespace e_regex
             // Start anchor found
 
             using tree = typename tree_builder_helper<
-                nodes::basic_node<terminals::anchors::start, std::tuple<>, 1, 1, nodes::policy::POSSESSIVE>,
+                nodes::basic<terminals::anchors::start, std::tuple<>, 1, 1, nodes::policy::POSSESSIVE>,
                 std::tuple<tail...>>::tree;
     };
 }// namespace e_regex

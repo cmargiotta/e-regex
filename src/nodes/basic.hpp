@@ -61,15 +61,15 @@ namespace e_regex::nodes
              std::size_t   repetitions_max   = 1,
              nodes::policy repetition_policy = nodes::policy::GREEDY,
              bool          grouping          = false>
-    struct basic_node;
+    struct basic;
 
     template<typename matcher, bool grouping_>
     struct set_node_grouping;
 
     template<typename matcher, typename children, std::size_t min, std::size_t max, nodes::policy policy_, bool grouping, bool grouping_>
-    struct set_node_grouping<basic_node<matcher, children, min, max, policy_, grouping>, grouping_>
+    struct set_node_grouping<basic<matcher, children, min, max, policy_, grouping>, grouping_>
     {
-            using type = basic_node<matcher, children, min, max, policy_, grouping_>;
+            using type = basic<matcher, children, min, max, policy_, grouping_>;
     };
 
     template<typename matcher, std::size_t min, std::size_t max, nodes::policy policy_>
@@ -84,12 +84,9 @@ namespace e_regex::nodes
              std::size_t   min,
              std::size_t   max,
              nodes::policy policy_>
-    struct set_node_range<basic_node<matcher, children, repetitions_min, repetitions_max, repetition_policy, grouping>,
-                          min,
-                          max,
-                          policy_>
+    struct set_node_range<basic<matcher, children, repetitions_min, repetitions_max, repetition_policy, grouping>, min, max, policy_>
     {
-            using type = basic_node<matcher, children, min, max, policy_, grouping>;
+            using type = basic<matcher, children, min, max, policy_, grouping>;
     };
 
     template<typename matcher, bool grouping_>
@@ -99,10 +96,10 @@ namespace e_regex::nodes
     using set_node_range_t = typename set_node_range<matcher, min, max, policy_>::type;
 
     template<typename matcher, typename children = std::tuple<>, nodes::policy policy_ = matcher::backtracking_policy>
-    using grouping_node = basic_node<matcher, children, 1, 1, policy_, true>;
+    using grouping_node = basic<matcher, children, 1, 1, policy_, true>;
 
     template<typename matcher, typename children = std::tuple<>, nodes::policy policy_ = nodes::policy::GREEDY>
-    using optional_node = basic_node<matcher, children, 0, 1, policy_, false>;
+    using optional_node = basic<matcher, children, 0, 1, policy_, false>;
 
     template<typename node>
     struct get_expression;
@@ -115,15 +112,14 @@ namespace e_regex::nodes
     };
 
     template<typename matcher, std::size_t repetitions_min, std::size_t repetitions_max, nodes::policy repetition_policy, bool grouping>
-    struct get_expression<
-        basic_node<matcher, std::tuple<>, repetitions_min, repetitions_max, repetition_policy, grouping>>
+    struct get_expression<basic<matcher, std::tuple<>, repetitions_min, repetitions_max, repetition_policy, grouping>>
     {
             using type = typename get_expression<matcher>::type;
     };
 
     template<typename... children, std::size_t repetitions_min, std::size_t repetitions_max, nodes::policy repetition_policy, bool grouping>
     struct get_expression<
-        basic_node<void, std::tuple<children...>, repetitions_min, repetitions_max, repetition_policy, grouping>>
+        basic<void, std::tuple<children...>, repetitions_min, repetitions_max, repetition_policy, grouping>>
     {
             using type
                 = concatenate_pack_strings_t<pack_string<'|'>, typename get_expression<children>::type...>;
@@ -137,7 +133,7 @@ namespace e_regex::nodes
              nodes::policy repetition_policy,
              bool          grouping>
     struct get_expression<
-        basic_node<terminals::terminal<matchers...>, std::tuple<child, children...>, repetitions_min, repetitions_max, repetition_policy, grouping>>
+        basic<terminals::terminal<matchers...>, std::tuple<child, children...>, repetitions_min, repetitions_max, repetition_policy, grouping>>
     {
             using matcher_string = merge_pack_strings_t<
                 typename terminals::rebuild_expression<terminals::terminal<matchers...>>::string,

@@ -711,7 +711,7 @@ namespace e_regex
             // Simple case, iterate
 
             using new_node =
-                typename tree_builder_helper<nodes::basic_node<terminals::terminal<head>, std::tuple<>>,
+                typename tree_builder_helper<nodes::basic<terminals::terminal<head>, std::tuple<>>,
                                              std::tuple<tail...>>::tree;
 
             using tree = add_child_t<last_node, new_node>;
@@ -943,7 +943,7 @@ namespace e_regex
             // End anchor found
 
             using new_node
-                = nodes::basic_node<terminals::anchors::end, std::tuple<>, 1, 1, nodes::policy::POSSESSIVE>;
+                = nodes::basic<terminals::anchors::end, std::tuple<>, 1, 1, nodes::policy::POSSESSIVE>;
 
             using tree = add_child_t<last_node, new_node>;
     };
@@ -1023,7 +1023,7 @@ namespace e_regex
             using value = typename hex_to_bin<first_nibble, second_nibble>::result;
 
             using new_node =
-                typename tree_builder_helper<nodes::basic_node<terminals::exact_matcher<value>, std::tuple<>>,
+                typename tree_builder_helper<nodes::basic<terminals::exact_matcher<value>, std::tuple<>>,
                                              std::tuple<tail...>>::tree;
             using tree = add_child_t<last_node, new_node>;
     };
@@ -1035,7 +1035,7 @@ namespace e_regex
             using value = typename hex_to_bin<nibble>::result;
 
             using new_node =
-                typename tree_builder_helper<nodes::basic_node<terminals::exact_matcher<value>, std::tuple<>>,
+                typename tree_builder_helper<nodes::basic<terminals::exact_matcher<value>, std::tuple<>>,
                                              std::tuple<tail...>>::tree;
             using tree = add_child_t<last_node, new_node>;
     };
@@ -1048,7 +1048,7 @@ namespace e_regex
             using value = typename hex_tuple_to_bin<typename substring::result>::result;
 
             using new_node =
-                typename tree_builder_helper<nodes::basic_node<terminals::exact_matcher<value>, std::tuple<>>,
+                typename tree_builder_helper<nodes::basic<terminals::exact_matcher<value>, std::tuple<>>,
                                              typename substring::remaining>::tree;
 
             using tree = add_child_t<last_node, new_node>;
@@ -1105,7 +1105,7 @@ namespace e_regex
             using value = typename octal_to_bin<first_nibble, second_nibble, third_nibble>::result;
 
             using new_node =
-                typename tree_builder_helper<nodes::basic_node<terminals::exact_matcher<value>, std::tuple<>>,
+                typename tree_builder_helper<nodes::basic<terminals::exact_matcher<value>, std::tuple<>>,
                                              std::tuple<tail...>>::tree;
             using tree = add_child_t<last_node, new_node>;
     };
@@ -1118,7 +1118,7 @@ namespace e_regex
             using value = typename octal_tuple_to_bin<typename substring::result>::result;
 
             using new_node =
-                typename tree_builder_helper<nodes::basic_node<terminals::exact_matcher<value>, std::tuple<>>,
+                typename tree_builder_helper<nodes::basic<terminals::exact_matcher<value>, std::tuple<>>,
                                              typename substring::remaining>::tree;
 
             using tree = add_child_t<last_node, new_node>;
@@ -1176,7 +1176,7 @@ namespace e_regex
     {
             // greedy + operator found
             using new_node
-                = nodes::basic_node<last_node, std::tuple<>, 1, std::numeric_limits<std::size_t>::max(), nodes::policy::GREEDY>;
+                = nodes::basic<last_node, std::tuple<>, 1, std::numeric_limits<std::size_t>::max(), nodes::policy::GREEDY>;
 
             using tree = typename tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
@@ -1186,7 +1186,7 @@ namespace e_regex
     {
             // lazy + operator found
             using new_node
-                = nodes::basic_node<last_node, std::tuple<>, 1, std::numeric_limits<std::size_t>::max(), nodes::policy::LAZY>;
+                = nodes::basic<last_node, std::tuple<>, 1, std::numeric_limits<std::size_t>::max(), nodes::policy::LAZY>;
 
             using tree = typename tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
@@ -1196,7 +1196,7 @@ namespace e_regex
     {
             // lazy + operator found
             using new_node
-                = nodes::basic_node<last_node, std::tuple<>, 1, std::numeric_limits<std::size_t>::max(), nodes::policy::POSSESSIVE>;
+                = nodes::basic<last_node, std::tuple<>, 1, std::numeric_limits<std::size_t>::max(), nodes::policy::POSSESSIVE>;
 
             using tree = typename tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
@@ -1232,7 +1232,7 @@ namespace e_regex
             using substring = extract_delimited_content_t<'(', ')', std::tuple<tail...>>;
 
             using subregex = typename tree_builder_helper<void, typename substring::result>::tree;
-            using new_node = typename tree_builder_helper<nodes::basic_node<subregex, std::tuple<>>,
+            using new_node = typename tree_builder_helper<nodes::basic<subregex, std::tuple<>>,
                                                           typename substring::remaining>::tree;
 
             using tree = add_child_t<last_node, new_node>;
@@ -1369,7 +1369,7 @@ namespace e_regex
             // Simple case, iterate
 
             using new_node
-                = add_child_t<last_node, nodes::basic_node<terminals::exact_matcher<head>, std::tuple<>>>;
+                = add_child_t<last_node, nodes::basic<terminals::exact_matcher<head>, std::tuple<>>>;
             using tree =
                 typename square_bracker_tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
@@ -1379,9 +1379,9 @@ namespace e_regex
     {
             // Simple case, iterate
 
-            using new_node = add_child_t<
-                last_node,
-                nodes::basic_node<terminals::terminal<pack_string<'\\', identifier>>, std::tuple<>>>;
+            using new_node
+                = add_child_t<last_node,
+                              nodes::basic<terminals::terminal<pack_string<'\\', identifier>>, std::tuple<>>>;
             using tree =
                 typename square_bracker_tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
@@ -1392,8 +1392,7 @@ namespace e_regex
             // Range found
 
             using new_node
-                = add_child_t<last_node,
-                              nodes::basic_node<terminals::range_terminal<start, end>, std::tuple<>>>;
+                = add_child_t<last_node, nodes::basic<terminals::range_terminal<start, end>, std::tuple<>>>;
             using tree =
                 typename square_bracker_tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
@@ -1405,7 +1404,7 @@ namespace e_regex
             using substring = extract_delimited_content_t<'[', ']', std::tuple<tail...>>;
 
             using subregex =
-                typename square_bracker_tree_builder_helper<nodes::basic_node<void, std::tuple<>>,
+                typename square_bracker_tree_builder_helper<nodes::basic<void, std::tuple<>>,
                                                             typename substring::result>::tree;
             using new_node =
                 typename tree_builder_helper<subregex, typename substring::remaining>::tree;
@@ -1420,10 +1419,10 @@ namespace e_regex
             using substring = extract_delimited_content_t<'[', ']', std::tuple<tail...>>;
 
             using subregex =
-                typename square_bracker_tree_builder_helper<nodes::basic_node<void, std::tuple<>>,
+                typename square_bracker_tree_builder_helper<nodes::basic<void, std::tuple<>>,
                                                             typename substring::result>::tree;
             using new_node =
-                typename tree_builder_helper<nodes::basic_node<nodes::negated_node<subregex>, std::tuple<>>,
+                typename tree_builder_helper<nodes::basic<nodes::negated_node<subregex>, std::tuple<>>,
                                              typename substring::remaining>::tree;
 
             using tree = add_child_t<last_node, new_node>;
@@ -1443,7 +1442,7 @@ namespace e_regex
     {
             // greedy * operator found
             using new_node
-                = nodes::basic_node<last_node, std::tuple<>, 0, std::numeric_limits<std::size_t>::max(), nodes::policy::GREEDY>;
+                = nodes::basic<last_node, std::tuple<>, 0, std::numeric_limits<std::size_t>::max(), nodes::policy::GREEDY>;
 
             using tree = typename tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
@@ -1453,7 +1452,7 @@ namespace e_regex
     {
             // lazy * operator found
             using new_node
-                = nodes::basic_node<last_node, std::tuple<>, 0, std::numeric_limits<std::size_t>::max(), nodes::policy::LAZY>;
+                = nodes::basic<last_node, std::tuple<>, 0, std::numeric_limits<std::size_t>::max(), nodes::policy::LAZY>;
 
             using tree = typename tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
@@ -1463,7 +1462,7 @@ namespace e_regex
     {
             // possessive * operator found
             using new_node
-                = nodes::basic_node<last_node, std::tuple<>, 0, std::numeric_limits<std::size_t>::max(), nodes::policy::POSSESSIVE>;
+                = nodes::basic<last_node, std::tuple<>, 0, std::numeric_limits<std::size_t>::max(), nodes::policy::POSSESSIVE>;
 
             using tree = typename tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
@@ -1485,7 +1484,7 @@ namespace e_regex
             // Start anchor found
 
             using tree = typename tree_builder_helper<
-                nodes::basic_node<terminals::anchors::start, std::tuple<>, 1, 1, nodes::policy::POSSESSIVE>,
+                nodes::basic<terminals::anchors::start, std::tuple<>, 1, 1, nodes::policy::POSSESSIVE>,
                 std::tuple<tail...>>::tree;
     };
 }// namespace e_regex
@@ -1679,7 +1678,7 @@ namespace e_regex
     struct tree_builder_branches<std::tuple<subregexes...>>
     {
             using branches = std::tuple<typename tree_builder_helper<void, subregexes>::tree...>;
-            using tree     = basic_node<void, branches>;
+            using tree     = nodes::basic<void, branches>;
     };
 
     template<typename regex>

@@ -18,7 +18,7 @@ namespace e_regex
             // End anchor found
 
             using new_node
-                = nodes::basic_node<terminals::anchors::end, std::tuple<>, 1, 1, nodes::policy::POSSESSIVE>;
+                = nodes::basic<terminals::anchors::end, std::tuple<>, 1, 1, nodes::policy::POSSESSIVE>;
 
             using tree = add_child_t<last_node, new_node>;
     };

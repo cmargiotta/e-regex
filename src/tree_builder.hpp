@@ -14,7 +14,7 @@ namespace e_regex
     struct tree_builder_branches<std::tuple<subregexes...>>
     {
             using branches = std::tuple<typename tree_builder_helper<void, subregexes>::tree...>;
-            using tree     = nodes::basic_node<void, branches>;
+            using tree     = nodes::basic<void, branches>;
     };
 
     template<typename regex>

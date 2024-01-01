@@ -52,13 +52,12 @@ namespace e_regex
     */
     template<typename... string, typename... child_strings, typename... children, nodes::policy repetition_policy>
     struct add_child<
-        nodes::basic_node<terminals::terminal<string...>, std::tuple<>, 1, 1, repetition_policy, false>,
-        nodes::basic_node<terminals::terminal<child_strings...>, std::tuple<children...>, 1, 1, repetition_policy, false>>
+        nodes::basic<terminals::terminal<string...>, std::tuple<>, 1, 1, repetition_policy, false>,
+        nodes::basic<terminals::terminal<child_strings...>, std::tuple<children...>, 1, 1, repetition_policy, false>>
     {
             using zipped =
                 typename _private::zip_matchers<std::tuple<string..., child_strings...>>::type;
-            using type
-                = nodes::basic_node<zipped, std::tuple<children...>, 1, 1, repetition_policy, false>;
+            using type = nodes::basic<zipped, std::tuple<children...>, 1, 1, repetition_policy, false>;
     };
 }// namespace e_regex
 
