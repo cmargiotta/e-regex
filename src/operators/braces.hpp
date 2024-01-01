@@ -1,5 +1,5 @@
-#ifndef OPERATORS_BRACES
-#define OPERATORS_BRACES
+#ifndef OPERATORS_BRACES_HPP
+#define OPERATORS_BRACES_HPP
 
 #include <limits>
 
@@ -31,30 +31,32 @@ namespace e_regex
     template<typename data>
     using first_type_t = typename first_type<data>::type;
 
-    template<typename matcher, typename data, policy policy_ = policy::GREEDY>
+    template<typename matcher, typename data, nodes::policy policy_ = nodes::policy::GREEDY>
     struct quantified_node_builder;
 
-    template<typename matcher, typename first, policy policy_>
+    template<typename matcher, typename first, nodes::policy policy_>
     struct quantified_node_builder<matcher, std::tuple<first>, policy_>
     {
             static constexpr auto value = pack_string_to_number<first>::value;
-            using type                  = set_node_range_t<matcher, value, value, policy_>;
+            using type                  = nodes::set_node_range_t<matcher, value, value, policy_>;
     };
 
-    template<typename matcher, typename first, policy policy_>
+    template<typename matcher, typename first, nodes::policy policy_>
     struct quantified_node_builder<matcher, std::tuple<first, pack_string<','>>, policy_>
     {
-            using type = set_node_range_t<matcher,
-                                          pack_string_to_number<first>::value,
-                                          std::numeric_limits<std::size_t>::max(),
-                                          policy_>;
+            using type = nodes::set_node_range_t<matcher,
+                                                 pack_string_to_number<first>::value,
+                                                 std::numeric_limits<std::size_t>::max(),
+                                                 policy_>;
     };
 
-    template<typename matcher, typename first, typename second, policy policy_>
+    template<typename matcher, typename first, typename second, nodes::policy policy_>
     struct quantified_node_builder<matcher, std::tuple<first, pack_string<','>, second>, policy_>
     {
-            using type
-                = set_node_range_t<matcher, pack_string_to_number<first>::value, pack_string_to_number<second>::value, policy_>;
+            using type = nodes::set_node_range_t<matcher,
+                                                 pack_string_to_number<first>::value,
+                                                 pack_string_to_number<second>::value,
+                                                 policy_>;
     };
 
     template<typename last_node, typename... tail>
@@ -67,12 +69,12 @@ namespace e_regex
 
             static constexpr auto policy_
                 = std::is_same_v<typename remaining_head::type, pack_string<'?'>>
-                      ? policy::LAZY
+                      ? nodes::policy::LAZY
                       : (std::is_same_v<typename remaining_head::type, pack_string<'+'>>
-                             ? policy::POSSESSIVE
-                             : policy::GREEDY);
+                             ? nodes::policy::POSSESSIVE
+                             : nodes::policy::GREEDY);
 
-            using remaining = std::conditional_t<policy_ != policy::GREEDY,
+            using remaining = std::conditional_t<policy_ != nodes::policy::GREEDY,
                                                  typename remaining_head::remaining,
                                                  typename substring::remaining>;
 
@@ -83,4 +85,4 @@ namespace e_regex
     };
 }// namespace e_regex
 
-#endif /* OPERATORS_BRACES */
+#endif /* OPERATORS_BRACES_HPP */

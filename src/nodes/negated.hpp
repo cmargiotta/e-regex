@@ -1,9 +1,10 @@
 #ifndef SRC_NODES_NEGATED_NODE_HPP
 #define SRC_NODES_NEGATED_NODE_HPP
 
-#include <cstdint>
+#include <utility>
 
-namespace e_regex {
+namespace e_regex::nodes
+{
     template<typename matcher>
     struct negated_node
     {
@@ -18,6 +19,6 @@ namespace e_regex {
                 return result;
             }
     };
-}
+}// namespace e_regex::nodes
 
 #endif /* SRC_NODES_NEGATED_NODE_HPP */

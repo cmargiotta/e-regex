@@ -42,7 +42,7 @@ namespace e_regex
     };
 
     template<typename last_node, char first_nibble, char second_nibble, char third_nibble, typename... tail>
-    requires octal<first_nibble> && octal<second_nibble> && octal<third_nibble>
+        requires octal<first_nibble> && octal<second_nibble> && octal<third_nibble>
     struct tree_builder_helper<
         last_node,
         std::tuple<pack_string<'\\', first_nibble>, pack_string<second_nibble>, pack_string<third_nibble>, tail...>>
@@ -50,7 +50,7 @@ namespace e_regex
             using value = typename octal_to_bin<first_nibble, second_nibble, third_nibble>::result;
 
             using new_node =
-                typename tree_builder_helper<basic_node<terminals::exact_matcher<value>, std::tuple<>>,
+                typename tree_builder_helper<nodes::basic_node<terminals::exact_matcher<value>, std::tuple<>>,
                                              std::tuple<tail...>>::tree;
             using tree = add_child_t<last_node, new_node>;
     };
@@ -63,7 +63,7 @@ namespace e_regex
             using value = typename octal_tuple_to_bin<typename substring::result>::result;
 
             using new_node =
-                typename tree_builder_helper<basic_node<terminals::exact_matcher<value>, std::tuple<>>,
+                typename tree_builder_helper<nodes::basic_node<terminals::exact_matcher<value>, std::tuple<>>,
                                              typename substring::remaining>::tree;
 
             using tree = add_child_t<last_node, new_node>;

@@ -12,16 +12,17 @@ namespace e_regex
 
     template<typename matcher,
              typename... children,
-             std::size_t repetitions_min,
-             std::size_t repetitions_max,
-             policy      repetition_policy,
-             bool        grouping,
+             std::size_t   repetitions_min,
+             std::size_t   repetitions_max,
+             nodes::policy repetition_policy,
+             bool          grouping,
              typename child>
-    struct add_child<basic_node<matcher, std::tuple<children...>, repetitions_min, repetitions_max, repetition_policy, grouping>,
-                     child>
+    struct add_child<
+        nodes::basic_node<matcher, std::tuple<children...>, repetitions_min, repetitions_max, repetition_policy, grouping>,
+        child>
     {
             using type
-                = basic_node<matcher, std::tuple<children..., child>, repetitions_min, repetitions_max, repetition_policy, grouping>;
+                = nodes::basic_node<matcher, std::tuple<children..., child>, repetitions_min, repetitions_max, repetition_policy, grouping>;
     };
 
     template<typename child>

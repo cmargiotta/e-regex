@@ -1,10 +1,10 @@
-#ifndef OPERATORS_END_ANCHOR
-#define OPERATORS_END_ANCHOR
+#ifndef OPERATORS_END_ANCHOR_HPP
+#define OPERATORS_END_ANCHOR_HPP
 
 #include <tuple>
 
 #include <heuristics.hpp>
-#include <nodes/basic_node.hpp>
+#include <nodes.hpp>
 #include <static_string.hpp>
 #include <terminals/anchors/end.hpp>
 
@@ -18,10 +18,10 @@ namespace e_regex
             // End anchor found
 
             using new_node
-                = basic_node<terminals::anchors::end, std::tuple<>, 1, 1, policy::POSSESSIVE>;
+                = nodes::basic_node<terminals::anchors::end, std::tuple<>, 1, 1, nodes::policy::POSSESSIVE>;
 
             using tree = add_child_t<last_node, new_node>;
     };
 }// namespace e_regex
 
-#endif /* OPERATORS_END_ANCHOR */
+#endif /* OPERATORS_END_ANCHOR_HPP */

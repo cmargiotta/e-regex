@@ -6,9 +6,9 @@
 #include <utilities/literal_string_view.hpp>
 #include <utilities/sum.hpp>
 
-#include "basic_node.hpp"
+#include "basic.hpp"
 
-namespace e_regex
+namespace e_regex::nodes
 {
     namespace _private
     {
@@ -135,7 +135,7 @@ namespace e_regex
     template<typename matcher, typename... children, std::size_t repetitions_min, std::size_t repetitions_max, bool grouping>
     struct basic_node<matcher, std::tuple<children...>, repetitions_min, repetitions_max, policy::GREEDY, grouping>
     {
-            static constexpr auto backtracking_policy = policy::GREEDY;
+            static constexpr auto backtracking_policy = nodes::policy::GREEDY;
 
             static constexpr std::size_t groups
                 = group_getter<matcher>::value + sum(children::groups...) + (grouping ? 1 : 0);
@@ -170,6 +170,6 @@ namespace e_regex
                     result, &self_match<Res>, dfs_ptr, repetitions_min, grouping, sizeof...(children), groups);
             }
     };
-}// namespace e_regex
+}// namespace e_regex::nodes
 
 #endif /* NODES_GREEDY_NODE_HPP */

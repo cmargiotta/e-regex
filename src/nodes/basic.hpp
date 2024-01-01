@@ -1,5 +1,5 @@
-#ifndef OPERATORS_BASIC_NODE_HPP
-#define OPERATORS_BASIC_NODE_HPP
+#ifndef NODES_BASIC_HPP
+#define NODES_BASIC_HPP
 
 #include <algorithm>
 #include <tuple>
@@ -8,7 +8,7 @@
 
 #include "terminals/common.hpp"
 
-namespace e_regex
+namespace e_regex::nodes
 {
     enum class policy
     {
@@ -56,34 +56,34 @@ namespace e_regex
     };
 
     template<typename matcher,
-             typename children             = std::tuple<>,
-             std::size_t repetitions_min   = 1,
-             std::size_t repetitions_max   = 1,
-             policy      repetition_policy = policy::GREEDY,
-             bool        grouping          = false>
+             typename children               = std::tuple<>,
+             std::size_t   repetitions_min   = 1,
+             std::size_t   repetitions_max   = 1,
+             nodes::policy repetition_policy = nodes::policy::GREEDY,
+             bool          grouping          = false>
     struct basic_node;
 
     template<typename matcher, bool grouping_>
     struct set_node_grouping;
 
-    template<typename matcher, typename children, std::size_t min, std::size_t max, policy policy_, bool grouping, bool grouping_>
+    template<typename matcher, typename children, std::size_t min, std::size_t max, nodes::policy policy_, bool grouping, bool grouping_>
     struct set_node_grouping<basic_node<matcher, children, min, max, policy_, grouping>, grouping_>
     {
             using type = basic_node<matcher, children, min, max, policy_, grouping_>;
     };
 
-    template<typename matcher, std::size_t min, std::size_t max, policy policy_>
+    template<typename matcher, std::size_t min, std::size_t max, nodes::policy policy_>
     struct set_node_range;
 
     template<typename matcher,
              typename children,
-             std::size_t repetitions_min,
-             std::size_t repetitions_max,
-             policy      repetition_policy,
-             bool        grouping,
-             std::size_t min,
-             std::size_t max,
-             policy      policy_>
+             std::size_t   repetitions_min,
+             std::size_t   repetitions_max,
+             nodes::policy repetition_policy,
+             bool          grouping,
+             std::size_t   min,
+             std::size_t   max,
+             nodes::policy policy_>
     struct set_node_range<basic_node<matcher, children, repetitions_min, repetitions_max, repetition_policy, grouping>,
                           min,
                           max,
@@ -95,13 +95,13 @@ namespace e_regex
     template<typename matcher, bool grouping_>
     using set_node_grouping_t = typename set_node_grouping<matcher, grouping_>::type;
 
-    template<typename matcher, std::size_t min, std::size_t max, policy policy_>
+    template<typename matcher, std::size_t min, std::size_t max, nodes::policy policy_>
     using set_node_range_t = typename set_node_range<matcher, min, max, policy_>::type;
 
-    template<typename matcher, typename children = std::tuple<>, policy policy_ = matcher::backtracking_policy>
+    template<typename matcher, typename children = std::tuple<>, nodes::policy policy_ = matcher::backtracking_policy>
     using grouping_node = basic_node<matcher, children, 1, 1, policy_, true>;
 
-    template<typename matcher, typename children = std::tuple<>, policy policy_ = policy::GREEDY>
+    template<typename matcher, typename children = std::tuple<>, nodes::policy policy_ = nodes::policy::GREEDY>
     using optional_node = basic_node<matcher, children, 0, 1, policy_, false>;
 
     template<typename node>
@@ -114,14 +114,14 @@ namespace e_regex
                 typename e_regex::terminals::rebuild_expression<e_regex::terminals::terminal<terminals_...>>::string;
     };
 
-    template<typename matcher, std::size_t repetitions_min, std::size_t repetitions_max, policy repetition_policy, bool grouping>
+    template<typename matcher, std::size_t repetitions_min, std::size_t repetitions_max, nodes::policy repetition_policy, bool grouping>
     struct get_expression<
         basic_node<matcher, std::tuple<>, repetitions_min, repetitions_max, repetition_policy, grouping>>
     {
             using type = typename get_expression<matcher>::type;
     };
 
-    template<typename... children, std::size_t repetitions_min, std::size_t repetitions_max, policy repetition_policy, bool grouping>
+    template<typename... children, std::size_t repetitions_min, std::size_t repetitions_max, nodes::policy repetition_policy, bool grouping>
     struct get_expression<
         basic_node<void, std::tuple<children...>, repetitions_min, repetitions_max, repetition_policy, grouping>>
     {
@@ -132,10 +132,10 @@ namespace e_regex
     template<typename... matchers,
              typename child,
              typename... children,
-             std::size_t repetitions_min,
-             std::size_t repetitions_max,
-             policy      repetition_policy,
-             bool        grouping>
+             std::size_t   repetitions_min,
+             std::size_t   repetitions_max,
+             nodes::policy repetition_policy,
+             bool          grouping>
     struct get_expression<
         basic_node<terminals::terminal<matchers...>, std::tuple<child, children...>, repetitions_min, repetitions_max, repetition_policy, grouping>>
     {
@@ -151,6 +151,6 @@ namespace e_regex
 
     template<typename node>
     using get_expression_t = typename get_expression<node>::type;
-}// namespace e_regex
+}// namespace e_regex::nodes
 
-#endif /* OPERATORS_BASIC_NODE_HPP */
+#endif /* NODES_BASIC_HPP */

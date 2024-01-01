@@ -15,8 +15,8 @@ namespace e_regex
             using substring = extract_delimited_content_t<'(', ')', std::tuple<tail...>>;
 
             using subregex = typename tree_builder_helper<void, typename substring::result>::tree;
-            using new_node =
-                typename tree_builder_helper<grouping_node<subregex>, typename substring::remaining>::tree;
+            using new_node = typename tree_builder_helper<nodes::grouping_node<subregex>,
+                                                          typename substring::remaining>::tree;
 
             using tree = add_child_t<last_node, new_node>;
     };
@@ -29,7 +29,7 @@ namespace e_regex
             using substring = extract_delimited_content_t<'(', ')', std::tuple<tail...>>;
 
             using subregex = typename tree_builder_helper<void, typename substring::result>::tree;
-            using new_node = typename tree_builder_helper<basic_node<subregex, std::tuple<>>,
+            using new_node = typename tree_builder_helper<nodes::basic_node<subregex, std::tuple<>>,
                                                           typename substring::remaining>::tree;
 
             using tree = add_child_t<last_node, new_node>;

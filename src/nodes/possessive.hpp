@@ -1,14 +1,14 @@
 #ifndef OPERATORS_POSSESSIVE_NODE_HPP
 #define OPERATORS_POSSESSIVE_NODE_HPP
 
-#include "basic_node.hpp"
+#include "basic.hpp"
 
-namespace e_regex
+namespace e_regex::nodes
 {
     template<typename matcher, typename... children, std::size_t repetitions_min, std::size_t repetitions_max, bool grouping>
-    struct basic_node<matcher, std::tuple<children...>, repetitions_min, repetitions_max, policy::POSSESSIVE, grouping>
+    struct basic_node<matcher, std::tuple<children...>, repetitions_min, repetitions_max, nodes::policy::POSSESSIVE, grouping>
     {
-            static constexpr auto backtracking_policy = policy::POSSESSIVE;
+            static constexpr auto backtracking_policy = nodes::policy::POSSESSIVE;
 
             static constexpr std::size_t groups
                 = group_getter<matcher>::value + sum(children::groups...) + (grouping ? 1 : 0);
@@ -97,6 +97,6 @@ namespace e_regex
                 return result;
             }
     };
-}// namespace e_regex
+}// namespace e_regex::nodes
 
 #endif /* OPERATORS_POSSESSIVE_NODE_HPP */

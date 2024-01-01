@@ -128,7 +128,7 @@ namespace e_regex
             std::size_t                                        matches  = 0;
             bool                                               accepted = true;
 
-            constexpr auto operator=(bool accepted) noexcept -> match_result_data&
+            constexpr auto operator=(bool accepted) noexcept -> match_result_data &
             {
                 this->accepted = accepted;
 
@@ -172,7 +172,7 @@ namespace e_regex
                 this->next();
             }
 
-            constexpr auto operator=(bool accepted) noexcept -> match_result&
+            constexpr auto operator=(bool accepted) noexcept -> match_result &
             {
                 this->accepted = accepted;
 
@@ -285,7 +285,7 @@ namespace std
     };
 
     template<std::size_t N, typename matcher>
-    auto get(e_regex::match_result<matcher>&& t) noexcept
+    auto get(e_regex::match_result<matcher> t) noexcept
     {
         return t.template get<N>();
     }
@@ -672,287 +672,58 @@ namespace e_regex
 
 #endif /* TOKENIZATION_RESULT */
 
-#ifndef TREE_BUILDER
-#define TREE_BUILDER
+#ifndef TREE_BUILDER_HPP
+#define TREE_BUILDER_HPP
 
-#ifndef OPERATORS_OPERATORS
-#define OPERATORS_OPERATORS
+#ifndef OPERATORS_HPP
+#define OPERATORS_HPP
 
-#ifndef OPERATORS_BASIC_NODE_HPP
-#define OPERATORS_BASIC_NODE_HPP
-
-#include <algorithm>
-#include <tuple>
-#include <type_traits>
-
-#ifndef TERMINALS_COMMON_HPP
-#define TERMINALS_COMMON_HPP
-
-namespace e_regex::terminals
-{
-    template<typename terminal>
-    struct terminal_common
-    {
-            static constexpr auto match(auto result)
-            {
-                if (result.actual_iterator_end >= result.query.end())
-                {
-                    result = false;
-                }
-                else
-                {
-                    return terminal::match_(std::move(result));
-                }
-
-                return result;
-            }
-    };
-
-    template<typename terminal>
-    struct negated_terminal
-    {
-            static constexpr auto match(auto result)
-            {
-                result = terminal::match_(std::move(result));
-                result = !result.accepted;
-
-                return result;
-            }
-    };
-
-    template<typename... identifiers>
-    struct terminal;
-
-    // Avoids instantiating nodes code for consecutive matchers
-    template<typename head, typename... tail>
-    struct terminal<head, tail...>
-    {
-            static constexpr auto match(auto result)
-            {
-                result = terminal<head>::match(std::move(result));
-
-                if (result)
-                {
-                    return terminal<tail...>::match(std::move(result));
-                }
-
-                return result;
-            }
-    };
-
-    template<typename terminal>
-    struct rebuild_expression;
-
-    template<>
-    struct rebuild_expression<terminal<>>
-    {
-            using string = pack_string<>;
-    };
-
-    template<char... chars, typename... tail>
-    struct rebuild_expression<terminal<pack_string<chars...>, tail...>>
-    {
-            using string
-                = merge_pack_strings_t<pack_string<chars...>,
-                                       typename rebuild_expression<terminal<tail...>>::string>;
-    };
-}// namespace e_regex::terminals
-
-#endif /* TERMINALS_COMMON_HPP */
-
-#ifndef UTILITIES_SUM
-#define UTILITIES_SUM
-
-namespace e_regex
-{
-    consteval auto sum()
-    {
-        return 0;
-    }
-
-    consteval auto sum(auto... n)
-    {
-        return (n + ...);
-    }
-}// namespace e_regex
-
-#endif /* UTILITIES_SUM */
-
-namespace e_regex
-{
-    enum class policy
-    {
-        GREEDY,
-        LAZY,
-        POSSESSIVE
-    };
-
-    template<typename Child, typename... Children>
-    constexpr auto dfs(auto match_result) noexcept
-    {
-        if constexpr (sizeof...(Children) == 0)
-        {
-            return Child::match(std::move(match_result));
-        }
-        else
-        {
-            auto result = Child::match(match_result);
-
-            match_result.matches += Child::groups;
-            match_result = dfs<Children...>(std::move(match_result));
-
-            if (!result || (result.actual_iterator_end < match_result.actual_iterator_end))
-            {
-                return match_result;
-            }
-
-            return result;
-        }
-    }
-
-    template<typename T>
-    concept has_groups = requires(T t) { t.groups; };
-
-    template<typename T>
-    struct group_getter
-    {
-            static constexpr auto value = 0;
-    };
-
-    template<has_groups T>
-    struct group_getter<T>
-    {
-            static constexpr auto value = T::groups;
-    };
-
-    template<typename matcher,
-             typename children             = std::tuple<>,
-             std::size_t repetitions_min   = 1,
-             std::size_t repetitions_max   = 1,
-             policy      repetition_policy = policy::GREEDY,
-             bool        grouping          = false>
-    struct basic_node;
-
-    template<typename matcher, bool grouping_>
-    struct set_node_grouping;
-
-    template<typename matcher, typename children, std::size_t min, std::size_t max, policy policy_, bool grouping, bool grouping_>
-    struct set_node_grouping<basic_node<matcher, children, min, max, policy_, grouping>, grouping_>
-    {
-            using type = basic_node<matcher, children, min, max, policy_, grouping_>;
-    };
-
-    template<typename matcher, std::size_t min, std::size_t max, policy policy_>
-    struct set_node_range;
-
-    template<typename matcher,
-             typename children,
-             std::size_t repetitions_min,
-             std::size_t repetitions_max,
-             policy      repetition_policy,
-             bool        grouping,
-             std::size_t min,
-             std::size_t max,
-             policy      policy_>
-    struct set_node_range<basic_node<matcher, children, repetitions_min, repetitions_max, repetition_policy, grouping>,
-                          min,
-                          max,
-                          policy_>
-    {
-            using type = basic_node<matcher, children, min, max, policy_, grouping>;
-    };
-
-    template<typename matcher, bool grouping_>
-    using set_node_grouping_t = typename set_node_grouping<matcher, grouping_>::type;
-
-    template<typename matcher, std::size_t min, std::size_t max, policy policy_>
-    using set_node_range_t = typename set_node_range<matcher, min, max, policy_>::type;
-
-    template<typename matcher, typename children = std::tuple<>, policy policy_ = matcher::backtracking_policy>
-    using grouping_node = basic_node<matcher, children, 1, 1, policy_, true>;
-
-    template<typename matcher, typename children = std::tuple<>, policy policy_ = policy::GREEDY>
-    using optional_node = basic_node<matcher, children, 0, 1, policy_, false>;
-
-    template<typename node>
-    struct get_expression;
-
-    template<typename... terminals>
-    struct get_expression<e_regex::terminals::terminal<terminals...>>
-    {
-            using type =
-                typename e_regex::terminals::rebuild_expression<e_regex::terminals::terminal<terminals...>>::string;
-    };
-
-    template<typename matcher, std::size_t repetitions_min, std::size_t repetitions_max, policy repetition_policy, bool grouping>
-    struct get_expression<
-        basic_node<matcher, std::tuple<>, repetitions_min, repetitions_max, repetition_policy, grouping>>
-    {
-            using type = typename get_expression<matcher>::type;
-    };
-
-    template<typename... children, std::size_t repetitions_min, std::size_t repetitions_max, policy repetition_policy, bool grouping>
-    struct get_expression<
-        basic_node<void, std::tuple<children...>, repetitions_min, repetitions_max, repetition_policy, grouping>>
-    {
-            using type
-                = concatenate_pack_strings_t<pack_string<'|'>, typename get_expression<children>::type...>;
-    };
-
-    template<typename... matchers,
-             typename child,
-             typename... children,
-             std::size_t repetitions_min,
-             std::size_t repetitions_max,
-             policy      repetition_policy,
-             bool        grouping>
-    struct get_expression<
-        basic_node<terminals::terminal<matchers...>, std::tuple<child, children...>, repetitions_min, repetitions_max, repetition_policy, grouping>>
-    {
-            using matcher_string = merge_pack_strings_t<
-                typename terminals::rebuild_expression<terminals::terminal<matchers...>>::string,
-                typename get_expression<child>::type>;
-
-            using type = concatenate_pack_strings_t<pack_string<'|'>,
-                                                    matcher_string,
-
-                                                    typename get_expression<children>::type...>;
-    };
-
-    template<typename node>
-    using get_expression_t = typename get_expression<node>::type;
-}// namespace e_regex
-
-#endif /* OPERATORS_BASIC_NODE_HPP */
-
-#ifndef OPERATORS_BRACES
-#define OPERATORS_BRACES
+#ifndef OPERATORS_BRACES_HPP
+#define OPERATORS_BRACES_HPP
 
 #include <limits>
+
+#include <nodes.hpp>
 
 #ifndef OPERATORS_COMMON
 #define OPERATORS_COMMON
 
 #include <tuple>
 
-#ifndef HEURISTICS_HPP
-#define HEURISTICS_HPP
-
-#include <tuple>
-
-#ifndef HEURISTICS_TERMINALS_HPP
-#define HEURISTICS_TERMINALS_HPP
-
-#ifndef HEURISTICS_COMMON_HPP
-#define HEURISTICS_COMMON_HPP
+#include <heuristics.hpp>
 
 namespace e_regex
 {
-    template<typename node, typename child>
-    struct add_child;
-}
+    template<typename last_node, typename tokens>
+    struct tree_builder_helper;
 
-#endif /* HEURISTICS_COMMON_HPP */
+    template<typename last_node>
+    struct tree_builder_helper<last_node, std::tuple<>>
+    {
+            // Base case
+
+            using tree = last_node;
+    };
+
+    template<typename last_node, typename head, typename... tail>
+    struct tree_builder_helper<last_node, std::tuple<head, tail...>>
+    {
+            // Simple case, iterate
+
+            using new_node =
+                typename tree_builder_helper<nodes::basic_node<terminals::terminal<head>, std::tuple<>>,
+                                             std::tuple<tail...>>::tree;
+
+            using tree = add_child_t<last_node, new_node>;
+    };
+}// namespace e_regex
+
+#endif /* OPERATORS_COMMON */
+
+#ifndef UTILITIES_EXTRACT_DELIMITED_CONTENT
+#define UTILITIES_EXTRACT_DELIMITED_CONTENT
+
+#include <tuple>
 
 #ifndef UTILITIES_TUPLE_CAT
 #define UTILITIES_TUPLE_CAT
@@ -981,763 +752,6 @@ namespace e_regex
 }// namespace e_regex
 
 #endif /* UTILITIES_TUPLE_CAT */
-
-namespace e_regex
-{
-    namespace _private
-    {
-        template<typename string, typename terminal = terminals::terminal<string>>
-        concept exact = requires() { terminal::exact; };
-
-        template<typename matchers, typename current = std::tuple<>>
-        struct zip_matchers;
-
-        template<typename prev, typename matcher, typename matcher1, typename... matchers>
-            requires exact<matcher> && exact<matcher1>
-        struct zip_matchers<std::tuple<matcher, matcher1, matchers...>, prev>
-        {
-                using matcher_ = merge_pack_strings_t<matcher, matcher1>;
-
-                using type = typename zip_matchers<std::tuple<matcher_, matchers...>, prev>::type;
-        };
-
-        template<typename... prev, typename matcher, typename matcher1, typename... matchers>
-            requires(!exact<matcher> || !exact<matcher1>)
-        struct zip_matchers<std::tuple<matcher, matcher1, matchers...>, std::tuple<prev...>>
-        {
-                using type =
-                    typename zip_matchers<std::tuple<matcher1, matchers...>, std::tuple<prev..., matcher>>::type;
-        };
-
-        template<typename... prev, typename matcher>
-        struct zip_matchers<std::tuple<matcher>, std::tuple<prev...>>
-        {
-                using type = terminals::terminal<prev..., matcher>;
-        };
-
-        template<typename... prev>
-        struct zip_matchers<std::tuple<>, std::tuple<prev...>>
-        {
-                using type = terminals::terminal<prev...>;
-        };
-    }// namespace _private
-
-    /*
-        Avoid repeating node parameters if there are only terminals
-    */
-    template<typename... string, typename... child_strings, typename... children, policy repetition_policy>
-    struct add_child<
-        basic_node<terminals::terminal<string...>, std::tuple<>, 1, 1, repetition_policy, false>,
-        basic_node<terminals::terminal<child_strings...>, std::tuple<children...>, 1, 1, repetition_policy, false>>
-    {
-            using zipped =
-                typename _private::zip_matchers<std::tuple<string..., child_strings...>>::type;
-            using type = basic_node<zipped, std::tuple<children...>, 1, 1, repetition_policy, false>;
-    };
-}// namespace e_regex
-
-#endif /* HEURISTICS_TERMINALS_HPP */
-
-#ifndef TERMINALS_EXACT_MATCHER_HPP
-#define TERMINALS_EXACT_MATCHER_HPP
-
-namespace e_regex::terminals
-{
-    namespace _private
-    {
-        constexpr auto exact_match(char identifier, auto result)
-        {
-            result = identifier == *result.actual_iterator_end;
-            result.actual_iterator_end++;
-
-            return result;
-        }
-    }// namespace _private
-
-    template<typename identifier>
-    struct exact_matcher;
-
-    template<char identifier>
-    struct exact_matcher<pack_string<identifier>>
-        : public terminal_common<exact_matcher<pack_string<identifier>>>
-    {
-            static constexpr auto match_(auto result)
-            {
-                return _private::exact_match(identifier, std::move(result));
-            }
-    };
-
-    template<char... identifier>
-    struct exact_matcher<pack_string<identifier...>>
-        : public terminal_common<exact_matcher<pack_string<identifier...>>>
-    {
-            static constexpr auto match_(auto result)
-            {
-                for (auto c: pack_string<identifier...>::string.to_view())
-                {
-                    result = c == *result.actual_iterator_end;
-                    result.actual_iterator_end++;
-
-                    if (!result)
-                    {
-                        break;
-                    }
-                }
-
-                return result;
-            }
-    };
-
-    template<typename identifier>
-    struct terminal<identifier> : public exact_matcher<identifier>
-    {
-            static constexpr bool exact = true;
-    };
-}// namespace e_regex::terminals
-
-#endif /* TERMINALS_EXACT_MATCHER_HPP */
-
-#ifndef TERMINALS_TERMINAL
-#define TERMINALS_TERMINAL
-
-#ifndef TERMINALS_ALARM
-#define TERMINALS_ALARM
-
-namespace e_regex::terminals
-{
-    template<>
-    struct terminal<pack_string<'\\', 'a'>> : public exact_matcher<pack_string<0x07>>
-    {
-    };
-}// namespace e_regex::terminals
-
-#endif /* TERMINALS_ALARM */
-
-#ifndef ANCHORS_ANCHORS
-#define ANCHORS_ANCHORS
-
-#ifndef TERMINALS_ANCHORS_END
-#define TERMINALS_ANCHORS_END
-
-namespace e_regex::terminals::anchors
-{
-    struct end
-    {
-            static constexpr auto match(auto result)
-            {
-                result = (result.actual_iterator_end == result.query.end());
-
-                return result;
-            }
-    };
-}// namespace e_regex::terminals::anchors
-
-#endif /* TERMINALS_ANCHORS_END */
-
-#ifndef ANCHORS_START
-#define ANCHORS_START
-
-namespace e_regex::terminals::anchors
-{
-    struct start
-    {
-            static constexpr auto match(auto result)
-            {
-                result = (result.actual_iterator_end == result.query.begin());
-
-                return result;
-            }
-    };
-}// namespace e_regex::terminals::anchors
-
-#endif /* ANCHORS_START */
-
-#endif /* ANCHORS_ANCHORS */
-
-#ifndef TERMINALS_ANY
-#define TERMINALS_ANY
-
-namespace e_regex::terminals
-{
-    template<>
-    struct terminal<pack_string<'.'>> : public terminal_common<terminal<pack_string<'.'>>>
-    {
-            static constexpr auto match_(auto result)
-            {
-                result = *result.actual_iterator_end != '\n';
-                result.actual_iterator_end++;
-
-                return result;
-            }
-    };
-}// namespace e_regex::terminals
-
-#endif /* TERMINALS_ANY */
-
-#ifndef TERMINALS_CARRIAGE_RETURN
-#define TERMINALS_CARRIAGE_RETURN
-
-namespace e_regex::terminals
-{
-    template<>
-    struct terminal<pack_string<'\\', 'r'>> : public exact_matcher<pack_string<'\r'>>
-    {
-    };
-}// namespace e_regex::terminals
-
-#endif /* TERMINALS_CARRIAGE_RETURN */
-
-#ifndef TERMINALS_DIGIT_CHARACTERS
-#define TERMINALS_DIGIT_CHARACTERS
-
-namespace e_regex::terminals
-{
-    template<>
-    struct terminal<pack_string<'\\', 'd'>> : public terminal_common<terminal<pack_string<'\\', 'd'>>>
-    {
-            static constexpr auto match_(auto result)
-            {
-                auto current = result.actual_iterator_end;
-
-                result = (*current >= '0' && *current <= '9');
-                result.actual_iterator_end++;
-
-                return result;
-            }
-    };
-
-    template<>
-    struct terminal<pack_string<'\\', 'D'>> : public negated_terminal<terminal<pack_string<'\\', 'd'>>>
-    {
-    };
-}// namespace e_regex::terminals
-
-#endif /* TERMINALS_DIGIT_CHARACTERS */
-
-#ifndef TERMINALS_ESCAPE
-#define TERMINALS_ESCAPE
-
-namespace e_regex::terminals
-{
-    template<>
-    struct terminal<pack_string<'\\', 'e'>> : public exact_matcher<pack_string<0x1B>>
-    {
-    };
-}// namespace e_regex::terminals
-
-#endif /* TERMINALS_ESCAPE */
-
-#ifndef TERMINALS_ESCAPED
-#define TERMINALS_ESCAPED
-
-namespace e_regex::terminals
-{
-    template<char identifier>
-    struct terminal<pack_string<'\\', identifier>>
-        : public terminal_common<terminal<pack_string<'\\', identifier>>>
-    {
-            static constexpr auto match_(auto result)
-            {
-                result = *result.actual_iterator_end == identifier;
-
-                result.actual_iterator_end++;
-
-                return result;
-            }
-    };
-}// namespace e_regex::terminals
-
-#endif /* TERMINALS_ESCAPED */
-
-#ifndef TERMINALS_FORM_FEED
-#define TERMINALS_FORM_FEED
-
-namespace e_regex::terminals
-{
-    template<>
-    struct terminal<pack_string<'\\', 'f'>> : public exact_matcher<pack_string<0x0C>>
-    {
-    };
-}// namespace e_regex::terminals
-
-#endif /* TERMINALS_FORM_FEED */
-
-#ifndef TERMINALS_NEW_LINE
-#define TERMINALS_NEW_LINE
-
-namespace e_regex::terminals
-{
-    template<>
-    struct terminal<pack_string<'\\', 'n'>> : public exact_matcher<pack_string<'\n'>>
-    {
-    };
-
-    template<>
-    struct terminal<pack_string<'\\', 'N'>> : public negated_terminal<terminal<pack_string<'\\', 'n'>>>
-    {
-    };
-}// namespace e_regex::terminals
-
-#endif /* TERMINALS_NEW_LINE */
-
-#ifndef TERMINALS_RANGE
-#define TERMINALS_RANGE
-
-namespace e_regex::terminals
-{
-    template<typename start, typename end>
-    struct range_terminal;
-
-    template<char start, char end>
-    struct range_terminal<pack_string<start>, pack_string<end>>
-        : public terminal_common<range_terminal<pack_string<start>, pack_string<end>>>
-    {
-            static constexpr auto match(auto result)
-            {
-                static_assert(end >= start, "Range [a-b] must respect b >= a");
-
-                auto current = result.actual_iterator_end;
-
-                result = *current >= start && *current <= end;
-                result.actual_iterator_end++;
-
-                return result;
-            }
-    };
-}// namespace e_regex::terminals
-
-#endif /* TERMINALS_RANGE */
-
-#ifndef TERMINALS_SPACE_CHARACTERS
-#define TERMINALS_SPACE_CHARACTERS
-
-#include <algorithm>
-#include <array>
-
-namespace e_regex::terminals
-{
-    template<>
-    struct terminal<pack_string<'\\', 's'>> : public terminal_common<terminal<pack_string<'\\', 's'>>>
-    {
-            static constexpr auto match_(auto result)
-            {
-                constexpr std::array matched {' ', '\t', '\n', '\r', '\f'};
-
-                result = std::find(matched.begin(), matched.end(), *result.actual_iterator_end)
-                         != matched.end();
-
-                result.actual_iterator_end++;
-
-                return result;
-            }
-    };
-
-    template<>
-    struct terminal<pack_string<'\\', 'S'>> : public negated_terminal<terminal<pack_string<'\\', 's'>>>
-    {
-    };
-}// namespace e_regex::terminals
-
-#endif /* TERMINALS_SPACE_CHARACTERS */
-
-#ifndef TERMINALS_TAB
-#define TERMINALS_TAB
-
-namespace e_regex::terminals
-{
-    template<>
-    struct terminal<pack_string<'\\', 't'>> : public exact_matcher<pack_string<'\t'>>
-    {
-    };
-}// namespace e_regex::terminals
-
-#endif /* TERMINALS_TAB */
-
-#ifndef TERMINALS_WORD_CHARACTERS
-#define TERMINALS_WORD_CHARACTERS
-
-namespace e_regex::terminals
-{
-    template<>
-    struct terminal<pack_string<'\\', 'w'>> : public terminal_common<terminal<pack_string<'\\', 'w'>>>
-    {
-            static constexpr auto match_(auto result)
-            {
-                auto current = result.actual_iterator_end;
-
-                result = (*current >= 'A' && *current <= 'Z') || (*current >= 'a' && *current <= 'z');
-                result.actual_iterator_end++;
-
-                return result;
-            }
-    };
-
-    template<>
-    struct terminal<pack_string<'\\', 'W'>> : public negated_terminal<terminal<pack_string<'\\', 'w'>>>
-    {
-    };
-}// namespace e_regex::terminals
-
-#endif /* TERMINALS_WORD_CHARACTERS */
-
-#endif /* TERMINALS_TERMINAL */
-
-namespace e_regex
-{
-    template<typename matcher,
-             typename... children,
-             std::size_t repetitions_min,
-             std::size_t repetitions_max,
-             policy      repetition_policy,
-             bool        grouping,
-             typename child>
-    struct add_child<basic_node<matcher, std::tuple<children...>, repetitions_min, repetitions_max, repetition_policy, grouping>,
-                     child>
-    {
-            using type
-                = basic_node<matcher, std::tuple<children..., child>, repetitions_min, repetitions_max, repetition_policy, grouping>;
-    };
-
-    template<typename child>
-    struct add_child<void, child>
-    {
-            using type = child;
-    };
-
-    template<typename node, typename child>
-    using add_child_t = typename add_child<node, child>::type;
-}// namespace e_regex
-
-#endif /* HEURISTICS_HPP */
-
-#ifndef TOKENIZER
-#define TOKENIZER
-
-#include <tuple>
-
-namespace e_regex
-{
-    template<typename matches, char... string>
-    struct extract_braces_numbers;
-
-    template<char... current, char... tail>
-    struct extract_braces_numbers<std::tuple<pack_string<current...>>, ',', tail...>
-        : public extract_braces_numbers<
-              tuple_cat_t<std::tuple<pack_string<current...>>, std::tuple<pack_string<','>>>,
-              tail...>
-    {
-            // ',' found, first number done
-    };
-
-    template<char... current, char head, char... tail>
-    struct extract_braces_numbers<std::tuple<pack_string<current...>>, head, tail...>
-        : public extract_braces_numbers<std::tuple<pack_string<current..., head>>, tail...>
-    {
-            // Populating first number
-    };
-
-    // Probably gcc bug -> ambiguous template instantiation if compact
-    template<typename first, typename second, char... current, char... tail>
-    struct extract_braces_numbers<std::tuple<first, second, pack_string<current...>>, '}', tail...>
-    {
-            // '}' found, finishing
-            using numbers
-                = std::tuple<pack_string<'{'>, first, second, pack_string<current...>, pack_string<'}'>>;
-            using remaining = pack_string<tail...>;
-    };
-
-    template<typename first, typename second, char... tail>
-    struct extract_braces_numbers<std::tuple<first, second>, '}', tail...>
-    {
-            // '}' found, finishing
-            using numbers   = std::tuple<pack_string<'{'>, first, second, pack_string<'}'>>;
-            using remaining = pack_string<tail...>;
-    };
-
-    template<char... current, char... tail>
-    struct extract_braces_numbers<std::tuple<pack_string<current...>>, '}', tail...>
-    {
-            // '}' found, finishing
-            using numbers = std::tuple<pack_string<'{'>, pack_string<current...>, pack_string<'}'>>;
-            using remaining = pack_string<tail...>;
-    };
-
-    template<typename first, typename second, char head, char... tail>
-    struct extract_braces_numbers<std::tuple<first, second>, head, tail...>
-        : public extract_braces_numbers<std::tuple<first, second, pack_string<head>>, tail...>
-    {
-            // Populating second number
-    };
-
-    template<char... current, typename first, typename second, char head, char... tail>
-    struct extract_braces_numbers<std::tuple<first, second, pack_string<current...>>, head, tail...>
-        : public extract_braces_numbers<std::tuple<first, second, pack_string<current..., head>>, tail...>
-    {
-            // Populating second number
-    };
-
-    template<char... string>
-    using extract_braces_numbers_t = extract_braces_numbers<std::tuple<pack_string<>>, string...>;
-
-    template<typename current, typename string>
-    struct tokenizer;
-
-    template<typename current, char head, char... tail>
-    struct tokenizer<current, pack_string<head, tail...>>
-    {
-            // Simple iteration
-            using current_ = tuple_cat_t<current, std::tuple<pack_string<head>>>;
-            using tokens   = typename tokenizer<current_, pack_string<tail...>>::tokens;
-    };
-
-    template<typename current, char head, char... tail>
-    struct tokenizer<current, pack_string<'\\', head, tail...>>
-    {
-            // Escaped character
-            using current_ = tuple_cat_t<current, std::tuple<pack_string<'\\', head>>>;
-            using tokens   = typename tokenizer<current_, pack_string<tail...>>::tokens;
-    };
-
-    template<typename current, char... tail>
-    struct tokenizer<current, pack_string<'{', tail...>>
-    {
-            // Number inside braces
-            using numbers  = extract_braces_numbers_t<tail...>;
-            using current_ = tuple_cat_t<current, typename numbers::numbers>;
-            using tokens   = typename tokenizer<current_, typename numbers::remaining>::tokens;
-    };
-
-    template<typename current>
-    struct tokenizer<current, pack_string<>>
-    {
-            // Base case
-            using tokens = current;
-    };
-
-    template<typename string>
-    using tokenizer_t = typename tokenizer<std::tuple<>, string>::tokens;
-}// namespace e_regex
-
-#endif /* TOKENIZER */
-
-namespace e_regex
-{
-    template<typename last_node, typename tokens>
-    struct tree_builder_helper;
-
-    template<typename last_node>
-    struct tree_builder_helper<last_node, std::tuple<>>
-    {
-            // Base case
-
-            using tree = last_node;
-    };
-
-    template<typename last_node, typename head, typename... tail>
-    struct tree_builder_helper<last_node, std::tuple<head, tail...>>
-    {
-            // Simple case, iterate
-
-            using new_node =
-                typename tree_builder_helper<basic_node<terminals::terminal<head>, std::tuple<>>,
-                                             std::tuple<tail...>>::tree;
-
-            using tree = add_child_t<last_node, new_node>;
-    };
-
-    template<typename matcher>
-    struct negated_node
-    {
-            static constexpr std::size_t groups = matcher::groups;
-
-            static constexpr auto match(auto result)
-            {
-                result = matcher::match(std::move(result));
-
-                result = !static_cast<bool>(result);
-
-                return result;
-            }
-    };
-}// namespace e_regex
-
-#endif /* OPERATORS_COMMON */
-
-#ifndef SRC_OPERATORS_GREEDY_NODE_HPP
-#define SRC_OPERATORS_GREEDY_NODE_HPP
-
-#include <cstddef>
-
-namespace e_regex
-{
-    namespace _private
-    {
-        constexpr auto self_match(auto result,
-                                  decltype(result) (*match)(decltype(result)),
-                                  std::size_t repetitions_max,
-                                  std::size_t repetitions_min,
-                                  bool        grouping)
-        {
-            unsigned matches = 0;
-
-            auto last_res = result;
-
-            while (last_res.actual_iterator_end < result.query.end() && matches < repetitions_max)
-            {
-                last_res.matches = result.matches;// Only last group is considered
-                auto res         = match(last_res);
-
-                if (res)
-                {
-                    if (grouping)
-                    {
-                        res.last_group_start = last_res.actual_iterator_end;
-                    }
-
-                    last_res = std::move(res);
-                    matches++;
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            if (result.actual_iterator_end == last_res.actual_iterator_end && repetitions_min != 0)
-            {
-                // No matching characters found and this node is not optional, increase
-                // iterator
-                result.actual_iterator_end++;
-            }
-            else
-            {
-                result = std::move(last_res);
-            }
-
-            result = matches >= repetitions_min && matches <= repetitions_max;
-
-            return result;
-        }
-
-        constexpr auto match(auto result,
-                             decltype(result) (*self_match)(decltype(result)),
-                             decltype(result) (*dfs)(decltype(result)),
-                             std::size_t repetitions_min,
-                             bool        grouping,
-                             std::size_t children_number,
-                             std::size_t groups)
-        {
-            auto match_index = result.matches;
-            auto end         = result.last_group_start;
-            auto begin       = end;
-
-            if (grouping)
-            {
-                result.matches++;
-                result.last_group_start = result.actual_iterator_end;
-            }
-
-            if (children_number == 0)
-            {
-                // No children, no need to apply the policy
-                result = self_match(std::move(result));
-                begin  = result.last_group_start;
-                end    = result.actual_iterator_end;
-            }
-            else
-            {
-                result.last_group_start = result.actual_iterator_end;
-                result                  = self_match(std::move(result));
-                auto this_start         = result.actual_iterator_end;
-
-                if (result)
-                {
-                    begin  = result.last_group_start;
-                    end    = result.actual_iterator_end;
-                    result = dfs(std::move(result));
-                }
-
-                // Greedy backtracking
-                while (!result && this_start > result.last_group_start + repetitions_min)
-                {
-                    result = true;
-                    this_start--;
-                    result.actual_iterator_end = this_start;
-                    end                        = this_start;
-
-                    result = dfs(std::move(result));
-
-                    if (result)
-                    {
-                        break;
-                    }
-                }
-            }
-
-            if (grouping)
-            {
-                if (result)
-                {
-                    result.match_groups[match_index] = literal_string_view {begin, end};
-                    result.matches += groups;
-                }
-            }
-
-            if (repetitions_min == 0)
-            {
-                result = true;
-            }
-
-            return result;
-        }
-    }// namespace _private
-
-    template<typename matcher, typename... children, std::size_t repetitions_min, std::size_t repetitions_max, bool grouping>
-    struct basic_node<matcher, std::tuple<children...>, repetitions_min, repetitions_max, policy::GREEDY, grouping>
-    {
-            static constexpr auto backtracking_policy = policy::GREEDY;
-
-            static constexpr std::size_t groups
-                = group_getter<matcher>::value + sum(children::groups...) + (grouping ? 1 : 0);
-
-            template<typename Res>
-            static constexpr Res self_match(Res result)
-            {
-                if constexpr (std::is_same_v<matcher, void>)
-                {
-                    return result;
-                }
-                else
-                {
-                    return _private::self_match(result,
-                                                &matcher::template match<decltype(result)>,
-                                                repetitions_max,
-                                                repetitions_min,
-                                                grouping);
-                }
-            }
-
-            template<typename Res>
-            static constexpr Res match(Res result)
-            {
-                decltype(result) (*dfs_ptr)(decltype(result)) = nullptr;
-                if constexpr (sizeof...(children) != 0)
-                {
-                    dfs_ptr = &dfs<children...>;
-                }
-
-                return _private::match(
-                    result, &self_match<Res>, dfs_ptr, repetitions_min, grouping, sizeof...(children), groups);
-            }
-    };
-}// namespace e_regex
-
-#endif /* SRC_OPERATORS_GREEDY_NODE_HPP */
-
-#ifndef UTILITIES_EXTRACT_DELIMITED_CONTENT
-#define UTILITIES_EXTRACT_DELIMITED_CONTENT
-
-#include <tuple>
 
 namespace e_regex
 {
@@ -1855,30 +869,32 @@ namespace e_regex
     template<typename data>
     using first_type_t = typename first_type<data>::type;
 
-    template<typename matcher, typename data, policy policy_ = policy::GREEDY>
+    template<typename matcher, typename data, nodes::policy policy_ = nodes::policy::GREEDY>
     struct quantified_node_builder;
 
-    template<typename matcher, typename first, policy policy_>
+    template<typename matcher, typename first, nodes::policy policy_>
     struct quantified_node_builder<matcher, std::tuple<first>, policy_>
     {
             static constexpr auto value = pack_string_to_number<first>::value;
-            using type                  = set_node_range_t<matcher, value, value, policy_>;
+            using type                  = nodes::set_node_range_t<matcher, value, value, policy_>;
     };
 
-    template<typename matcher, typename first, policy policy_>
+    template<typename matcher, typename first, nodes::policy policy_>
     struct quantified_node_builder<matcher, std::tuple<first, pack_string<','>>, policy_>
     {
-            using type = set_node_range_t<matcher,
-                                          pack_string_to_number<first>::value,
-                                          std::numeric_limits<std::size_t>::max(),
-                                          policy_>;
+            using type = nodes::set_node_range_t<matcher,
+                                                 pack_string_to_number<first>::value,
+                                                 std::numeric_limits<std::size_t>::max(),
+                                                 policy_>;
     };
 
-    template<typename matcher, typename first, typename second, policy policy_>
+    template<typename matcher, typename first, typename second, nodes::policy policy_>
     struct quantified_node_builder<matcher, std::tuple<first, pack_string<','>, second>, policy_>
     {
-            using type
-                = set_node_range_t<matcher, pack_string_to_number<first>::value, pack_string_to_number<second>::value, policy_>;
+            using type = nodes::set_node_range_t<matcher,
+                                                 pack_string_to_number<first>::value,
+                                                 pack_string_to_number<second>::value,
+                                                 policy_>;
     };
 
     template<typename last_node, typename... tail>
@@ -1891,12 +907,12 @@ namespace e_regex
 
             static constexpr auto policy_
                 = std::is_same_v<typename remaining_head::type, pack_string<'?'>>
-                      ? policy::LAZY
+                      ? nodes::policy::LAZY
                       : (std::is_same_v<typename remaining_head::type, pack_string<'+'>>
-                             ? policy::POSSESSIVE
-                             : policy::GREEDY);
+                             ? nodes::policy::POSSESSIVE
+                             : nodes::policy::GREEDY);
 
-            using remaining = std::conditional_t<policy_ != policy::GREEDY,
+            using remaining = std::conditional_t<policy_ != nodes::policy::GREEDY,
                                                  typename remaining_head::remaining,
                                                  typename substring::remaining>;
 
@@ -1907,10 +923,17 @@ namespace e_regex
     };
 }// namespace e_regex
 
-#endif /* OPERATORS_BRACES */
+#endif /* OPERATORS_BRACES_HPP */
 
-#ifndef OPERATORS_END_ANCHOR
-#define OPERATORS_END_ANCHOR
+#ifndef OPERATORS_END_ANCHOR_HPP
+#define OPERATORS_END_ANCHOR_HPP
+
+#include <tuple>
+
+#include <heuristics.hpp>
+#include <nodes.hpp>
+#include <static_string.hpp>
+#include <terminals/anchors/end.hpp>
 
 namespace e_regex
 {
@@ -1920,16 +943,20 @@ namespace e_regex
             // End anchor found
 
             using new_node
-                = basic_node<terminals::anchors::end, std::tuple<>, 1, 1, policy::POSSESSIVE>;
+                = nodes::basic_node<terminals::anchors::end, std::tuple<>, 1, 1, nodes::policy::POSSESSIVE>;
 
             using tree = add_child_t<last_node, new_node>;
     };
 }// namespace e_regex
 
-#endif /* OPERATORS_END_ANCHOR */
+#endif /* OPERATORS_END_ANCHOR_HPP */
 
 #ifndef OPERATORS_HEX
 #define OPERATORS_HEX
+
+#include <static_string.hpp>
+#include <terminals.hpp>
+#include <utilities/extract_delimited_content.hpp>
 
 namespace e_regex
 {
@@ -1988,7 +1015,7 @@ namespace e_regex
     };
 
     template<typename last_node, char first_nibble, char second_nibble, typename... tail>
-    requires hex<first_nibble> && hex<second_nibble>
+        requires hex<first_nibble> && hex<second_nibble>
     struct tree_builder_helper<
         last_node,
         std::tuple<pack_string<'\\', 'x'>, pack_string<first_nibble>, pack_string<second_nibble>, tail...>>
@@ -1996,19 +1023,19 @@ namespace e_regex
             using value = typename hex_to_bin<first_nibble, second_nibble>::result;
 
             using new_node =
-                typename tree_builder_helper<basic_node<terminals::exact_matcher<value>, std::tuple<>>,
+                typename tree_builder_helper<nodes::basic_node<terminals::exact_matcher<value>, std::tuple<>>,
                                              std::tuple<tail...>>::tree;
             using tree = add_child_t<last_node, new_node>;
     };
 
     template<typename last_node, char nibble, typename... tail>
-    requires hex<nibble>
+        requires hex<nibble>
     struct tree_builder_helper<last_node, std::tuple<pack_string<'\\', 'x'>, pack_string<nibble>, tail...>>
     {
             using value = typename hex_to_bin<nibble>::result;
 
             using new_node =
-                typename tree_builder_helper<basic_node<terminals::exact_matcher<value>, std::tuple<>>,
+                typename tree_builder_helper<nodes::basic_node<terminals::exact_matcher<value>, std::tuple<>>,
                                              std::tuple<tail...>>::tree;
             using tree = add_child_t<last_node, new_node>;
     };
@@ -2021,7 +1048,7 @@ namespace e_regex
             using value = typename hex_tuple_to_bin<typename substring::result>::result;
 
             using new_node =
-                typename tree_builder_helper<basic_node<terminals::exact_matcher<value>, std::tuple<>>,
+                typename tree_builder_helper<nodes::basic_node<terminals::exact_matcher<value>, std::tuple<>>,
                                              typename substring::remaining>::tree;
 
             using tree = add_child_t<last_node, new_node>;
@@ -2029,142 +1056,6 @@ namespace e_regex
 }// namespace e_regex
 
 #endif /* OPERATORS_HEX */
-
-#ifndef OPERATORS_LAZY_NODE_HPP
-#define OPERATORS_LAZY_NODE_HPP
-
-namespace e_regex
-{
-    template<typename matcher, typename... children, std::size_t repetitions_min, std::size_t repetitions_max, bool grouping>
-    struct basic_node<matcher, std::tuple<children...>, repetitions_min, repetitions_max, policy::LAZY, grouping>
-    {
-            static constexpr auto backtracking_policy = policy::LAZY;
-
-            static constexpr std::size_t groups
-                = group_getter<matcher>::value + sum(children::groups...) + (grouping ? 1 : 0);
-
-            static constexpr auto self_match(auto result)
-            {
-                if constexpr (std::is_same_v<matcher, void>)
-                {
-                    return result;
-                }
-                else
-                {
-                    unsigned matches = 0;
-
-                    auto last_res = result;
-
-                    auto res = matcher::match(last_res);
-
-                    if (res)
-                    {
-                        if constexpr (grouping)
-                        {
-                            res.last_group_start = last_res.actual_iterator_end;
-                        }
-
-                        last_res = std::move(res);
-                        matches++;
-                    }
-
-                    if (result.actual_iterator_end == last_res.actual_iterator_end
-                        && repetitions_min != 0)
-                    {
-                        result.actual_iterator_end++;
-                    }
-                    else
-                    {
-                        result = std::move(last_res);
-                    }
-
-                    result = matches >= repetitions_min && matches <= repetitions_max;
-
-                    return result;
-                }
-            }
-
-            static constexpr auto match(auto result)
-            {
-                auto match_index = result.matches;
-                auto end         = result.last_group_start;
-                auto begin       = result.actual_iterator_end;
-
-                if constexpr (grouping)
-                {
-                    result.matches++;
-                    result.last_group_start = result.actual_iterator_end;
-                }
-
-                if constexpr (sizeof...(children) == 0)
-                {
-                    // No children, no need to apply the policy
-                    result = self_match(std::move(result));
-                    begin  = result.last_group_start;
-                    end    = result.actual_iterator_end;
-                }
-                else
-                {
-                    std::size_t total_matches = 0;
-
-                    if constexpr (repetitions_min == 0)
-                    {
-                        // First try, only dfs
-                        result = dfs<children...>(std::move(result));
-                        end    = begin;
-                    }
-
-                    if (!result || repetitions_min > 0)
-                    {
-                        // Lazy backtracking
-                        do
-                        {
-                            result = true;
-
-                            do
-                            {
-                                result = self_match(std::move(result));
-                                total_matches++;
-                            } while (total_matches < repetitions_min);
-
-                            if (!result)
-                            {
-                                break;
-                            }
-
-                            begin  = result.last_group_start;
-                            end    = result.actual_iterator_end;
-                            result = dfs<children...>(std::move(result));
-
-                            if (!result)
-                            {
-                                result.actual_iterator_end++;
-                            }
-
-                        } while (!result && result.actual_iterator_end <= result.query.end()
-                                 && total_matches < repetitions_max);
-                    }
-                }
-
-                if constexpr (grouping)
-                {
-                    if (result)
-                    {
-                        result.match_groups[match_index] = literal_string_view {begin, end};
-                    }
-                }
-
-                if constexpr (repetitions_min == 0)
-                {
-                    result = true;
-                }
-
-                return result;
-            }
-    };
-}// namespace e_regex
-
-#endif /* OPERATORS_LAZY_NODE_HPP */
 
 #ifndef OPERATORS_OCTAL
 #define OPERATORS_OCTAL
@@ -2206,7 +1097,7 @@ namespace e_regex
     };
 
     template<typename last_node, char first_nibble, char second_nibble, char third_nibble, typename... tail>
-    requires octal<first_nibble> && octal<second_nibble> && octal<third_nibble>
+        requires octal<first_nibble> && octal<second_nibble> && octal<third_nibble>
     struct tree_builder_helper<
         last_node,
         std::tuple<pack_string<'\\', first_nibble>, pack_string<second_nibble>, pack_string<third_nibble>, tail...>>
@@ -2214,7 +1105,7 @@ namespace e_regex
             using value = typename octal_to_bin<first_nibble, second_nibble, third_nibble>::result;
 
             using new_node =
-                typename tree_builder_helper<basic_node<terminals::exact_matcher<value>, std::tuple<>>,
+                typename tree_builder_helper<nodes::basic_node<terminals::exact_matcher<value>, std::tuple<>>,
                                              std::tuple<tail...>>::tree;
             using tree = add_child_t<last_node, new_node>;
     };
@@ -2227,7 +1118,7 @@ namespace e_regex
             using value = typename octal_tuple_to_bin<typename substring::result>::result;
 
             using new_node =
-                typename tree_builder_helper<basic_node<terminals::exact_matcher<value>, std::tuple<>>,
+                typename tree_builder_helper<nodes::basic_node<terminals::exact_matcher<value>, std::tuple<>>,
                                              typename substring::remaining>::tree;
 
             using tree = add_child_t<last_node, new_node>;
@@ -2239,13 +1130,15 @@ namespace e_regex
 #ifndef OPERATORS_OPTIONAL
 #define OPERATORS_OPTIONAL
 
+#include <nodes.hpp>
+
 namespace e_regex
 {
     template<typename last_node, typename... tail>
     struct tree_builder_helper<last_node, std::tuple<pack_string<'?'>, tail...>>
     {
             // greedy ? operator found
-            using new_node = set_node_range_t<last_node, 0, 1, policy::GREEDY>;
+            using new_node = nodes::set_node_range_t<last_node, 0, 1, nodes::policy::GREEDY>;
 
             using tree = typename tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
@@ -2254,7 +1147,7 @@ namespace e_regex
     struct tree_builder_helper<last_node, std::tuple<pack_string<'?'>, pack_string<'?'>, tail...>>
     {
             // lazy ? operator found
-            using new_node = set_node_range_t<last_node, 0, 1, policy::LAZY>;
+            using new_node = nodes::set_node_range_t<last_node, 0, 1, nodes::policy::LAZY>;
 
             using tree = typename tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
@@ -2263,7 +1156,7 @@ namespace e_regex
     struct tree_builder_helper<last_node, std::tuple<pack_string<'?'>, pack_string<'+'>, tail...>>
     {
             // possessive ? operator found
-            using new_node = set_node_range_t<last_node, 0, 1, policy::POSSESSIVE>;
+            using new_node = nodes::set_node_range_t<last_node, 0, 1, nodes::policy::POSSESSIVE>;
 
             using tree = typename tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
@@ -2283,7 +1176,7 @@ namespace e_regex
     {
             // greedy + operator found
             using new_node
-                = basic_node<last_node, std::tuple<>, 1, std::numeric_limits<std::size_t>::max(), policy::GREEDY>;
+                = nodes::basic_node<last_node, std::tuple<>, 1, std::numeric_limits<std::size_t>::max(), nodes::policy::GREEDY>;
 
             using tree = typename tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
@@ -2293,7 +1186,7 @@ namespace e_regex
     {
             // lazy + operator found
             using new_node
-                = basic_node<last_node, std::tuple<>, 1, std::numeric_limits<std::size_t>::max(), policy::LAZY>;
+                = nodes::basic_node<last_node, std::tuple<>, 1, std::numeric_limits<std::size_t>::max(), nodes::policy::LAZY>;
 
             using tree = typename tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
@@ -2303,7 +1196,7 @@ namespace e_regex
     {
             // lazy + operator found
             using new_node
-                = basic_node<last_node, std::tuple<>, 1, std::numeric_limits<std::size_t>::max(), policy::POSSESSIVE>;
+                = nodes::basic_node<last_node, std::tuple<>, 1, std::numeric_limits<std::size_t>::max(), nodes::policy::POSSESSIVE>;
 
             using tree = typename tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
@@ -2311,109 +1204,10 @@ namespace e_regex
 
 #endif /* OPERATORS_PLUS */
 
-#ifndef OPERATORS_POSSESSIVE_NODE_HPP
-#define OPERATORS_POSSESSIVE_NODE_HPP
-
-namespace e_regex
-{
-    template<typename matcher, typename... children, std::size_t repetitions_min, std::size_t repetitions_max, bool grouping>
-    struct basic_node<matcher, std::tuple<children...>, repetitions_min, repetitions_max, policy::POSSESSIVE, grouping>
-    {
-            static constexpr auto backtracking_policy = policy::POSSESSIVE;
-
-            static constexpr std::size_t groups
-                = group_getter<matcher>::value + sum(children::groups...) + (grouping ? 1 : 0);
-
-            static constexpr auto self_match(auto result)
-            {
-                if constexpr (std::is_same_v<matcher, void>)
-                {
-                    return result;
-                }
-                else
-                {
-                    unsigned matches = 0;
-
-                    auto last_res = result;
-
-                    while (last_res.actual_iterator_end <= result.query.end()
-                           && matches < repetitions_max)
-                    {
-                        last_res.matches = result.matches;// Only last group is considered
-                        auto res         = matcher::match(last_res);
-
-                        if (res)
-                        {
-                            if constexpr (grouping)
-                            {
-                                res.last_group_start = last_res.actual_iterator_end;
-                            }
-
-                            last_res = std::move(res);
-                            matches++;
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-
-                    result = std::move(last_res);
-                    result = matches >= repetitions_min && matches <= repetitions_max;
-
-                    return result;
-                }
-            }
-
-            static constexpr auto match(auto result)
-            {
-                auto match_index = result.matches;
-                auto end         = result.last_group_start;
-                auto begin       = end;
-
-                if constexpr (grouping)
-                {
-                    result.matches++;
-                    result.last_group_start = result.actual_iterator_end;
-                }
-
-                if constexpr (sizeof...(children) == 0)
-                {
-                    // No children, no need to apply the policy
-                    result = self_match(std::move(result));
-                    begin  = result.last_group_start;
-                    end    = result.actual_iterator_end;
-                }
-                else
-                {
-                    result.last_group_start = result.actual_iterator_end;
-                    result                  = self_match(std::move(result));
-
-                    if (result)
-                    {
-                        begin  = result.last_group_start;
-                        end    = result.actual_iterator_end;
-                        result = dfs<children...>(std::move(result));
-                    }
-                }
-
-                if constexpr (grouping)
-                {
-                    if (result)
-                    {
-                        result.match_groups[match_index] = literal_string_view {begin, end};
-                    }
-                }
-
-                return result;
-            }
-    };
-}// namespace e_regex
-
-#endif /* OPERATORS_POSSESSIVE_NODE_HPP */
-
 #ifndef OPERATORS_ROUND_BRACKETS
 #define OPERATORS_ROUND_BRACKETS
+
+#include <nodes.hpp>
 
 namespace e_regex
 {
@@ -2424,8 +1218,8 @@ namespace e_regex
             using substring = extract_delimited_content_t<'(', ')', std::tuple<tail...>>;
 
             using subregex = typename tree_builder_helper<void, typename substring::result>::tree;
-            using new_node =
-                typename tree_builder_helper<grouping_node<subregex>, typename substring::remaining>::tree;
+            using new_node = typename tree_builder_helper<nodes::grouping_node<subregex>,
+                                                          typename substring::remaining>::tree;
 
             using tree = add_child_t<last_node, new_node>;
     };
@@ -2438,7 +1232,7 @@ namespace e_regex
             using substring = extract_delimited_content_t<'(', ')', std::tuple<tail...>>;
 
             using subregex = typename tree_builder_helper<void, typename substring::result>::tree;
-            using new_node = typename tree_builder_helper<basic_node<subregex, std::tuple<>>,
+            using new_node = typename tree_builder_helper<nodes::basic_node<subregex, std::tuple<>>,
                                                           typename substring::remaining>::tree;
 
             using tree = add_child_t<last_node, new_node>;
@@ -2447,8 +1241,114 @@ namespace e_regex
 
 #endif /* OPERATORS_ROUND_BRACKETS */
 
-#ifndef OPERATORS_SQUARE_BRACKETS
-#define OPERATORS_SQUARE_BRACKETS
+#ifndef OPERATORS_SQUARE_BRACKETS_HPP
+#define OPERATORS_SQUARE_BRACKETS_HPP
+
+#include <terminals/exact_matcher.hpp>
+#include <utilities/extract_delimited_content.hpp>
+
+#ifndef TERMINALS_RANGE
+#define TERMINALS_RANGE
+
+#ifndef TERMINALS_COMMON_HPP
+#define TERMINALS_COMMON_HPP
+
+namespace e_regex::terminals
+{
+    template<typename terminal>
+    struct terminal_common
+    {
+            static constexpr auto match(auto result)
+            {
+                if (result.actual_iterator_end >= result.query.end())
+                {
+                    result = false;
+                }
+                else
+                {
+                    return terminal::match_(std::move(result));
+                }
+
+                return result;
+            }
+    };
+
+    template<typename terminal>
+    struct negated_terminal
+    {
+            static constexpr auto match(auto result)
+            {
+                result = terminal::match_(std::move(result));
+                result = !result.accepted;
+
+                return result;
+            }
+    };
+
+    template<typename... identifiers>
+    struct terminal;
+
+    // Avoids instantiating nodes code for consecutive matchers
+    template<typename head, typename... tail>
+    struct terminal<head, tail...>
+    {
+            static constexpr auto match(auto result)
+            {
+                result = terminal<head>::match(std::move(result));
+
+                if (result)
+                {
+                    return terminal<tail...>::match(std::move(result));
+                }
+
+                return result;
+            }
+    };
+
+    template<typename terminal>
+    struct rebuild_expression;
+
+    template<>
+    struct rebuild_expression<terminal<>>
+    {
+            using string = pack_string<>;
+    };
+
+    template<char... chars, typename... tail>
+    struct rebuild_expression<terminal<pack_string<chars...>, tail...>>
+    {
+            using string
+                = merge_pack_strings_t<pack_string<chars...>,
+                                       typename rebuild_expression<terminal<tail...>>::string>;
+    };
+}// namespace e_regex::terminals
+
+#endif /* TERMINALS_COMMON_HPP */
+
+namespace e_regex::terminals
+{
+    template<typename start, typename end>
+    struct range_terminal;
+
+    template<char start, char end>
+    struct range_terminal<pack_string<start>, pack_string<end>>
+        : public terminal_common<range_terminal<pack_string<start>, pack_string<end>>>
+    {
+            static constexpr auto match(auto result)
+            {
+                static_assert(end >= start, "Range [a-b] must respect b >= a");
+
+                auto current = result.actual_iterator_end;
+
+                result = *current >= start && *current <= end;
+                result.actual_iterator_end++;
+
+                return result;
+            }
+    };
+}// namespace e_regex::terminals
+
+#endif /* TERMINALS_RANGE */
 
 namespace e_regex
 {
@@ -2469,7 +1369,7 @@ namespace e_regex
             // Simple case, iterate
 
             using new_node
-                = add_child_t<last_node, basic_node<terminals::exact_matcher<head>, std::tuple<>>>;
+                = add_child_t<last_node, nodes::basic_node<terminals::exact_matcher<head>, std::tuple<>>>;
             using tree =
                 typename square_bracker_tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
@@ -2479,9 +1379,9 @@ namespace e_regex
     {
             // Simple case, iterate
 
-            using new_node
-                = add_child_t<last_node,
-                              basic_node<terminals::terminal<pack_string<'\\', identifier>>, std::tuple<>>>;
+            using new_node = add_child_t<
+                last_node,
+                nodes::basic_node<terminals::terminal<pack_string<'\\', identifier>>, std::tuple<>>>;
             using tree =
                 typename square_bracker_tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
@@ -2492,7 +1392,8 @@ namespace e_regex
             // Range found
 
             using new_node
-                = add_child_t<last_node, basic_node<terminals::range_terminal<start, end>, std::tuple<>>>;
+                = add_child_t<last_node,
+                              nodes::basic_node<terminals::range_terminal<start, end>, std::tuple<>>>;
             using tree =
                 typename square_bracker_tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
@@ -2504,7 +1405,7 @@ namespace e_regex
             using substring = extract_delimited_content_t<'[', ']', std::tuple<tail...>>;
 
             using subregex =
-                typename square_bracker_tree_builder_helper<basic_node<void, std::tuple<>>,
+                typename square_bracker_tree_builder_helper<nodes::basic_node<void, std::tuple<>>,
                                                             typename substring::result>::tree;
             using new_node =
                 typename tree_builder_helper<subregex, typename substring::remaining>::tree;
@@ -2519,10 +1420,10 @@ namespace e_regex
             using substring = extract_delimited_content_t<'[', ']', std::tuple<tail...>>;
 
             using subregex =
-                typename square_bracker_tree_builder_helper<basic_node<void, std::tuple<>>,
+                typename square_bracker_tree_builder_helper<nodes::basic_node<void, std::tuple<>>,
                                                             typename substring::result>::tree;
             using new_node =
-                typename tree_builder_helper<basic_node<negated_node<subregex>, std::tuple<>>,
+                typename tree_builder_helper<nodes::basic_node<nodes::negated_node<subregex>, std::tuple<>>,
                                              typename substring::remaining>::tree;
 
             using tree = add_child_t<last_node, new_node>;
@@ -2530,7 +1431,7 @@ namespace e_regex
 
 }// namespace e_regex
 
-#endif /* OPERATORS_SQUARE_BRACKETS */
+#endif /* OPERATORS_SQUARE_BRACKETS_HPP */
 
 #ifndef OPERATORS_STAR
 #define OPERATORS_STAR
@@ -2542,7 +1443,7 @@ namespace e_regex
     {
             // greedy * operator found
             using new_node
-                = basic_node<last_node, std::tuple<>, 0, std::numeric_limits<std::size_t>::max(), policy::GREEDY>;
+                = nodes::basic_node<last_node, std::tuple<>, 0, std::numeric_limits<std::size_t>::max(), nodes::policy::GREEDY>;
 
             using tree = typename tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
@@ -2552,7 +1453,7 @@ namespace e_regex
     {
             // lazy * operator found
             using new_node
-                = basic_node<last_node, std::tuple<>, 0, std::numeric_limits<std::size_t>::max(), policy::LAZY>;
+                = nodes::basic_node<last_node, std::tuple<>, 0, std::numeric_limits<std::size_t>::max(), nodes::policy::LAZY>;
 
             using tree = typename tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
@@ -2562,7 +1463,7 @@ namespace e_regex
     {
             // possessive * operator found
             using new_node
-                = basic_node<last_node, std::tuple<>, 0, std::numeric_limits<std::size_t>::max(), policy::POSSESSIVE>;
+                = nodes::basic_node<last_node, std::tuple<>, 0, std::numeric_limits<std::size_t>::max(), nodes::policy::POSSESSIVE>;
 
             using tree = typename tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
@@ -2573,6 +1474,9 @@ namespace e_regex
 #ifndef OPERATORS_START_ANCHOR
 #define OPERATORS_START_ANCHOR
 
+#include <nodes.hpp>
+#include <terminals.hpp>
+
 namespace e_regex
 {
     template<typename... tail>
@@ -2581,14 +1485,124 @@ namespace e_regex
             // Start anchor found
 
             using tree = typename tree_builder_helper<
-                basic_node<terminals::anchors::start, std::tuple<>, 1, 1, policy::POSSESSIVE>,
+                nodes::basic_node<terminals::anchors::start, std::tuple<>, 1, 1, nodes::policy::POSSESSIVE>,
                 std::tuple<tail...>>::tree;
     };
 }// namespace e_regex
 
 #endif /* OPERATORS_START_ANCHOR */
 
-#endif /* OPERATORS_OPERATORS */
+#endif /* OPERATORS_HPP */
+
+#ifndef TOKENIZER
+#define TOKENIZER
+
+#include <tuple>
+
+namespace e_regex
+{
+    template<typename matches, char... string>
+    struct extract_braces_numbers;
+
+    template<char... current, char... tail>
+    struct extract_braces_numbers<std::tuple<pack_string<current...>>, ',', tail...>
+        : public extract_braces_numbers<
+              tuple_cat_t<std::tuple<pack_string<current...>>, std::tuple<pack_string<','>>>,
+              tail...>
+    {
+            // ',' found, first number done
+    };
+
+    template<char... current, char head, char... tail>
+    struct extract_braces_numbers<std::tuple<pack_string<current...>>, head, tail...>
+        : public extract_braces_numbers<std::tuple<pack_string<current..., head>>, tail...>
+    {
+            // Populating first number
+    };
+
+    // Probably gcc bug -> ambiguous template instantiation if compact
+    template<typename first, typename second, char... current, char... tail>
+    struct extract_braces_numbers<std::tuple<first, second, pack_string<current...>>, '}', tail...>
+    {
+            // '}' found, finishing
+            using numbers
+                = std::tuple<pack_string<'{'>, first, second, pack_string<current...>, pack_string<'}'>>;
+            using remaining = pack_string<tail...>;
+    };
+
+    template<typename first, typename second, char... tail>
+    struct extract_braces_numbers<std::tuple<first, second>, '}', tail...>
+    {
+            // '}' found, finishing
+            using numbers   = std::tuple<pack_string<'{'>, first, second, pack_string<'}'>>;
+            using remaining = pack_string<tail...>;
+    };
+
+    template<char... current, char... tail>
+    struct extract_braces_numbers<std::tuple<pack_string<current...>>, '}', tail...>
+    {
+            // '}' found, finishing
+            using numbers = std::tuple<pack_string<'{'>, pack_string<current...>, pack_string<'}'>>;
+            using remaining = pack_string<tail...>;
+    };
+
+    template<typename first, typename second, char head, char... tail>
+    struct extract_braces_numbers<std::tuple<first, second>, head, tail...>
+        : public extract_braces_numbers<std::tuple<first, second, pack_string<head>>, tail...>
+    {
+            // Populating second number
+    };
+
+    template<char... current, typename first, typename second, char head, char... tail>
+    struct extract_braces_numbers<std::tuple<first, second, pack_string<current...>>, head, tail...>
+        : public extract_braces_numbers<std::tuple<first, second, pack_string<current..., head>>, tail...>
+    {
+            // Populating second number
+    };
+
+    template<char... string>
+    using extract_braces_numbers_t = extract_braces_numbers<std::tuple<pack_string<>>, string...>;
+
+    template<typename current, typename string>
+    struct tokenizer;
+
+    template<typename current, char head, char... tail>
+    struct tokenizer<current, pack_string<head, tail...>>
+    {
+            // Simple iteration
+            using current_ = tuple_cat_t<current, std::tuple<pack_string<head>>>;
+            using tokens   = typename tokenizer<current_, pack_string<tail...>>::tokens;
+    };
+
+    template<typename current, char head, char... tail>
+    struct tokenizer<current, pack_string<'\\', head, tail...>>
+    {
+            // Escaped character
+            using current_ = tuple_cat_t<current, std::tuple<pack_string<'\\', head>>>;
+            using tokens   = typename tokenizer<current_, pack_string<tail...>>::tokens;
+    };
+
+    template<typename current, char... tail>
+    struct tokenizer<current, pack_string<'{', tail...>>
+    {
+            // Number inside braces
+            using numbers  = extract_braces_numbers_t<tail...>;
+            using current_ = tuple_cat_t<current, typename numbers::numbers>;
+            using tokens   = typename tokenizer<current_, typename numbers::remaining>::tokens;
+    };
+
+    template<typename current>
+    struct tokenizer<current, pack_string<>>
+    {
+            // Base case
+            using tokens = current;
+    };
+
+    template<typename string>
+    using tokenizer_t = typename tokenizer<std::tuple<>, string>::tokens;
+}// namespace e_regex
+
+#endif /* TOKENIZER */
 
 #ifndef UTILITIES_SPLIT
 #define UTILITIES_SPLIT
@@ -2679,7 +1693,7 @@ namespace e_regex
 
 }// namespace e_regex
 
-#endif /* TREE_BUILDER */
+#endif /* TREE_BUILDER_HPP */
 
 namespace e_regex
 {

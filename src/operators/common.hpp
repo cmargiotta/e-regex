@@ -24,7 +24,7 @@ namespace e_regex
             // Simple case, iterate
 
             using new_node =
-                typename tree_builder_helper<basic_node<terminals::terminal<head>, std::tuple<>>,
+                typename tree_builder_helper<nodes::basic_node<terminals::terminal<head>, std::tuple<>>,
                                              std::tuple<tail...>>::tree;
 
             using tree = add_child_t<last_node, new_node>;

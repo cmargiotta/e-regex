@@ -3,6 +3,6 @@
 
 #include "heuristics/common.hpp"
 #include "heuristics/terminals.hpp"
-#include "nodes/basic_node.hpp"
+#include "nodes.hpp"
 
 #endif /* HEURISTICS_HPP */

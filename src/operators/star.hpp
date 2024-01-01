@@ -12,7 +12,7 @@ namespace e_regex
     {
             // greedy * operator found
             using new_node
-                = basic_node<last_node, std::tuple<>, 0, std::numeric_limits<std::size_t>::max(), policy::GREEDY>;
+                = nodes::basic_node<last_node, std::tuple<>, 0, std::numeric_limits<std::size_t>::max(), nodes::policy::GREEDY>;
 
             using tree = typename tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
@@ -22,7 +22,7 @@ namespace e_regex
     {
             // lazy * operator found
             using new_node
-                = basic_node<last_node, std::tuple<>, 0, std::numeric_limits<std::size_t>::max(), policy::LAZY>;
+                = nodes::basic_node<last_node, std::tuple<>, 0, std::numeric_limits<std::size_t>::max(), nodes::policy::LAZY>;
 
             using tree = typename tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
@@ -32,7 +32,7 @@ namespace e_regex
     {
             // possessive * operator found
             using new_node
-                = basic_node<last_node, std::tuple<>, 0, std::numeric_limits<std::size_t>::max(), policy::POSSESSIVE>;
+                = nodes::basic_node<last_node, std::tuple<>, 0, std::numeric_limits<std::size_t>::max(), nodes::policy::POSSESSIVE>;
 
             using tree = typename tree_builder_helper<new_node, std::tuple<tail...>>::tree;
     };
