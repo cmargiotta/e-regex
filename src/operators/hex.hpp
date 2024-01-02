@@ -1,11 +1,10 @@
 #ifndef OPERATORS_HEX
 #define OPERATORS_HEX
 
-#include <static_string.hpp>
-#include <terminals.hpp>
-#include <utilities/extract_delimited_content.hpp>
-
 #include "common.hpp"
+#include "static_string.hpp"
+#include "terminals.hpp"
+#include "utilities/extract_delimited_content.hpp"
 
 namespace e_regex
 {
@@ -63,42 +62,46 @@ namespace e_regex
             using result = typename hex_to_bin<digits...>::result;
     };
 
-    template<typename last_node, char first_nibble, char second_nibble, typename... tail>
+    template<typename last_node, char first_nibble, char second_nibble, typename... tail, auto group_index>
         requires hex<first_nibble> && hex<second_nibble>
     struct tree_builder_helper<
         last_node,
-        std::tuple<pack_string<'\\', 'x'>, pack_string<first_nibble>, pack_string<second_nibble>, tail...>>
+        std::tuple<pack_string<'\\', 'x'>, pack_string<first_nibble>, pack_string<second_nibble>, tail...>,
+        group_index>
     {
             using value = typename hex_to_bin<first_nibble, second_nibble>::result;
 
             using new_node =
-                typename tree_builder_helper<nodes::basic<terminals::exact_matcher<value>, std::tuple<>>,
-                                             std::tuple<tail...>>::tree;
+                typename tree_builder_helper<nodes::simple<terminals::exact_matcher<value>>,
+                                             std::tuple<tail...>,
+                                             group_index>::tree;
             using tree = add_child_t<last_node, new_node>;
     };
 
-    template<typename last_node, char nibble, typename... tail>
+    template<typename last_node, char nibble, typename... tail, auto group_index>
         requires hex<nibble>
-    struct tree_builder_helper<last_node, std::tuple<pack_string<'\\', 'x'>, pack_string<nibble>, tail...>>
+    struct tree_builder_helper<last_node, std::tuple<pack_string<'\\', 'x'>, pack_string<nibble>, tail...>, group_index>
     {
             using value = typename hex_to_bin<nibble>::result;
 
             using new_node =
-                typename tree_builder_helper<nodes::basic<terminals::exact_matcher<value>, std::tuple<>>,
-                                             std::tuple<tail...>>::tree;
+                typename tree_builder_helper<nodes::simple<terminals::exact_matcher<value>>,
+                                             std::tuple<tail...>,
+                                             group_index>::tree;
             using tree = add_child_t<last_node, new_node>;
     };
 
-    template<typename last_node, typename... tail>
-    struct tree_builder_helper<last_node, std::tuple<pack_string<'\\', 'x'>, pack_string<'{'>, tail...>>
+    template<typename last_node, typename... tail, auto group_index>
+    struct tree_builder_helper<last_node, std::tuple<pack_string<'\\', 'x'>, pack_string<'{'>, tail...>, group_index>
     {
             using substring = extract_delimited_content_t<'{', '}', std::tuple<tail...>>;
 
             using value = typename hex_tuple_to_bin<typename substring::result>::result;
 
             using new_node =
-                typename tree_builder_helper<nodes::basic<terminals::exact_matcher<value>, std::tuple<>>,
-                                             typename substring::remaining>::tree;
+                typename tree_builder_helper<nodes::simple<terminals::exact_matcher<value>>,
+                                             typename substring::remaining,
+                                             group_index>::tree;
 
             using tree = add_child_t<last_node, new_node>;
     };

@@ -2,6 +2,7 @@
 #define OPERATORS_HPP
 
 #include "operators/braces.hpp"
+#include "operators/common.hpp"
 #include "operators/end_anchor.hpp"
 #include "operators/hex.hpp"
 #include "operators/octal.hpp"

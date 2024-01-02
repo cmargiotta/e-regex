@@ -1,11 +1,10 @@
 #ifndef HEURISTICS_TERMINALS_HPP
 #define HEURISTICS_TERMINALS_HPP
 
-#include <nodes.hpp>
-#include <static_string.hpp>
-#include <terminals/common.hpp>
-
 #include "common.hpp"
+#include "nodes.hpp"
+#include "static_string.hpp"
+#include "terminals/common.hpp"
 
 namespace e_regex
 {
@@ -50,14 +49,13 @@ namespace e_regex
     /*
         Avoid repeating node parameters if there are only terminals
     */
-    template<typename... string, typename... child_strings, typename... children, nodes::policy repetition_policy>
-    struct add_child<
-        nodes::basic<terminals::terminal<string...>, std::tuple<>, 1, 1, repetition_policy, false>,
-        nodes::basic<terminals::terminal<child_strings...>, std::tuple<children...>, 1, 1, repetition_policy, false>>
+    template<typename... string, typename... child_strings, typename... children>
+    struct add_child<nodes::simple<terminals::terminal<string...>>,
+                     nodes::simple<terminals::terminal<child_strings...>, children...>>
     {
             using zipped =
                 typename _private::zip_matchers<std::tuple<string..., child_strings...>>::type;
-            using type = nodes::basic<zipped, std::tuple<children...>, 1, 1, repetition_policy, false>;
+            using type = nodes::simple<zipped, children...>;
     };
 }// namespace e_regex
 

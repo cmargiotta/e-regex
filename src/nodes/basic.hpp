@@ -1,152 +1,37 @@
 #ifndef NODES_BASIC_HPP
 #define NODES_BASIC_HPP
 
-#include <algorithm>
-#include <tuple>
-
-#include <static_string.hpp>
-
-#include "terminals/common.hpp"
+#include "common.hpp"
+#include "static_string.hpp"
+#include "terminals.hpp"
 
 namespace e_regex::nodes
 {
-    enum class policy
+    template<typename matcher, typename... children>
+    struct simple : public base<matcher, children...>
     {
-        GREEDY,
-        LAZY,
-        POSSESSIVE
-    };
-
-    template<typename Child, typename... Children>
-    constexpr auto dfs(auto match_result) noexcept
-    {
-        if constexpr (sizeof...(Children) == 0)
-        {
-            return Child::match(std::move(match_result));
-        }
-        else
-        {
-            auto result = Child::match(match_result);
-
-            match_result.matches += Child::groups;
-            match_result = dfs<Children...>(std::move(match_result));
-
-            if (!result || (result.actual_iterator_end < match_result.actual_iterator_end))
+            template<typename... second_layer_children>
+            static constexpr auto match(auto res)
             {
-                return match_result;
+                if constexpr (!std::is_same_v<matcher, void>)
+                {
+                    res = matcher::template match(res);
+                }
+
+                return dfs<children...>(res);
             }
-
-            return result;
-        }
-    }
-
-    template<typename T>
-    concept has_groups = requires(T t) { t.groups; };
-
-    template<typename T>
-    struct group_getter
-    {
-            static constexpr auto value = 0;
     };
 
-    template<has_groups T>
-    struct group_getter<T>
+    template<node_with_second_layer_children matcher, typename... children>
+    struct simple<matcher, children...> : public base<matcher, children...>
     {
-            static constexpr auto value = T::groups;
+            template<typename... second_layer_children>
+            static constexpr auto match(auto res)
+            {
+                res = matcher::template match<second_layer_children...>(res);
+                return dfs<children...>(res);
+            }
     };
-
-    template<typename matcher,
-             typename children               = std::tuple<>,
-             std::size_t   repetitions_min   = 1,
-             std::size_t   repetitions_max   = 1,
-             nodes::policy repetition_policy = nodes::policy::GREEDY,
-             bool          grouping          = false>
-    struct basic;
-
-    template<typename matcher, bool grouping_>
-    struct set_node_grouping;
-
-    template<typename matcher, typename children, std::size_t min, std::size_t max, nodes::policy policy_, bool grouping, bool grouping_>
-    struct set_node_grouping<basic<matcher, children, min, max, policy_, grouping>, grouping_>
-    {
-            using type = basic<matcher, children, min, max, policy_, grouping_>;
-    };
-
-    template<typename matcher, std::size_t min, std::size_t max, nodes::policy policy_>
-    struct set_node_range;
-
-    template<typename matcher,
-             typename children,
-             std::size_t   repetitions_min,
-             std::size_t   repetitions_max,
-             nodes::policy repetition_policy,
-             bool          grouping,
-             std::size_t   min,
-             std::size_t   max,
-             nodes::policy policy_>
-    struct set_node_range<basic<matcher, children, repetitions_min, repetitions_max, repetition_policy, grouping>, min, max, policy_>
-    {
-            using type = basic<matcher, children, min, max, policy_, grouping>;
-    };
-
-    template<typename matcher, bool grouping_>
-    using set_node_grouping_t = typename set_node_grouping<matcher, grouping_>::type;
-
-    template<typename matcher, std::size_t min, std::size_t max, nodes::policy policy_>
-    using set_node_range_t = typename set_node_range<matcher, min, max, policy_>::type;
-
-    template<typename matcher, typename children = std::tuple<>, nodes::policy policy_ = matcher::backtracking_policy>
-    using grouping_node = basic<matcher, children, 1, 1, policy_, true>;
-
-    template<typename matcher, typename children = std::tuple<>, nodes::policy policy_ = nodes::policy::GREEDY>
-    using optional_node = basic<matcher, children, 0, 1, policy_, false>;
-
-    template<typename node>
-    struct get_expression;
-
-    template<typename... terminals_>
-    struct get_expression<terminals::terminal<terminals_...>>
-    {
-            using type =
-                typename e_regex::terminals::rebuild_expression<e_regex::terminals::terminal<terminals_...>>::string;
-    };
-
-    template<typename matcher, std::size_t repetitions_min, std::size_t repetitions_max, nodes::policy repetition_policy, bool grouping>
-    struct get_expression<basic<matcher, std::tuple<>, repetitions_min, repetitions_max, repetition_policy, grouping>>
-    {
-            using type = typename get_expression<matcher>::type;
-    };
-
-    template<typename... children, std::size_t repetitions_min, std::size_t repetitions_max, nodes::policy repetition_policy, bool grouping>
-    struct get_expression<
-        basic<void, std::tuple<children...>, repetitions_min, repetitions_max, repetition_policy, grouping>>
-    {
-            using type
-                = concatenate_pack_strings_t<pack_string<'|'>, typename get_expression<children>::type...>;
-    };
-
-    template<typename... matchers,
-             typename child,
-             typename... children,
-             std::size_t   repetitions_min,
-             std::size_t   repetitions_max,
-             nodes::policy repetition_policy,
-             bool          grouping>
-    struct get_expression<
-        basic<terminals::terminal<matchers...>, std::tuple<child, children...>, repetitions_min, repetitions_max, repetition_policy, grouping>>
-    {
-            using matcher_string = merge_pack_strings_t<
-                typename terminals::rebuild_expression<terminals::terminal<matchers...>>::string,
-                typename get_expression<child>::type>;
-
-            using type = concatenate_pack_strings_t<pack_string<'|'>,
-                                                    matcher_string,
-
-                                                    typename get_expression<children>::type...>;
-    };
-
-    template<typename node>
-    using get_expression_t = typename get_expression<node>::type;
 }// namespace e_regex::nodes
 
 #endif /* NODES_BASIC_HPP */

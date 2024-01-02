@@ -1,100 +1,43 @@
 #ifndef NODES_POSSESSIVE_HPP
 #define NODES_POSSESSIVE_HPP
 
+#include <limits>
+
 #include "basic.hpp"
 
 namespace e_regex::nodes
 {
-    template<typename matcher, typename... children, std::size_t repetitions_min, std::size_t repetitions_max, bool grouping>
-    struct basic<matcher, std::tuple<children...>, repetitions_min, repetitions_max, nodes::policy::POSSESSIVE, grouping>
+    template<typename matcher,
+             std::size_t repetitions_min,
+             std::size_t repetitions_max = std::numeric_limits<std::size_t>::max(),
+             typename... children>
+    struct possessive : public base<matcher, children...>
     {
-            static constexpr auto backtracking_policy = nodes::policy::POSSESSIVE;
-
-            static constexpr std::size_t groups
-                = group_getter<matcher>::value + sum(children::groups...) + (grouping ? 1 : 0);
-
-            static constexpr auto self_match(auto result)
-            {
-                if constexpr (std::is_same_v<matcher, void>)
-                {
-                    return result;
-                }
-                else
-                {
-                    unsigned matches = 0;
-
-                    auto last_res = result;
-
-                    while (last_res.actual_iterator_end <= result.query.end()
-                           && matches < repetitions_max)
-                    {
-                        last_res.matches = result.matches;// Only last group is considered
-                        auto res         = matcher::match(last_res);
-
-                        if (res)
-                        {
-                            if constexpr (grouping)
-                            {
-                                res.last_group_start = last_res.actual_iterator_end;
-                            }
-
-                            last_res = std::move(res);
-                            matches++;
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-
-                    result = std::move(last_res);
-                    result = matches >= repetitions_min && matches <= repetitions_max;
-
-                    return result;
-                }
-            }
-
+            template<typename... second_layer_children>
             static constexpr auto match(auto result)
             {
-                auto match_index = result.matches;
-                auto end         = result.last_group_start;
-                auto begin       = end;
-
-                if constexpr (grouping)
+                for (auto i = 0; i < repetitions_max; ++i)
                 {
-                    result.matches++;
-                    result.last_group_start = result.actual_iterator_end;
-                }
+                    auto last_result = matcher::template match<second_layer_children...>(result);
 
-                if constexpr (sizeof...(children) == 0)
-                {
-                    // No children, no need to apply the policy
-                    result = self_match(std::move(result));
-                    begin  = result.last_group_start;
-                    end    = result.actual_iterator_end;
-                }
-                else
-                {
-                    result.last_group_start = result.actual_iterator_end;
-                    result                  = self_match(std::move(result));
-
-                    if (result)
+                    if (last_result)
                     {
-                        begin  = result.last_group_start;
-                        end    = result.actual_iterator_end;
-                        result = dfs<children...>(std::move(result));
+                        result = last_result;
+                    }
+                    else
+                    {
+                        if (i < repetitions_min)
+                        {
+                            // Failed too early
+                            return last_result;
+                        }
+
+                        // Failed but repetitions_min was satisfied, run dfs
+                        break;
                     }
                 }
 
-                if constexpr (grouping)
-                {
-                    if (result)
-                    {
-                        result.match_groups[match_index] = literal_string_view {begin, end};
-                    }
-                }
-
-                return result;
+                return dfs<children...>(result);
             }
     };
 }// namespace e_regex::nodes

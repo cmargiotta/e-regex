@@ -1,5 +1,5 @@
-#ifndef E_REGEX
-#define E_REGEX
+#ifndef E_REGEX_HPP
+#define E_REGEX_HPP
 
 #include "match_result.hpp"
 #include "static_string.hpp"
@@ -31,4 +31,4 @@ namespace e_regex
     using token_t = prebuilt_tokenization_result<match<regex>, match<separator>, data, token_type>;
 }// namespace e_regex
 
-#endif /* E_REGEX */
+#endif /* E_REGEX_HPP */

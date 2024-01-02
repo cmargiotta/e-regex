@@ -3,16 +3,17 @@
 
 #include <utility>
 
+#include "basic.hpp"
+
 namespace e_regex::nodes
 {
     template<typename matcher>
-    struct negated_node
+    struct negated_node : public base<matcher>
     {
-            static constexpr std::size_t groups = matcher::groups;
-
+            template<typename... second_layer_children>
             static constexpr auto match(auto result)
             {
-                result = matcher::match(std::move(result));
+                result = matcher::template match<second_layer_children...>(std::move(result));
 
                 result = !static_cast<bool>(result);
 

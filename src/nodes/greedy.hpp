@@ -1,175 +1,77 @@
-#ifndef NODES_GREEDY_NODE_HPP
-#define NODES_GREEDY_NODE_HPP
+#ifndef NODES_GREEDY_HPP
+#define NODES_GREEDY_HPP
 
 #include <cstddef>
-
-#include <utilities/literal_string_view.hpp>
-#include <utilities/sum.hpp>
+#include <limits>
 
 #include "basic.hpp"
+#include "utilities/literal_string_view.hpp"
+#include "utilities/sum.hpp"
 
 namespace e_regex::nodes
 {
-    namespace _private
+    template<typename matcher,
+             std::size_t repetitions_min,
+             std::size_t repetitions_max = std::numeric_limits<std::size_t>::max(),
+             typename... children>
+    struct greedy : public base<matcher, children...>
     {
-        constexpr auto self_match(auto result,
-                                  decltype(result) (*match)(decltype(result)),
-                                  std::size_t repetitions_max,
-                                  std::size_t repetitions_min,
-                                  bool        grouping)
-        {
-            unsigned matches = 0;
-
-            auto last_res = result;
-
-            while (last_res.actual_iterator_end < result.query.end() && matches < repetitions_max)
-            {
-                last_res.matches = result.matches;// Only last group is considered
-                auto res         = match(last_res);
-
-                if (res)
-                {
-                    if (grouping)
-                    {
-                        res.last_group_start = last_res.actual_iterator_end;
-                    }
-
-                    last_res = std::move(res);
-                    matches++;
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            if (result.actual_iterator_end == last_res.actual_iterator_end && repetitions_min != 0)
-            {
-                // No matching characters found and this node is not optional, increase
-                // iterator
-                result.actual_iterator_end++;
-            }
-            else
-            {
-                result = std::move(last_res);
-            }
-
-            result = matches >= repetitions_min && matches <= repetitions_max;
-
-            return result;
-        }
-
-        constexpr auto match(auto result,
-                             decltype(result) (*self_match)(decltype(result)),
-                             decltype(result) (*dfs)(decltype(result)),
-                             std::size_t repetitions_min,
-                             bool        grouping,
-                             std::size_t children_number,
-                             std::size_t groups)
-        {
-            auto match_index = result.matches;
-            auto end         = result.last_group_start;
-            auto begin       = end;
-
-            if (grouping)
-            {
-                result.matches++;
-                result.last_group_start = result.actual_iterator_end;
-            }
-
-            if (children_number == 0)
-            {
-                // No children, no need to apply the policy
-                result = self_match(std::move(result));
-                begin  = result.last_group_start;
-                end    = result.actual_iterator_end;
-            }
-            else
-            {
-                result.last_group_start = result.actual_iterator_end;
-                result                  = self_match(std::move(result));
-                auto this_start         = result.actual_iterator_end;
-
-                if (result)
-                {
-                    begin  = result.last_group_start;
-                    end    = result.actual_iterator_end;
-                    result = dfs(std::move(result));
-                }
-
-                // Greedy backtracking
-                while (!result && this_start > result.last_group_start + repetitions_min)
-                {
-                    result = true;
-                    this_start--;
-                    result.actual_iterator_end = this_start;
-                    end                        = this_start;
-
-                    result = dfs(std::move(result));
-
-                    if (result)
-                    {
-                        break;
-                    }
-                }
-            }
-
-            if (grouping)
-            {
-                if (result)
-                {
-                    result.match_groups[match_index] = literal_string_view {begin, end};
-                    result.matches += groups;
-                }
-            }
-
-            if (repetitions_min == 0)
-            {
-                result = true;
-            }
-
-            return result;
-        }
-    }// namespace _private
-
-    template<typename matcher, typename... children, std::size_t repetitions_min, std::size_t repetitions_max, bool grouping>
-    struct basic<matcher, std::tuple<children...>, repetitions_min, repetitions_max, policy::GREEDY, grouping>
-    {
-            static constexpr auto backtracking_policy = nodes::policy::GREEDY;
-
             static constexpr std::size_t groups
-                = group_getter<matcher>::value + sum(children::groups...) + (grouping ? 1 : 0);
+                = group_getter<matcher>::value + sum(children::groups...);
 
-            template<typename Res>
-            static constexpr Res self_match(Res result)
+            template<typename... second_layer_children>
+            static constexpr auto recursive_match(auto result, std::size_t matches = 0)
+            {
+                if (result.actual_iterator_end >= result.query.end() || matches >= repetitions_max)
+                {
+                    result.accepted = (repetitions_min == 0 && sizeof...(children) == 0)
+                                      && dfs<second_layer_children...>(result);
+                    return result;
+                }
+
+                auto last_result = result;
+                result           = matcher::match(result);
+
+                if (result)
+                {
+                    if (auto res = recursive_match<second_layer_children...>(result, matches + 1); res)
+                    {
+                        // Recursion had success
+                        return res;
+                    }
+
+                    // Recursion had no success, this iteration could be the acceptant one
+                    result.accepted = (matches + 1) >= repetitions_min;
+
+                    result          = dfs<children...>(result);
+                    result.accepted = dfs<second_layer_children...>(result);
+                    return result;
+                }
+
+                if constexpr (repetitions_min == 0)
+                {
+                    last_result          = dfs<children...>(last_result);
+                    last_result.accepted = dfs<second_layer_children...>(last_result);
+                    return last_result;
+                }
+
+                // Current iteration is not matching
+                return result;
+            }
+
+            template<typename... second_layer_children>
+            static constexpr auto match(auto result)
             {
                 if constexpr (std::is_same_v<matcher, void>)
                 {
-                    return result;
+                    return dfs<children...>(result);
                 }
                 else
                 {
-                    return _private::self_match(result,
-                                                &matcher::template match<decltype(result)>,
-                                                repetitions_max,
-                                                repetitions_min,
-                                                grouping);
+                    return recursive_match<second_layer_children...>(std::move(result));
                 }
-            }
-
-            template<typename Res>
-            static constexpr Res match(Res result)
-            {
-                decltype(result) (*dfs_ptr)(decltype(result)) = nullptr;
-                if constexpr (sizeof...(children) != 0)
-                {
-                    dfs_ptr = &dfs<children...>;
-                }
-
-                return _private::match(
-                    result, &self_match<Res>, dfs_ptr, repetitions_min, grouping, sizeof...(children), groups);
             }
     };
 }// namespace e_regex::nodes
 
-#endif /* NODES_GREEDY_NODE_HPP */
+#endif /* NODES_GREEDY_HPP */

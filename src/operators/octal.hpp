@@ -41,30 +41,33 @@ namespace e_regex
             using result = typename octal_to_bin<digits...>::result;
     };
 
-    template<typename last_node, char first_nibble, char second_nibble, char third_nibble, typename... tail>
+    template<typename last_node, char first_nibble, char second_nibble, char third_nibble, typename... tail, auto group_index>
         requires octal<first_nibble> && octal<second_nibble> && octal<third_nibble>
     struct tree_builder_helper<
         last_node,
-        std::tuple<pack_string<'\\', first_nibble>, pack_string<second_nibble>, pack_string<third_nibble>, tail...>>
+        std::tuple<pack_string<'\\', first_nibble>, pack_string<second_nibble>, pack_string<third_nibble>, tail...>,
+        group_index>
     {
             using value = typename octal_to_bin<first_nibble, second_nibble, third_nibble>::result;
 
             using new_node =
-                typename tree_builder_helper<nodes::basic<terminals::exact_matcher<value>, std::tuple<>>,
-                                             std::tuple<tail...>>::tree;
+                typename tree_builder_helper<nodes::simple<terminals::exact_matcher<value>>,
+                                             std::tuple<tail...>,
+                                             group_index>::tree;
             using tree = add_child_t<last_node, new_node>;
     };
 
-    template<typename last_node, typename... tail>
-    struct tree_builder_helper<last_node, std::tuple<pack_string<'\\', 'o'>, pack_string<'{'>, tail...>>
+    template<typename last_node, typename... tail, auto group_index>
+    struct tree_builder_helper<last_node, std::tuple<pack_string<'\\', 'o'>, pack_string<'{'>, tail...>, group_index>
     {
             using substring = extract_delimited_content_t<'{', '}', std::tuple<tail...>>;
 
             using value = typename octal_tuple_to_bin<typename substring::result>::result;
 
             using new_node =
-                typename tree_builder_helper<nodes::basic<terminals::exact_matcher<value>, std::tuple<>>,
-                                             typename substring::remaining>::tree;
+                typename tree_builder_helper<nodes::simple<terminals::exact_matcher<value>>,
+                                             typename substring::remaining,
+                                             group_index>::tree;
 
             using tree = add_child_t<last_node, new_node>;
     };

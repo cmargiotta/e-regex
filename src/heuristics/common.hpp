@@ -3,25 +3,39 @@
 
 #include <tuple>
 
-#include <nodes.hpp>
+#include "nodes.hpp"
+#include "nodes/repeated.hpp"
 
 namespace e_regex
 {
     template<typename node, typename child>
     struct add_child;
 
-    template<typename matcher,
-             typename... children,
-             std::size_t   repetitions_min,
-             std::size_t   repetitions_max,
-             nodes::policy repetition_policy,
-             bool          grouping,
-             typename child>
-    struct add_child<nodes::basic<matcher, std::tuple<children...>, repetitions_min, repetitions_max, repetition_policy, grouping>,
-                     child>
+    template<template<typename, typename...> typename matcher, typename match, typename... children, typename child>
+    struct add_child<matcher<match, children...>, child>
     {
-            using type
-                = nodes::basic<matcher, std::tuple<children..., child>, repetitions_min, repetitions_max, repetition_policy, grouping>;
+            using type = matcher<match, children..., child>;
+    };
+
+    template<template<typename, auto, auto, typename...> typename quantified_matcher,
+             auto min,
+             auto max,
+             typename match,
+             typename... children,
+             typename child>
+    struct add_child<quantified_matcher<match, min, max, children...>, child>
+    {
+            using type = quantified_matcher<match, min, max, children..., child>;
+    };
+
+    template<template<typename, auto, typename...> typename quantified_matcher,
+             auto data,
+             typename match,
+             typename... children,
+             typename child>
+    struct add_child<quantified_matcher<match, data, children...>, child>
+    {
+            using type = quantified_matcher<match, data, children..., child>;
     };
 
     template<typename child>

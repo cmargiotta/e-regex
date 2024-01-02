@@ -13,10 +13,8 @@ namespace e_regex
             literal_string_view<Char_Type>                     query;
             typename literal_string_view<Char_Type>::iterator  actual_iterator_start;
             typename literal_string_view<Char_Type>::iterator  actual_iterator_end;
-            typename literal_string_view<Char_Type>::iterator  last_group_start;
-            std::array<literal_string_view<Char_Type>, groups> match_groups;
-            std::size_t                                        matches  = 0;
-            bool                                               accepted = true;
+            std::array<literal_string_view<Char_Type>, groups> match_groups = {};
+            bool                                               accepted     = true;
 
             constexpr auto operator=(bool accepted) noexcept -> match_result_data &
             {
@@ -36,30 +34,21 @@ namespace e_regex
     {
             friend matcher;
 
-        public:
-            match_result_data<matcher::groups, Char_Type> data;
-            bool                                          initialized = false;
-
         private:
-            constexpr void init()
-            {
-                initialized              = true;
-                data.matches             = 0;
-                data.match_groups        = {};
-                data.actual_iterator_end = data.actual_iterator_start;
-                data.last_group_start    = data.actual_iterator_start;
-                data.accepted            = true;
-
-                data = matcher::match(std::move(data));
-            }
+            match_result_data<matcher::groups, Char_Type> data;
 
         public:
             constexpr match_result(literal_string_view<> query) noexcept
             {
                 data.query                 = query;
                 data.actual_iterator_start = query.begin();
+                data.actual_iterator_end   = data.actual_iterator_start;
 
-                this->next();
+                data = matcher::match(data);
+                if (!data)
+                {
+                    next();
+                }
             }
 
             constexpr auto operator=(bool accepted) noexcept -> match_result &
@@ -135,26 +124,25 @@ namespace e_regex
              */
             constexpr auto next() noexcept
             {
-                do
+                data.actual_iterator_start = data.actual_iterator_end;
+
+                while (data.actual_iterator_start < data.query.end())
                 {
-                    if (initialized)
+                    data.actual_iterator_end = data.actual_iterator_start;
+                    data.accepted            = true;
+                    auto result              = matcher::match(data);
+
+                    if (result)
                     {
-                        // This is not the first call
-                        if (data.accepted)
-                        {
-                            data.actual_iterator_start = data.actual_iterator_end;
-                        }
-                        else
-                        {
-                            data.actual_iterator_start++;
-                        }
+                        data = result;
+                        return true;
                     }
 
-                    init();
-                } while (!data.accepted && data.actual_iterator_start < data.query.end()
-                         && data.actual_iterator_start >= data.query.begin());
+                    data.actual_iterator_start++;
+                }
 
-                return data.accepted;
+                data.accepted = false;
+                return false;
             }
     };
 }// namespace e_regex
