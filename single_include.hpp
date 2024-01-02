@@ -238,6 +238,7 @@ namespace e_regex
 
                 while (data.actual_iterator_start < data.query.end())
                 {
+                    data.match_groups        = {};
                     data.actual_iterator_end = data.actual_iterator_start;
                     data.accepted            = true;
                     auto result              = matcher::match(data);
@@ -361,6 +362,12 @@ namespace e_regex
             using type = string;
     };
 
+    template<typename separator>
+    struct concatenate_pack_strings<separator>
+    {
+            using type = pack_string<>;
+    };
+
     template<typename separator, typename string, typename... strings>
     struct concatenate_pack_strings<separator, string, strings...>
     {
@@ -421,7 +428,7 @@ namespace e_regex
 
 namespace e_regex::tokenization
 {
-    template<typename match_result, typename token_type, typename token_raw_type>
+    template<typename match_result, typename token_type, typename token_raw_type, auto separator_verifier>
     class iterator
     {
         private:
@@ -437,19 +444,17 @@ namespace e_regex::tokenization
                 }
                 else
                 {
-                    std::size_t index = 0;
+                    std::size_t index = 1;
 
-                    if constexpr (match_result::groups() != 0)
+                    for (; index <= match_result::groups(); ++index)
                     {
-                        index = 1;
-                        while (res[index].empty())
+                        if (!res[index].empty())
                         {
-                            ++index;
+                            break;
                         }
-                        index--;
                     }
 
-                    return decltype(current) {.type   = static_cast<token_raw_type>(index),
+                    return decltype(current) {.type   = static_cast<token_raw_type>(index - 1),
                                               .string = res.to_view()};
                 }
             }
@@ -573,7 +578,7 @@ namespace e_regex::tokenization
     consteval auto build_token(auto token_with_literal)
         requires(!std::is_same_v<Token_Type, void>)
     {
-        return e_regex::token<Token_Type, decltype(string)> {token_with_literal.type, string};
+        return token<Token_Type, decltype(string)> {.type = token_with_literal.type, .string = string};
     };
 
     template<std::same_as<void> Token_Type, static_string string>
@@ -590,30 +595,30 @@ namespace e_regex::tokenization
     // If Token_Type is an enum, it MUST contain at least the number of groups of regex of
     // consecutive values starting from 0
     template<auto matcher, auto separator_verifier, typename Token_Type_, typename Char_Type = char>
-    class tokenization_result
+    class result
     {
         private:
             using match_result = decltype(matcher(std::declval<literal_string_view<>>()));
 
         public:
             using token_type = token<Token_Type_, literal_string_view<Char_Type>>;
-            using iterator   = runtime_iterator<match_result, token_type, Token_Type_>;
+            using iter       = iterator<match_result, token_type, Token_Type_, separator_verifier>;
 
         private:
             match_result regex_result;
 
         public:
-            constexpr explicit tokenization_result(literal_string_view<> expression)
+            constexpr explicit result(literal_string_view<> expression)
                 : regex_result {matcher(expression)} {};
 
-            constexpr auto begin() const noexcept -> iterator
+            constexpr auto begin() const noexcept -> iter
             {
-                return iterator {regex_result};
+                return iter {regex_result};
             }
 
-            constexpr auto end() const noexcept -> iterator
+            constexpr auto end() const noexcept -> iter
             {
-                iterator res {regex_result};
+                iter res {regex_result};
                 res.invalidate();
 
                 return res;
@@ -694,139 +699,6 @@ namespace e_regex::tokenization
 
 #include <cstddef>
 #include <tuple>
-
-#ifndef NODES_BASIC_HPP
-#define NODES_BASIC_HPP
-
-#ifndef NODES_COMMON_HPP
-#define NODES_COMMON_HPP
-
-#include <algorithm>
-
-#ifndef UTILITIES_MAX
-#define UTILITIES_MAX
-
-namespace e_regex
-{
-    consteval auto max(auto n)
-    {
-        return n;
-    }
-
-    consteval auto max(auto n, auto m)
-    {
-        return n > m ? n : m;
-    }
-
-    consteval auto max(auto n, auto m, auto... tail)
-    {
-        return max(max(n, m), tail...);
-    }
-}// namespace e_regex
-
-#endif /* UTILITIES_MAX */
-
-#ifndef UTILITIES_SUM
-#define UTILITIES_SUM
-
-namespace e_regex
-{
-    consteval auto sum()
-    {
-        return 0;
-    }
-
-    consteval auto sum(auto... n)
-    {
-        return (n + ...);
-    }
-}// namespace e_regex
-
-#endif /* UTILITIES_SUM */
-
-namespace e_regex::nodes
-{
-    template<typename T>
-    concept node_with_second_layer_children = requires() {
-        // template match (auto) -> auto
-
-        T::template match<void, void>;
-    };
-
-    template<typename T>
-    concept has_groups = requires(T t) { t.groups; };
-
-    template<typename T>
-    struct group_getter
-    {
-            static constexpr auto value = 0;
-    };
-
-    template<has_groups T>
-    struct group_getter<T>
-    {
-            static constexpr auto value = T::groups;
-    };
-
-    template<typename T>
-    concept has_group_index = requires(T t) { t.next_group_index; };
-
-    template<typename T>
-    struct group_index_getter
-    {
-            static constexpr auto value = 0;
-    };
-
-    template<has_groups T>
-    struct group_index_getter<T>
-    {
-            static constexpr auto value = T::next_group_index;
-    };
-
-    template<typename matcher, typename... children>
-    struct base
-    {
-            static constexpr auto next_group_index
-                = max(group_index_getter<matcher>::value, group_index_getter<children>::value...);
-
-            static constexpr std::size_t groups
-                = group_getter<matcher>::value + sum(group_getter<children>::value...);
-    };
-
-    constexpr auto dfs(auto match_result) noexcept
-    {
-        return match_result;
-    }
-
-    template<typename Child, typename... Children>
-    constexpr auto dfs(auto match_result) noexcept
-    {
-        if (!match_result)
-        {
-            return match_result;
-        }
-
-        if constexpr (sizeof...(Children) == 0)
-        {
-            return Child::match(std::move(match_result));
-        }
-        else
-        {
-            auto result = Child::match(match_result);
-
-            match_result = dfs<Children...>(std::move(match_result));
-
-            if (!result || (result.actual_iterator_end < match_result.actual_iterator_end))
-            {
-                return match_result;
-            }
-
-            return result;
-        }
-    }
-}// namespace e_regex::nodes
-
-#endif /* NODES_COMMON_HPP */
 
 #ifndef TERMINALS_HPP
 #define TERMINALS_HPP
@@ -1249,6 +1121,198 @@ namespace e_regex::terminals
 
 namespace e_regex::nodes
 {
+    template<typename node>
+    struct get_expression;
+
+    template<typename... terminals_>
+    struct get_expression<terminals::terminal<terminals_...>>
+    {
+            using type =
+                typename e_regex::terminals::rebuild_expression<e_regex::terminals::terminal<terminals_...>>::string;
+    };
+
+    template<typename matcher, typename... children>
+    struct get_expression_base;
+
+    template<typename matcher>
+    struct get_expression_base<matcher>
+    {
+            using type = typename get_expression<matcher>::type;
+    };
+
+    template<>
+    struct get_expression_base<void>
+    {
+            using type = pack_string<>;
+    };
+
+    template<typename... children>
+    struct get_expression_base<void, children...>
+    {
+            using type
+                = concatenate_pack_strings_t<pack_string<'|'>, typename get_expression<children>::type...>;
+    };
+
+    template<typename matcher, typename child, typename... children>
+        requires(!std::same_as<matcher, void>)
+    struct get_expression_base<matcher, child, children...>
+    {
+            using matcher_string = merge_pack_strings_t<typename get_expression<matcher>::type,
+                                                        typename get_expression<child>::type>;
+
+            using type = concatenate_pack_strings_t<pack_string<'|'>,
+                                                    matcher_string,
+
+                                                    typename get_expression<children>::type...>;
+    };
+
+    template<typename node>
+    using get_expression_t = typename get_expression<node>::type;
+}// namespace e_regex::nodes
+
+#endif /* NODES_GET_EXPRESSION_HPP */
+
+#ifndef NODES_GREEDY_HPP
+#define NODES_GREEDY_HPP
+
+#include <cstddef>
+#include <limits>
+
+#ifndef NODES_BASIC_HPP
+#define NODES_BASIC_HPP
+
+#ifndef NODES_COMMON_HPP
+#define NODES_COMMON_HPP
+
+#include <algorithm>
+
+#ifndef UTILITIES_MAX
+#define UTILITIES_MAX
+
+namespace e_regex
+{
+    consteval auto max(auto n)
+    {
+        return n;
+    }
+
+    consteval auto max(auto n, auto m)
+    {
+        return n > m ? n : m;
+    }
+
+    consteval auto max(auto n, auto m, auto... tail)
+    {
+        return max(max(n, m), tail...);
+    }
+}// namespace e_regex
+
+#endif /* UTILITIES_MAX */
+
+#ifndef UTILITIES_SUM
+#define UTILITIES_SUM
+
+namespace e_regex
+{
+    consteval auto sum()
+    {
+        return 0;
+    }
+
+    consteval auto sum(auto... n)
+    {
+        return (n + ...);
+    }
+}// namespace e_regex
+
+#endif /* UTILITIES_SUM */
+
+namespace e_regex::nodes
+{
+    template<typename T>
+    concept node_with_second_layer_children = requires() {
+        // template match (auto) -> auto
+
+        T::template match<void, void>;
+    };
+
+    template<typename T>
+    concept has_groups = requires(T t) { t.groups; };
+
+    template<typename T>
+    struct group_getter
+    {
+            static constexpr auto value = 0;
+    };
+
+    template<has_groups T>
+    struct group_getter<T>
+    {
+            static constexpr auto value = T::groups;
+    };
+
+    template<typename T>
+    concept has_group_index = requires(T t) { t.next_group_index; };
+
+    template<typename T>
+    struct group_index_getter
+    {
+            static constexpr auto value = 0;
+    };
+
+    template<has_groups T>
+    struct group_index_getter<T>
+    {
+            static constexpr auto value = T::next_group_index;
+    };
+
+    template<typename matcher, typename... children>
+    struct base
+    {
+            static constexpr auto next_group_index
+                = max(group_index_getter<matcher>::value, group_index_getter<children>::value...);
+
+            static constexpr std::size_t groups
+                = group_getter<matcher>::value + sum(group_getter<children>::value...);
+    };
+
+    constexpr auto dfs(auto match_result) noexcept
+    {
+        return match_result;
+    }
+
+    template<typename Child, typename... Children>
+    constexpr auto dfs(auto match_result) noexcept
+    {
+        if (!match_result)
+        {
+            return match_result;
+        }
+
+        if constexpr (sizeof...(Children) == 0)
+        {
+            return Child::match(std::move(match_result));
+        }
+        else
+        {
+            auto result = Child::match(match_result);
+
+            match_result = dfs<Children...>(std::move(match_result));
+
+            if (!result || (result.actual_iterator_end < match_result.actual_iterator_end))
+            {
+                return match_result;
+            }
+
+            return result;
+        }
+    }
+}// namespace e_regex::nodes
+
+#endif /* NODES_COMMON_HPP */
+
+namespace e_regex::nodes
+{
     template<typename matcher, typename... children>
     struct simple : public base<matcher, children...>
     {
@@ -1274,59 +1338,62 @@ namespace e_regex::nodes
                 return dfs<children...>(res);
             }
     };
+
+    template<typename matcher, typename... children>
+    struct get_expression<simple<matcher, children...>>
+        : public get_expression_base<matcher, children...>
+    {
+    };
 }// namespace e_regex::nodes
 
 #endif /* NODES_BASIC_HPP */
 
-namespace e_regex::nodes
+#ifndef UTILITIES_NUMBER_TO_PACK_STRING_HPP
+#define UTILITIES_NUMBER_TO_PACK_STRING_HPP
+
+#include <concepts>
+
+namespace e_regex
 {
-    template<typename node>
-    struct get_expression;
-
-    template<typename... terminals_>
-    struct get_expression<terminals::terminal<terminals_...>>
+    consteval bool nonzero(auto number)
     {
+        return number != 0;
+    };
+
+    template<auto number, typename current_string>
+        requires std::integral<decltype(number)>
+    struct number_to_pack_string;
+
+    template<auto number, char... current>
+        requires(!nonzero(number))
+    struct number_to_pack_string<number, pack_string<current...>>
+    {
+            using type = pack_string<current...>;
+    };
+
+    template<auto number, char... current>
+        requires(nonzero(number))
+    struct number_to_pack_string<number, pack_string<current...>>
+    {
+            static constexpr auto number_10_shifted = number / 10;
+            static constexpr auto current_unit      = number - (number_10_shifted * 10);
+
             using type =
-                typename e_regex::terminals::rebuild_expression<e_regex::terminals::terminal<terminals_...>>::string;
+                typename number_to_pack_string<number_10_shifted,
+                                               pack_string<(current_unit + '0'), current...>>::type;
     };
 
-    template<typename matcher>
-    struct get_expression<simple<matcher>>
+    template<>
+    struct number_to_pack_string<0, pack_string<>>
     {
-            using type = typename get_expression<matcher>::type;
+            using type = pack_string<'0'>;
     };
 
-    template<typename... children>
-    struct get_expression<simple<void, children...>>
-    {
-            using type
-                = concatenate_pack_strings_t<pack_string<'|'>, typename get_expression<children>::type...>;
-    };
+    template<auto number>
+    using number_to_pack_string_t = typename number_to_pack_string<number, pack_string<>>::type;
+}// namespace e_regex
 
-    template<typename... matchers, typename child, typename... children>
-    struct get_expression<simple<terminals::terminal<matchers...>, child, children...>>
-    {
-            using matcher_string = merge_pack_strings_t<
-                typename terminals::rebuild_expression<terminals::terminal<matchers...>>::string,
-                typename get_expression<child>::type>;
-
-            using type = concatenate_pack_strings_t<pack_string<'|'>,
-                                                    matcher_string,
-
-                                                    typename get_expression<children>::type...>;
-    };
-
-    template<typename node>
-    using get_expression_t = typename get_expression<node>::type;
-}// namespace e_regex::nodes
-
-#endif /* NODES_GET_EXPRESSION_HPP */
-
-#ifndef NODES_GREEDY_HPP
-#define NODES_GREEDY_HPP
-
-#include <cstddef>
-#include <limits>
+#endif /* UTILITIES_NUMBER_TO_PACK_STRING_HPP */
 
 namespace e_regex::nodes
 {
@@ -1392,6 +1459,56 @@ namespace e_regex::nodes
                 }
             }
     };
+
+    template<typename matcher, typename... children>
+    struct get_expression<greedy<matcher, 0, std::numeric_limits<std::size_t>::max(), children...>>
+    {
+            using self
+                = merge_pack_strings_t<typename get_expression_base<matcher>::type, pack_string<'*'>>;
+            using children_ = typename get_expression_base<void, children...>::type;
+
+            using type = merge_pack_strings_t<self, children_>;
+    };
+
+    template<typename matcher, typename... children>
+    struct get_expression<greedy<matcher, 1, std::numeric_limits<std::size_t>::max(), children...>>
+    {
+            using self
+                = merge_pack_strings_t<typename get_expression_base<matcher>::type, pack_string<'+'>>;
+            using children_ = typename get_expression_base<void, children...>::type;
+
+            using type = merge_pack_strings_t<self, children_>;
+    };
+
+    template<typename matcher, auto min, typename... children>
+    struct get_expression<greedy<matcher, min, std::numeric_limits<std::size_t>::max(), children...>>
+    {
+            using self = concatenate_pack_strings_t<pack_string<>,
+                                                    typename get_expression_base<matcher>::type,
+                                                    pack_string<'{'>,
+                                                    number_to_pack_string_t<min>,
+                                                    pack_string<',', '}'>>;
+
+            using children_ = typename get_expression_base<void, children...>::type;
+
+            using type = merge_pack_strings_t<self, children_>;
+    };
+
+    template<typename matcher, auto min, auto max, typename... children>
+    struct get_expression<greedy<matcher, min, max, children...>>
+    {
+            using self = concatenate_pack_strings_t<pack_string<>,
+                                                    typename get_expression_base<matcher>::type,
+                                                    pack_string<'{'>,
+                                                    number_to_pack_string_t<min>,
+                                                    pack_string<','>,
+                                                    number_to_pack_string_t<max>,
+                                                    pack_string<'}'>>;
+
+            using children_ = typename get_expression_base<void, children...>::type;
+
+            using type = merge_pack_strings_t<self, children_>;
+    };
 }// namespace e_regex::nodes
 
 #endif /* NODES_GREEDY_HPP */
@@ -1428,6 +1545,16 @@ namespace e_regex::nodes
 
                 return result;
             }
+    };
+
+    template<typename matcher, auto index, typename... children>
+    struct get_expression<group<matcher, index, children...>>
+    {
+            using type
+                = concatenate_pack_strings_t<pack_string<>,
+                                             pack_string<'('>,
+                                             typename get_expression_base<matcher, children...>::type,
+                                             pack_string<')'>>;
     };
 }// namespace e_regex::nodes
 
@@ -1493,6 +1620,56 @@ namespace e_regex::nodes
                 }
             }
     };
+
+    template<typename matcher, typename... children>
+    struct get_expression<lazy<matcher, 0, std::numeric_limits<std::size_t>::max(), children...>>
+    {
+            using self
+                = merge_pack_strings_t<typename get_expression_base<matcher>::type, pack_string<'*', '?'>>;
+            using children_ = typename get_expression_base<void, children...>::type;
+
+            using type = merge_pack_strings_t<self, children_>;
+    };
+
+    template<typename matcher, typename... children>
+    struct get_expression<lazy<matcher, 1, std::numeric_limits<std::size_t>::max(), children...>>
+    {
+            using self
+                = merge_pack_strings_t<typename get_expression_base<matcher>::type, pack_string<'+', '?'>>;
+            using children_ = typename get_expression_base<void, children...>::type;
+
+            using type = merge_pack_strings_t<self, children_>;
+    };
+
+    template<typename matcher, auto min, typename... children>
+    struct get_expression<lazy<matcher, min, std::numeric_limits<std::size_t>::max(), children...>>
+    {
+            using self = concatenate_pack_strings_t<pack_string<>,
+                                                    typename get_expression_base<matcher>::type,
+                                                    pack_string<'{'>,
+                                                    number_to_pack_string_t<min>,
+                                                    pack_string<',', '}', '?'>>;
+
+            using children_ = typename get_expression_base<void, children...>::type;
+
+            using type = merge_pack_strings_t<self, children_>;
+    };
+
+    template<typename matcher, auto min, auto max, typename... children>
+    struct get_expression<lazy<matcher, min, max, children...>>
+    {
+            using self = concatenate_pack_strings_t<pack_string<>,
+                                                    typename get_expression_base<matcher>::type,
+                                                    pack_string<'{'>,
+                                                    number_to_pack_string_t<min>,
+                                                    pack_string<','>,
+                                                    number_to_pack_string_t<max>,
+                                                    pack_string<'}', '?'>>;
+
+            using children_ = typename get_expression_base<void, children...>::type;
+
+            using type = merge_pack_strings_t<self, children_>;
+    };
 }// namespace e_regex::nodes
 
 #endif /* OPERATORS_LAZY_NODE_HPP */
@@ -1517,6 +1694,8 @@ namespace e_regex::nodes
                 return result;
             }
     };
+
+    // TODO missing get_expression
 }// namespace e_regex::nodes
 
 #endif /* SRC_NODES_NEGATED_NODE_HPP */
@@ -1524,6 +1703,7 @@ namespace e_regex::nodes
 #ifndef NODES_POSSESSIVE_HPP
 #define NODES_POSSESSIVE_HPP
 
+#include <cstddef>
 #include <limits>
 
 namespace e_regex::nodes
@@ -1537,7 +1717,7 @@ namespace e_regex::nodes
             template<typename... second_layer_children>
             static constexpr auto match(auto result)
             {
-                for (auto i = 0; i < repetitions_max; ++i)
+                for (std::size_t i = 0; i < repetitions_max; ++i)
                 {
                     auto last_result = matcher::template match<second_layer_children...>(result);
 
@@ -1560,6 +1740,56 @@ namespace e_regex::nodes
 
                 return dfs<children...>(result);
             }
+    };
+
+    template<typename matcher, typename... children>
+    struct get_expression<possessive<matcher, 0, std::numeric_limits<std::size_t>::max(), children...>>
+    {
+            using self
+                = merge_pack_strings_t<typename get_expression_base<matcher>::type, pack_string<'*', '+'>>;
+            using children_ = typename get_expression_base<void, children...>::type;
+
+            using type = merge_pack_strings_t<self, children_>;
+    };
+
+    template<typename matcher, typename... children>
+    struct get_expression<possessive<matcher, 1, std::numeric_limits<std::size_t>::max(), children...>>
+    {
+            using self
+                = merge_pack_strings_t<typename get_expression_base<matcher>::type, pack_string<'+'>>;
+            using children_ = typename get_expression_base<void, children...>::type;
+
+            using type = merge_pack_strings_t<self, children_>;
+    };
+
+    template<typename matcher, auto min, typename... children>
+    struct get_expression<possessive<matcher, min, std::numeric_limits<std::size_t>::max(), children...>>
+    {
+            using self = concatenate_pack_strings_t<pack_string<>,
+                                                    typename get_expression_base<matcher>::type,
+                                                    pack_string<'{'>,
+                                                    number_to_pack_string_t<min>,
+                                                    pack_string<',', '}', '+'>>;
+
+            using children_ = typename get_expression_base<void, children...>::type;
+
+            using type = merge_pack_strings_t<self, children_>;
+    };
+
+    template<typename matcher, auto min, auto max, typename... children>
+    struct get_expression<possessive<matcher, min, max, children...>>
+    {
+            using self = concatenate_pack_strings_t<pack_string<>,
+                                                    typename get_expression_base<matcher>::type,
+                                                    pack_string<'{'>,
+                                                    number_to_pack_string_t<min>,
+                                                    pack_string<','>,
+                                                    number_to_pack_string_t<max>,
+                                                    pack_string<'}', '+'>>;
+
+            using children_ = typename get_expression_base<void, children...>::type;
+
+            using type = merge_pack_strings_t<self, children_>;
     };
 }// namespace e_regex::nodes
 
@@ -1590,6 +1820,20 @@ namespace e_regex::nodes
 
                 return dfs<children...>(res);
             }
+    };
+
+    template<typename matcher, auto repetitions, typename... children>
+    struct get_expression<repeated<matcher, repetitions, children...>>
+    {
+            using self = concatenate_pack_strings_t<pack_string<>,
+                                                    typename get_expression_base<matcher>::type,
+                                                    pack_string<'{'>,
+                                                    number_to_pack_string_t<repetitions>,
+                                                    pack_string<'}'>>;
+
+            using children_ = typename get_expression_base<void, children...>::type;
+
+            using type = merge_pack_strings_t<self, children_>;
     };
 }// namespace e_regex::nodes
 
