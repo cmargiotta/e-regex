@@ -79,6 +79,12 @@ namespace e_regex
             using type = string;
     };
 
+    template<typename separator>
+    struct concatenate_pack_strings<separator>
+    {
+            using type = pack_string<>;
+    };
+
     template<typename separator, typename string, typename... strings>
     struct concatenate_pack_strings<separator, string, strings...>
     {

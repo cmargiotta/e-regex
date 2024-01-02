@@ -2,6 +2,7 @@
 #define NODES_BASIC_HPP
 
 #include "common.hpp"
+#include "get_expression.hpp"
 #include "static_string.hpp"
 #include "terminals.hpp"
 
@@ -31,6 +32,12 @@ namespace e_regex::nodes
                 res = matcher::template match<second_layer_children...>(res);
                 return dfs<children...>(res);
             }
+    };
+
+    template<typename matcher, typename... children>
+    struct get_expression<simple<matcher, children...>>
+        : public get_expression_base<matcher, children...>
+    {
     };
 }// namespace e_regex::nodes
 

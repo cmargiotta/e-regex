@@ -2,11 +2,11 @@
 
 #include <type_traits>
 
-#include <static_string.hpp>
-#include <tokenizer.hpp>
-#include <utilities/extract_delimited_content.hpp>
-#include <utilities/pack_string_to_number.hpp>
-#include <utilities/split.hpp>
+#include "static_string.hpp"
+#include "tokenizer.hpp"
+#include "utilities/extract_delimited_content.hpp"
+#include "utilities/pack_string_to_number.hpp"
+#include "utilities/split.hpp"
 
 TEST_CASE("Split")
 {

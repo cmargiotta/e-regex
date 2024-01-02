@@ -35,6 +35,16 @@ namespace e_regex::nodes
                 return result;
             }
     };
+
+    template<typename matcher, auto index, typename... children>
+    struct get_expression<group<matcher, index, children...>>
+    {
+            using type
+                = concatenate_pack_strings_t<pack_string<>,
+                                             pack_string<'('>,
+                                             typename get_expression_base<matcher, children...>::type,
+                                             pack_string<')'>>;
+    };
 }// namespace e_regex::nodes
 
 #endif /* NODES_GROUP_HPP */

@@ -20,6 +20,8 @@ namespace e_regex::nodes
                 return result;
             }
     };
+
+    // TODO missing get_expression
 }// namespace e_regex::nodes
 
 #endif /* SRC_NODES_NEGATED_NODE_HPP */

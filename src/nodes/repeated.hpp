@@ -4,6 +4,7 @@
 #include <cstddef>
 
 #include "basic.hpp"
+#include "utilities/number_to_pack_string.hpp"
 
 namespace e_regex::nodes
 {
@@ -25,6 +26,20 @@ namespace e_regex::nodes
 
                 return dfs<children...>(res);
             }
+    };
+
+    template<typename matcher, auto repetitions, typename... children>
+    struct get_expression<repeated<matcher, repetitions, children...>>
+    {
+            using self = concatenate_pack_strings_t<pack_string<>,
+                                                    typename get_expression_base<matcher>::type,
+                                                    pack_string<'{'>,
+                                                    number_to_pack_string_t<repetitions>,
+                                                    pack_string<'}'>>;
+
+            using children_ = typename get_expression_base<void, children...>::type;
+
+            using type = merge_pack_strings_t<self, children_>;
     };
 }// namespace e_regex::nodes
 
