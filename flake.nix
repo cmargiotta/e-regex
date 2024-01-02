@@ -18,6 +18,7 @@
               meson
               ninja
               gcc13
+              gdb
               clang-tools_17
 
               (
