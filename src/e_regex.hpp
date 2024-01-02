@@ -3,7 +3,8 @@
 
 #include "match_result.hpp"
 #include "static_string.hpp"
-#include "tokenization_result.hpp"
+#include "tokenization/prebuilt_result.hpp"
+#include "tokenization/result.hpp"
 #include "tree_builder.hpp"
 #include "utilities/literal_string_view.hpp"
 
@@ -24,11 +25,11 @@ namespace e_regex
         auto matcher           = match<regex>;
         auto separator_matcher = match<separator>;
 
-        return tokenization_result<matcher, separator_matcher, token_type> {expression};
+        return tokenization::result<matcher, separator_matcher, token_type> {expression};
     };
 
     template<static_string regex, static_string data, static_string separator = static_string {""}, typename token_type = void>
-    using token_t = prebuilt_tokenization_result<match<regex>, match<separator>, data, token_type>;
+    using token_t = tokenization::prebuilt_result<match<regex>, match<separator>, data, token_type>;
 }// namespace e_regex
 
 #endif /* E_REGEX_HPP */

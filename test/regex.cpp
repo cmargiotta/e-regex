@@ -119,19 +119,48 @@ TEST_CASE("Group matching order")
 
 TEST_CASE("Group matching with more branches")
 {
-    constexpr auto matcher = e_regex::match<"a(a[a-g]+)|([h-z]+)">;
+    constexpr auto matcher = e_regex::match<R"(\w(\w+)|(\d+))">;
 
-    auto [full, first, second] = matcher("aaaa");
+    auto match                 = matcher("abc");
+    auto [full, first, second] = match;
 
-    REQUIRE(full == "aaaa");
-    REQUIRE(first == "aaa");
+    REQUIRE(match.groups() == 2);
+    REQUIRE(full == "abc");
+    REQUIRE(first == "bc");
     REQUIRE(second.empty());
 
-    auto [full1, first1, second1] = matcher("hhhh");
+    auto [full1, first1, second1] = matcher("123");
 
-    REQUIRE(full1 == "hhhh");
+    REQUIRE(full1 == "123");
     REQUIRE(first1.empty());
-    REQUIRE(second1 == "hhhh");
+    REQUIRE(second1 == "123");
+}
+
+TEST_CASE("Iteration on group matching with more branches")
+{
+    constexpr auto matcher = e_regex::match<R"(\w(\w+)|(\d+))">;
+
+    auto match                 = matcher("abc123ab");
+    auto [full, first, second] = match;
+
+    REQUIRE(match.groups() == 2);
+    REQUIRE(full == "abc");
+    REQUIRE(first == "bc");
+    REQUIRE(second.empty());
+
+    match.next();
+    auto [full1, first1, second1] = match;
+
+    REQUIRE(full1 == "123");
+    REQUIRE(first1.empty());
+    REQUIRE(second1 == "123");
+
+    match.next();
+    auto [full2, first2, second2] = match;
+
+    REQUIRE(full2 == "ab");
+    REQUIRE(first2 == "b");
+    REQUIRE(second2.empty());
 }
 
 TEST_CASE("Branches collisions handling")

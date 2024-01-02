@@ -2,3 +2,4 @@
 build/**
 .direnv/**
 subprojects/*/meson.build
+subprojects/Catch2-3.4.0/meson.build

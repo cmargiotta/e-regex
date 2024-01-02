@@ -2,8 +2,8 @@
 
 #include <vector>
 
-#include <e_regex.hpp>
-#include <tokenizer.hpp>
+#include "e_regex.hpp"
+#include "tokenizer.hpp"
 
 TEST_CASE("Tokenization by space")
 {

@@ -128,6 +128,7 @@ namespace e_regex
 
                 while (data.actual_iterator_start < data.query.end())
                 {
+                    data.match_groups        = {};
                     data.actual_iterator_end = data.actual_iterator_start;
                     data.accepted            = true;
                     auto result              = matcher::match(data);
