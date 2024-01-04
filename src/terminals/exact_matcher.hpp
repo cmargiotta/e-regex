@@ -3,40 +3,22 @@
 
 #include "common.hpp"
 #include "static_string.hpp"
+#include "utilities/admitted_set.hpp"
 
 namespace e_regex::terminals
 {
-    namespace _private
-    {
-        constexpr auto exact_match(char identifier, auto result)
-        {
-            result = identifier == *result.actual_iterator_end;
-            result.actual_iterator_end++;
-
-            return result;
-        }
-    }// namespace _private
-
     template<typename identifier>
     struct exact_matcher;
 
-    template<char identifier>
-    struct exact_matcher<pack_string<identifier>>
-        : public terminal_common<exact_matcher<pack_string<identifier>>>
+    template<char identifier, char... identifiers>
+    struct exact_matcher<pack_string<identifier, identifiers...>>
+        : public terminal_common<exact_matcher<pack_string<identifier, identifiers...>>>
     {
-            static constexpr auto match_(auto result)
-            {
-                return _private::exact_match(identifier, std::move(result));
-            }
-    };
+            using admitted_first_chars = admitted_set<char, identifier>;
 
-    template<char... identifier>
-    struct exact_matcher<pack_string<identifier...>>
-        : public terminal_common<exact_matcher<pack_string<identifier...>>>
-    {
             static constexpr auto match_(auto result)
             {
-                for (auto c: pack_string<identifier...>::string.to_view())
+                for (auto c: pack_string<identifier, identifiers...>::string.to_view())
                 {
                     result = c == *result.actual_iterator_end;
                     result.actual_iterator_end++;
@@ -55,6 +37,12 @@ namespace e_regex::terminals
     struct terminal<identifier> : public exact_matcher<identifier>
     {
             static constexpr bool exact = true;
+    };
+
+    template<char... chars>
+    struct rebuild_expression<exact_matcher<pack_string<chars...>>>
+    {
+            using string = pack_string<chars...>;
     };
 }// namespace e_regex::terminals
 

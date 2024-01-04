@@ -1,12 +1,16 @@
 #ifndef NODES_GREEDY_HPP
 #define NODES_GREEDY_HPP
 
+#include <concepts>
 #include <cstddef>
 #include <limits>
+#include <type_traits>
 
-#include "basic.hpp"
+#include "common.hpp"
 #include "get_expression.hpp"
+#include "nodes/possessive.hpp"
 #include "static_string.hpp"
+#include "utilities/admitted_set.hpp"
 #include "utilities/literal_string_view.hpp"
 #include "utilities/number_to_pack_string.hpp"
 #include "utilities/sum.hpp"
@@ -21,6 +25,35 @@ namespace e_regex::nodes
     {
             static constexpr std::size_t groups
                 = group_getter<matcher>::value + sum(children::groups...);
+
+            using self_expression = std::conditional_t<
+                repetitions_min == 0 && repetitions_max == std::numeric_limits<std::size_t>::max(),
+                merge_pack_strings_t<typename get_expression_base<matcher>::type, pack_string<'*'>>,
+                std::conditional_t<
+                    repetitions_min == 1 && repetitions_max == std::numeric_limits<std::size_t>::max(),
+                    merge_pack_strings_t<typename get_expression_base<matcher>::type, pack_string<'+'>>,
+                    std::conditional_t<repetitions_max == std::numeric_limits<std::size_t>::max(),
+                                       concatenate_pack_strings_t<pack_string<>,
+                                                                  typename get_expression_base<matcher>::type,
+                                                                  pack_string<'{'>,
+                                                                  number_to_pack_string_t<repetitions_min>,
+                                                                  pack_string<',', '}'>>,
+                                       concatenate_pack_strings_t<pack_string<>,
+                                                                  typename get_expression_base<matcher>::type,
+                                                                  pack_string<'{'>,
+                                                                  number_to_pack_string_t<repetitions_min>,
+                                                                  pack_string<','>,
+                                                                  number_to_pack_string_t<repetitions_max>,
+                                                                  pack_string<'}'>>>>>;
+            using children_expression = typename get_expression_base<void, children...>::type;
+            using expression          = merge_pack_strings_t<self_expression, children_expression>;
+
+            // If matcher is optional (aka repetitions_min==0), admission set must include
+            // children too
+            using admitted_first_chars
+                = std::conditional_t<repetitions_min == 0,
+                                     typename extract_admission_set<matcher, children...>::type,
+                                     typename matcher::admitted_first_chars>;
 
             template<typename... second_layer_children>
             static constexpr auto recursive_match(auto result, std::size_t matches = 0)
@@ -76,54 +109,12 @@ namespace e_regex::nodes
             }
     };
 
-    template<typename matcher, typename... children>
-    struct get_expression<greedy<matcher, 0, std::numeric_limits<std::size_t>::max(), children...>>
+    template<typename matcher, std::size_t repetitions_min, std::size_t repetitions_max, typename child>
+        requires(admitted_sets_intersection_t<typename matcher::admitted_first_chars,
+                                              typename child::admitted_first_chars>::empty)
+    struct greedy<matcher, repetitions_min, repetitions_max, child>
+        : public possessive<matcher, repetitions_min, repetitions_max, child>
     {
-            using self
-                = merge_pack_strings_t<typename get_expression_base<matcher>::type, pack_string<'*'>>;
-            using children_ = typename get_expression_base<void, children...>::type;
-
-            using type = merge_pack_strings_t<self, children_>;
-    };
-
-    template<typename matcher, typename... children>
-    struct get_expression<greedy<matcher, 1, std::numeric_limits<std::size_t>::max(), children...>>
-    {
-            using self
-                = merge_pack_strings_t<typename get_expression_base<matcher>::type, pack_string<'+'>>;
-            using children_ = typename get_expression_base<void, children...>::type;
-
-            using type = merge_pack_strings_t<self, children_>;
-    };
-
-    template<typename matcher, auto min, typename... children>
-    struct get_expression<greedy<matcher, min, std::numeric_limits<std::size_t>::max(), children...>>
-    {
-            using self = concatenate_pack_strings_t<pack_string<>,
-                                                    typename get_expression_base<matcher>::type,
-                                                    pack_string<'{'>,
-                                                    number_to_pack_string_t<min>,
-                                                    pack_string<',', '}'>>;
-
-            using children_ = typename get_expression_base<void, children...>::type;
-
-            using type = merge_pack_strings_t<self, children_>;
-    };
-
-    template<typename matcher, auto min, auto max, typename... children>
-    struct get_expression<greedy<matcher, min, max, children...>>
-    {
-            using self = concatenate_pack_strings_t<pack_string<>,
-                                                    typename get_expression_base<matcher>::type,
-                                                    pack_string<'{'>,
-                                                    number_to_pack_string_t<min>,
-                                                    pack_string<','>,
-                                                    number_to_pack_string_t<max>,
-                                                    pack_string<'}'>>;
-
-            using children_ = typename get_expression_base<void, children...>::type;
-
-            using type = merge_pack_strings_t<self, children_>;
     };
 }// namespace e_regex::nodes
 

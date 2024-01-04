@@ -1,8 +1,9 @@
-#ifndef TERMINALS_ALARM
-#define TERMINALS_ALARM
+#ifndef TERMINALS_ALARM_HPP
+#define TERMINALS_ALARM_HPP
 
 #include "common.hpp"
 #include "exact_matcher.hpp"
+#include "static_string.hpp"
 
 namespace e_regex::terminals
 {
@@ -12,4 +13,4 @@ namespace e_regex::terminals
     };
 }// namespace e_regex::terminals
 
-#endif /* TERMINALS_ALARM */
+#endif /* TERMINALS_ALARM_HPP */

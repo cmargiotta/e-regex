@@ -1,7 +1,8 @@
-#ifndef TERMINALS_RANGE
-#define TERMINALS_RANGE
+#ifndef TERMINALS_RANGE_HPP
+#define TERMINALS_RANGE_HPP
 
 #include "common.hpp"
+#include "utilities/admitted_set.hpp"
 
 namespace e_regex::terminals
 {
@@ -12,6 +13,9 @@ namespace e_regex::terminals
     struct range_terminal<pack_string<start>, pack_string<end>>
         : public terminal_common<range_terminal<pack_string<start>, pack_string<end>>>
     {
+            using expression           = pack_string<'[', start, '-', end, ']'>;
+            using admitted_first_chars = admitted_set_range_t<char, start, end>;
+
             static constexpr auto match(auto result)
             {
                 static_assert(end >= start, "Range [a-b] must respect b >= a");
@@ -26,4 +30,4 @@ namespace e_regex::terminals
     };
 }// namespace e_regex::terminals
 
-#endif /* TERMINALS_RANGE */
+#endif /* TERMINALS_RANGE_HPP */

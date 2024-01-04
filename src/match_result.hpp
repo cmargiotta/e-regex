@@ -32,7 +32,8 @@ namespace e_regex
     template<typename matcher, typename Char_Type = char>
     class match_result
     {
-            friend matcher;
+        public:
+            using expression = typename matcher::expression;
 
         private:
             match_result_data<matcher::groups, Char_Type> data;

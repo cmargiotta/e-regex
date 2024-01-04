@@ -3,11 +3,34 @@
 
 #include <algorithm>
 
+#include "utilities/admitted_set.hpp"
 #include "utilities/max.hpp"
 #include "utilities/sum.hpp"
 
 namespace e_regex::nodes
 {
+    template<typename... children>
+    struct extract_admission_set;
+
+    template<typename child, typename... children>
+    struct extract_admission_set<child, children...>
+    {
+            using type = merge_admitted_sets_t<typename child::admitted_first_chars,
+                                               typename extract_admission_set<children...>::type>;
+    };
+
+    template<typename... children>
+    struct extract_admission_set<void, children...>
+    {
+            using type = typename extract_admission_set<children...>::type;
+    };
+
+    template<>
+    struct extract_admission_set<>
+    {
+            using type = admitted_set<char>;
+    };
+
     template<typename T>
     concept node_with_second_layer_children = requires() {
         // template match (auto) -> auto

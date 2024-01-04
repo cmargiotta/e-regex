@@ -12,6 +12,12 @@ namespace e_regex::nodes
     template<typename matcher, auto group_index, typename... children>
     struct group
     {
+            using expression
+                = concatenate_pack_strings_t<pack_string<>,
+                                             pack_string<'('>,
+                                             typename get_expression_base<matcher, children...>::type,
+                                             pack_string<')'>>;
+            using admitted_first_chars             = typename matcher::admitted_first_chars;
             static constexpr auto next_group_index = group_index + 1;
 
             static constexpr std::size_t groups
@@ -34,16 +40,6 @@ namespace e_regex::nodes
 
                 return result;
             }
-    };
-
-    template<typename matcher, auto index, typename... children>
-    struct get_expression<group<matcher, index, children...>>
-    {
-            using type
-                = concatenate_pack_strings_t<pack_string<>,
-                                             pack_string<'('>,
-                                             typename get_expression_base<matcher, children...>::type,
-                                             pack_string<')'>>;
     };
 }// namespace e_regex::nodes
 
