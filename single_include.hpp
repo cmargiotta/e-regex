@@ -2716,8 +2716,158 @@ namespace e_regex
 #ifndef OPERATORS_ROUND_BRACKETS_HPP
 #define OPERATORS_ROUND_BRACKETS_HPP
 
+#ifndef UTILITIES_SPLIT
+#define UTILITIES_SPLIT
+
+#include <tuple>
+
+#ifndef UTILITIES_BALANCED_HPP
+#define UTILITIES_BALANCED_HPP
+
 namespace e_regex
 {
+    template<unsigned round_par, unsigned square_par, unsigned braces, typename... strings>
+    struct balanced;
+
+    template<auto round_par, auto square_par, auto braces, typename... strings>
+    struct balanced<round_par, square_par, braces, pack_string<'('>, strings...>
+        : public balanced<round_par + 1, square_par, braces, strings...>
+    {
+    };
+
+    template<auto round_par, auto square_par, auto braces, typename... strings>
+    struct balanced<round_par, square_par, braces, pack_string<')'>, strings...>
+        : public balanced<round_par - 1, square_par, braces, strings...>
+    {
+    };
+
+    template<auto round_par, auto square_par, auto braces, typename... strings>
+    struct balanced<round_par, square_par, braces, pack_string<'['>, strings...>
+        : public balanced<round_par, square_par + 1, braces, strings...>
+    {
+    };
+
+    template<auto round_par, auto square_par, auto braces, typename... strings>
+    struct balanced<round_par, square_par, braces, pack_string<']'>, strings...>
+        : public balanced<round_par, square_par - 1, braces, strings...>
+    {
+    };
+
+    template<auto round_par, auto square_par, auto braces, typename... strings>
+    struct balanced<round_par, square_par, braces, pack_string<'{'>, strings...>
+        : public balanced<round_par, square_par, braces + 1, strings...>
+    {
+    };
+
+    template<auto round_par, auto square_par, auto braces, typename... strings>
+    struct balanced<round_par, square_par, braces, pack_string<'}'>, strings...>
+        : public balanced<round_par, square_par, braces - 1, strings...>
+    {
+    };
+
+    template<auto round_par, auto square_par, auto braces, typename head, typename... strings>
+    struct balanced<round_par, square_par, braces, head, strings...>
+        : public balanced<round_par, square_par, braces, strings...>
+    {
+    };
+
+    template<auto round_par, auto square_par, auto braces>
+    struct balanced<round_par, square_par, braces>
+    {
+            static constexpr bool value = round_par == 0 && square_par == 0 && braces == 0;
+    };
+
+    template<typename... strings>
+    static constexpr auto balanced_v = balanced<0, 0, 0, strings...>::value;
+
+}// namespace e_regex
+
+#endif /* UTILITIES_BALANCED_HPP */
+
+#ifndef UTILITIES_REVERSE
+#define UTILITIES_REVERSE
+
+#include <tuple>
+
+namespace e_regex
+{
+    template<typename T, typename current = std::tuple<>>
+    struct reverse;
+
+    template<typename T, typename... tail, typename... currents>
+    struct reverse<std::tuple<T, tail...>, std::tuple<currents...>>
+    {
+            using type = typename reverse<std::tuple<tail...>, std::tuple<T, currents...>>::type;
+    };
+
+    template<typename... currents>
+    struct reverse<std::tuple<>, std::tuple<currents...>>
+    {
+            using type = std::tuple<currents...>;
+    };
+
+    template<typename tuple>
+    using reverse_t = typename reverse<tuple>::type;
+}// namespace e_regex
+
+#endif /* UTILITIES_REVERSE */
+
+namespace e_regex
+{
+    template<char separator, typename tokens, typename current = std::tuple<std::tuple<>>>
+    struct split;
+
+    template<char separator, typename... tail, typename... current_tokens, typename... currents>
+        requires balanced_v<tail...> && balanced_v<current_tokens...>
+    struct split<separator,
+                 std::tuple<pack_string<separator>, tail...>,
+                 std::tuple<std::tuple<current_tokens...>, currents...>>
+    {
+            // Separator found
+            using current = std::tuple<std::tuple<>, std::tuple<current_tokens...>, currents...>;
+            using type    = typename split<separator, std::tuple<tail...>, current>::type;
+    };
+
+    template<char separator, typename head, typename... tail, typename... current_tokens, typename... currents>
+    struct split<separator, std::tuple<head, tail...>, std::tuple<std::tuple<current_tokens...>, currents...>>
+    {
+            using current = std::tuple<std::tuple<current_tokens..., head>, currents...>;
+            using type    = typename split<separator, std::tuple<tail...>, current>::type;
+    };
+
+    template<char separator, typename current>
+    struct split<separator, std::tuple<>, current>
+    {
+            using type = reverse_t<current>;
+    };
+
+    template<char separator, typename tokens>
+    using split_t = typename split<separator, tokens>::type;
+}// namespace e_regex
+
+#endif /* UTILITIES_SPLIT */
+
+namespace e_regex
+{
+    template<typename parsed, typename branches, auto group_index>
+    struct branched;
+
+    template<typename... parsed, typename subregex, typename... subregexes, auto group_index>
+    struct branched<std::tuple<parsed...>, std::tuple<subregex, subregexes...>, group_index>
+    {
+            using subtree = typename tree_builder_helper<void, subregex, group_index>::tree;
+
+            using tree = typename branched<std::tuple<parsed..., subtree>,
+                                           std::tuple<subregexes...>,
+                                           subtree::next_group_index>::tree;
+    };
+
+    template<typename... parsed, auto group_index>
+    struct branched<std::tuple<parsed...>, std::tuple<>, group_index>
+    {
+            using tree = nodes::simple<void, parsed...>;
+    };
+
     template<typename last_node, typename... tail, auto group_index>
     struct tree_builder_helper<last_node, std::tuple<pack_string<'('>, tail...>, group_index>
     {
@@ -2725,7 +2875,7 @@ namespace e_regex
             using substring = extract_delimited_content_t<'(', ')', std::tuple<tail...>>;
 
             using subregex =
-                typename tree_builder_helper<void, typename substring::result, group_index + 1>::tree;
+                typename branched<std::tuple<>, split_t<'|', typename substring::result>, group_index + 1>::subtree;
 
             using node = nodes::group<subregex, group_index>;
 
@@ -2744,7 +2894,7 @@ namespace e_regex
             using substring = extract_delimited_content_t<'(', ')', std::tuple<tail...>>;
 
             using subregex =
-                typename tree_builder_helper<void, typename substring::result, group_index>::tree;
+                typename branched<std::tuple<>, split_t<'|', typename substring::result>, group_index>::subtree;
 
             using new_node = typename tree_builder_helper<nodes::simple<subregex>,
                                                           typename substring::remaining,
@@ -3006,72 +3156,6 @@ namespace e_regex
 }// namespace e_regex
 
 #endif /* TOKENIZER */
-
-#ifndef UTILITIES_SPLIT
-#define UTILITIES_SPLIT
-
-#include <tuple>
-
-#ifndef UTILITIES_REVERSE
-#define UTILITIES_REVERSE
-
-#include <tuple>
-
-namespace e_regex
-{
-    template<typename T, typename current = std::tuple<>>
-    struct reverse;
-
-    template<typename T, typename... tail, typename... currents>
-    struct reverse<std::tuple<T, tail...>, std::tuple<currents...>>
-    {
-            using type = typename reverse<std::tuple<tail...>, std::tuple<T, currents...>>::type;
-    };
-
-    template<typename... currents>
-    struct reverse<std::tuple<>, std::tuple<currents...>>
-    {
-            using type = std::tuple<currents...>;
-    };
-
-    template<typename tuple>
-    using reverse_t = typename reverse<tuple>::type;
-}// namespace e_regex
-
-#endif /* UTILITIES_REVERSE */
-
-namespace e_regex
-{
-    template<char separator, typename tokens, typename current = std::tuple<std::tuple<>>>
-    struct split;
-
-    template<char separator, typename... tail, typename... current_tokens, typename... currents>
-    struct split<separator,
-                 std::tuple<pack_string<separator>, tail...>,
-                 std::tuple<std::tuple<current_tokens...>, currents...>>
-    {
-            using current = std::tuple<std::tuple<>, std::tuple<current_tokens...>, currents...>;
-            using type    = typename split<separator, std::tuple<tail...>, current>::type;
-    };
-
-    template<char separator, typename head, typename... tail, typename... current_tokens, typename... currents>
-    struct split<separator, std::tuple<head, tail...>, std::tuple<std::tuple<current_tokens...>, currents...>>
-    {
-            using current = std::tuple<std::tuple<current_tokens..., head>, currents...>;
-            using type    = typename split<separator, std::tuple<tail...>, current>::type;
-    };
-
-    template<char separator, typename current>
-    struct split<separator, std::tuple<>, current>
-    {
-            using type = reverse_t<current>;
-    };
-
-    template<char separator, typename tokens>
-    using split_t = typename split<separator, tokens>::type;
-}// namespace e_regex
-
-#endif /* UTILITIES_SPLIT */
 
 namespace e_regex
 {

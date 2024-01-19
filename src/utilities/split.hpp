@@ -3,6 +3,7 @@
 
 #include <tuple>
 
+#include "balanced.hpp"
 #include "reverse.hpp"
 #include "static_string.hpp"
 
@@ -12,10 +13,12 @@ namespace e_regex
     struct split;
 
     template<char separator, typename... tail, typename... current_tokens, typename... currents>
+        requires balanced_v<tail...> && balanced_v<current_tokens...>
     struct split<separator,
                  std::tuple<pack_string<separator>, tail...>,
                  std::tuple<std::tuple<current_tokens...>, currents...>>
     {
+            // Separator found
             using current = std::tuple<std::tuple<>, std::tuple<current_tokens...>, currents...>;
             using type    = typename split<separator, std::tuple<tail...>, current>::type;
     };

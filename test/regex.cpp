@@ -98,7 +98,7 @@ TEST_CASE("Braces")
     REQUIRE(!matcher2("abc").is_accepted());
 }
 
-TEST_CASE("Group matching")
+TEST_CASE("Nested group matching")
 {
     constexpr auto match = e_regex::match<"a(a(b))cd">("aabcdef");
 
@@ -106,6 +106,19 @@ TEST_CASE("Group matching")
     REQUIRE(match[0] == "aabcd");
     REQUIRE(match[1] == "ab");
     REQUIRE(match[2] == "b");
+}
+
+TEST_CASE("Branched group matching")
+{
+    constexpr auto matcher = e_regex::match<"a(a|b)+">;
+
+    REQUIRE(matcher("aa").is_accepted());
+    REQUIRE(matcher("ab").is_accepted());
+    REQUIRE(matcher("abaab").is_accepted());
+
+    constexpr auto match = matcher("aab");
+    REQUIRE(match[0] == "aab");
+    REQUIRE(match[1] == "b");
 }
 
 TEST_CASE("Group matching order")
