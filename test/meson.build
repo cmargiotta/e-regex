@@ -1,4 +1,6 @@
 if not meson.is_subproject()
+        catch2 = dependency('catch2-with-main')
+
         tokenization_test = executable(
                 'tokenization',
                 'tokenization.cpp',

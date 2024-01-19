@@ -4,8 +4,6 @@ if get_option('buildtype') == 'debug'
   add_project_arguments('-Og', '-g3',  language : 'cpp')
 endif
 
-catch2 = dependency('catch2-with-main')
-
 subdir('src')
 subdir('test')
 
