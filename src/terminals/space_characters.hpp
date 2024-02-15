@@ -12,11 +12,11 @@ namespace e_regex::terminals
     template<>
     struct terminal<pack_string<'\\', 's'>> : public terminal_common<terminal<pack_string<'\\', 's'>>>
     {
-            using admitted_first_chars = admitted_set<char, 't', '\n', '\f', '\r', ' '>;
+            using admitted_first_chars = admitted_set<char, '\t', '\n', '\f', '\r', ' '>;
 
             static constexpr auto match_(auto result)
             {
-                constexpr std::array matched {'t', '\n', '\f', '\r', ' '};
+                constexpr std::array matched {'\t', '\n', '\f', '\r', ' '};
 
                 result = std::find(matched.begin(), matched.end(), *result.actual_iterator_end)
                          != matched.end();
