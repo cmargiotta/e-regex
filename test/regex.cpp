@@ -121,6 +121,16 @@ TEST_CASE("Branched group matching")
     REQUIRE(match[1] == "b");
 }
 
+TEST_CASE("Ranged square bracket - 1")
+{
+    constexpr auto matcher = e_regex::match<R"((10[0-7]0))">;
+
+    auto match = matcher("274.06 102	1000	");
+    auto full  = match;
+
+    REQUIRE(full.to_view() == "1000");
+}
+
 TEST_CASE("Group matching order")
 {
     constexpr auto match = e_regex::match<"a(a[a-g])+">("aabacad");

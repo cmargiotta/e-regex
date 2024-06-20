@@ -2,12 +2,28 @@
 #define OPERATORS_SQUARE_BRACKETS_HPP
 
 #include "common.hpp"
+#include "heuristics/common.hpp"
 #include "terminals/exact_matcher.hpp"
 #include "terminals/range.hpp"
 #include "utilities/extract_delimited_content.hpp"
 
 namespace e_regex
 {
+    namespace __private
+    {
+        template<typename node, typename child>
+        struct add_branch;
+
+        template<template<typename, typename...> typename matcher, typename... children, typename match, typename child>
+        struct add_branch<matcher<match, children...>, child>
+        {
+                using type = matcher<match, children..., child>;
+        };
+
+        template<typename node, typename child>
+        using add_branch_t = typename add_branch<node, child>::type;
+    }// namespace __private
+
     template<typename last_node, typename tokens, auto group_index>
     struct square_bracker_tree_builder_helper;
 
@@ -24,7 +40,8 @@ namespace e_regex
     {
             // Simple case, iterate
 
-            using new_node = add_child_t<last_node, nodes::simple<terminals::exact_matcher<head>>>;
+            using new_node
+                = __private::add_branch_t<last_node, nodes::simple<terminals::exact_matcher<head>>>;
             using tree =
                 typename square_bracker_tree_builder_helper<new_node, std::tuple<tail...>, group_index>::tree;
     };
@@ -35,7 +52,8 @@ namespace e_regex
             // Simple case, iterate
 
             using new_node
-                = add_child_t<last_node, nodes::simple<terminals::terminal<pack_string<'\\', identifier>>>>;
+                = __private::add_branch_t<last_node,
+                                          nodes::simple<terminals::terminal<pack_string<'\\', identifier>>>>;
             using tree =
                 typename square_bracker_tree_builder_helper<new_node, std::tuple<tail...>, group_index>::tree;
     };
@@ -46,7 +64,7 @@ namespace e_regex
             // Range found
 
             using new_node
-                = add_child_t<last_node, nodes::simple<terminals::range_terminal<start, end>>>;
+                = __private::add_branch_t<last_node, nodes::simple<terminals::range_terminal<start, end>>>;
             using tree =
                 typename square_bracker_tree_builder_helper<new_node, std::tuple<tail...>, group_index>::tree;
     };
@@ -57,9 +75,10 @@ namespace e_regex
             // [ found
             using substring = extract_delimited_content_t<'[', ']', std::tuple<tail...>>;
 
-            using subregex = typename square_bracker_tree_builder_helper<nodes::simple<void>,
-                                                                         typename substring::result,
-                                                                         group_index>::tree;
+            using subregex
+                = nodes::simple<typename square_bracker_tree_builder_helper<nodes::simple<void>,
+                                                                            typename substring::result,
+                                                                            group_index>::tree>;
 
             using new_node =
                 typename tree_builder_helper<subregex, typename substring::remaining, subregex::next_group_index>::tree;
