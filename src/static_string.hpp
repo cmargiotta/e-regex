@@ -58,17 +58,29 @@ namespace e_regex
             static constexpr auto string = static_string<size + 1> {std::array {data...}};
     };
 
-    template<typename S1, typename S2>
+    template<typename... Strings>
     struct merge_pack_strings;
 
-    template<char... data1, char... data2>
-    struct merge_pack_strings<pack_string<data1...>, pack_string<data2...>>
+    template<char... data1, char... data2, typename... Strings>
+    struct merge_pack_strings<pack_string<data1...>, pack_string<data2...>, Strings...>
     {
-            using type = pack_string<data1..., data2...>;
+            using type = typename merge_pack_strings<pack_string<data1..., data2...>, Strings...>::type;
     };
 
-    template<typename S1, typename S2>
-    using merge_pack_strings_t = typename merge_pack_strings<S1, S2>::type;
+    template<typename String>
+    struct merge_pack_strings<String>
+    {
+            using type = String;
+    };
+
+    template<>
+    struct merge_pack_strings<>
+    {
+            using type = pack_string<>;
+    };
+
+    template<typename... Strings>
+    using merge_pack_strings_t = typename merge_pack_strings<Strings...>::type;
 
     template<typename separator, typename... strings>
     struct concatenate_pack_strings;
@@ -83,6 +95,13 @@ namespace e_regex
     struct concatenate_pack_strings<separator>
     {
             using type = pack_string<>;
+    };
+
+    template<typename separator, typename... strings>
+    struct concatenate_pack_strings<separator, pack_string<>, strings...>
+    {
+            // Skip empty strings
+            using type = typename concatenate_pack_strings<separator, strings...>::type;
     };
 
     template<typename separator, typename string, typename... strings>

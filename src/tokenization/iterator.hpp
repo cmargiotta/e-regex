@@ -1,41 +1,35 @@
 #ifndef TOKENIZATION_RUNTIME_ITERATOR_HPP
 #define TOKENIZATION_RUNTIME_ITERATOR_HPP
 
+#include <array>
 #include <type_traits>
 
 #include "utilities/literal_string_view.hpp"
 
 namespace e_regex::tokenization
 {
-    template<typename match_result, typename token_type, typename token_raw_type, auto separator_verifier>
+    template<typename match_result, typename token_type, auto separator_verifier, std::array type_map>
     class iterator
     {
         private:
+            using token_class = decltype(type_map)::value_type;
+
             match_result res;
             token_type   current;
 
             [[nodiscard]] static constexpr auto build_token(const match_result& res) noexcept
             {
-                if constexpr (std::is_same_v<token_raw_type, void>)
-                {
-                    // void token type, no need to match a group
-                    return decltype(current) {res.to_view()};
-                }
-                else
-                {
-                    std::size_t index = 1;
+                std::size_t index = 1;
 
-                    for (; index <= match_result::groups(); ++index)
+                for (; index <= match_result::groups(); ++index)
+                {
+                    if (!res[index].empty())
                     {
-                        if (!res[index].empty())
-                        {
-                            break;
-                        }
+                        break;
                     }
-
-                    return decltype(current) {.type   = static_cast<token_raw_type>(index - 1),
-                                              .string = res.to_view()};
                 }
+
+                return decltype(current) {.type = type_map[index - 1], .string = res.to_view()};
             }
 
         public:
@@ -85,14 +79,7 @@ namespace e_regex::tokenization
 
             constexpr auto operator*() const noexcept
             {
-                if constexpr (std::is_same_v<token_raw_type, void>)
-                {
-                    return current.string;
-                }
-                else
-                {
-                    return current;
-                }
+                return current;
             }
 
             constexpr operator bool() const noexcept

@@ -7,16 +7,13 @@
 namespace e_regex
 {
     template<typename Type = char>
-    class literal_string_view
+    struct literal_string_view
     {
-        public:
             using iterator = const Type*;
 
-        private:
             iterator begin_;
             iterator end_;
 
-        public:
             constexpr literal_string_view(): begin_ {nullptr}, end_ {nullptr}
             {
             }
