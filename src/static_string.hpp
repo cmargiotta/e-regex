@@ -135,16 +135,16 @@ namespace e_regex
         return result;
     }
 
-    template<auto instance, typename indices = std::make_index_sequence<instance.size>>
+    template<static_string instance, typename indices = std::make_index_sequence<instance.size>>
     struct build_pack_string;
 
-    template<auto instance, std::size_t... indices>
+    template<static_string instance, std::size_t... indices>
     struct build_pack_string<instance, std::index_sequence<indices...>>
     {
             using type = pack_string<instance.data[indices]...>;
     };
 
-    template<auto instance>
+    template<static_string instance>
     using build_pack_string_t = typename build_pack_string<instance>::type;
 
 }// namespace e_regex
