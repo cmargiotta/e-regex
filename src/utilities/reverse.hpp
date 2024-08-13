@@ -1,17 +1,21 @@
-#ifndef UTILITIES_REVERSE
-#define UTILITIES_REVERSE
+#ifndef E_REGEX_UTILITIES_REVERSE_HPP_
+#define E_REGEX_UTILITIES_REVERSE_HPP_
 
 #include <tuple>
 
+#include "concepts.hpp"
+
 namespace e_regex
 {
-    template<typename T, typename current = std::tuple<>>
+    template<typename T, tuple current = std::tuple<>>
     struct reverse;
 
     template<typename T, typename... tail, typename... currents>
     struct reverse<std::tuple<T, tail...>, std::tuple<currents...>>
     {
-            using type = typename reverse<std::tuple<tail...>, std::tuple<T, currents...>>::type;
+            using type =
+                typename reverse<std::tuple<tail...>,
+                                 std::tuple<T, currents...>>::type;
     };
 
     template<typename... currents>
@@ -20,8 +24,8 @@ namespace e_regex
             using type = std::tuple<currents...>;
     };
 
-    template<typename tuple>
+    template<tuple tuple>
     using reverse_t = typename reverse<tuple>::type;
-}// namespace e_regex
+} // namespace e_regex
 
-#endif /* UTILITIES_REVERSE */
+#endif /* E_REGEX_UTILITIES_REVERSE_HPP_*/

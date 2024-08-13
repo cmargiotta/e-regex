@@ -1,8 +1,8 @@
-#ifndef UTILITIES_BALANCED_HPP
-#define UTILITIES_BALANCED_HPP
+#ifndef E_REGEX_UTILITIES_BALANCED_HPP_
+#define E_REGEX_UTILITIES_BALANCED_HPP_
 
 #include "static_stack.hpp"
-#include "static_string.hpp"
+#include "utilities/pack_string.hpp"
 
 namespace e_regex
 {
@@ -20,7 +20,8 @@ namespace e_regex
     };
 
     template<typename stack, typename string, typename... strings>
-    struct balanced<stack, string, strings...> : public balanced<stack, strings...>
+    struct balanced<stack, string, strings...>
+        : public balanced<stack, strings...>
     {
             // This token is not a parentheses
     };
@@ -71,8 +72,9 @@ namespace e_regex
     };
 
     template<typename... strings>
-    static constexpr auto balanced_v = balanced<static_stack<char>, strings...>::value;
+    static constexpr auto balanced_v
+        = balanced<static_stack<char>, strings...>::value;
 
-}// namespace e_regex
+} // namespace e_regex
 
-#endif /* UTILITIES_BALANCED_HPP */
+#endif /* E_REGEX_UTILITIES_BALANCED_HPP_*/

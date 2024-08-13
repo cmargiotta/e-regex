@@ -1,15 +1,19 @@
-#ifndef UTILITIES_SPLIT
-#define UTILITIES_SPLIT
+#ifndef E_REGEX_UTILITIES_SPLIT_HPP_
+#define E_REGEX_UTILITIES_SPLIT_HPP_
 
 #include <tuple>
 
 #include "balanced.hpp"
+#include "concepts.hpp"
 #include "reverse.hpp"
 #include "static_string.hpp"
 
 namespace e_regex
 {
-    template<char separator, typename tokens, typename current = std::tuple<std::tuple<>>>
+    /* Split a token tuple by the given separator token, parentheses
+     * will remain balanced even after splitting.
+     */
+    template<char separator, tuple tokens, tuple current = std::tuple<std::tuple<>>>
     struct split;
 
     template<char separator, typename... tail, typename... current_tokens, typename... currents>
@@ -19,15 +23,21 @@ namespace e_regex
                  std::tuple<std::tuple<current_tokens...>, currents...>>
     {
             // Separator found
-            using current = std::tuple<std::tuple<>, std::tuple<current_tokens...>, currents...>;
-            using type    = typename split<separator, std::tuple<tail...>, current>::type;
+            using current
+                = std::tuple<std::tuple<>, std::tuple<current_tokens...>, currents...>;
+            using type =
+                typename split<separator, std::tuple<tail...>, current>::type;
     };
 
     template<char separator, typename head, typename... tail, typename... current_tokens, typename... currents>
-    struct split<separator, std::tuple<head, tail...>, std::tuple<std::tuple<current_tokens...>, currents...>>
+    struct split<separator,
+                 std::tuple<head, tail...>,
+                 std::tuple<std::tuple<current_tokens...>, currents...>>
     {
-            using current = std::tuple<std::tuple<current_tokens..., head>, currents...>;
-            using type    = typename split<separator, std::tuple<tail...>, current>::type;
+            using current
+                = std::tuple<std::tuple<current_tokens..., head>, currents...>;
+            using type =
+                typename split<separator, std::tuple<tail...>, current>::type;
     };
 
     template<char separator, typename current>
@@ -36,8 +46,8 @@ namespace e_regex
             using type = reverse_t<current>;
     };
 
-    template<char separator, typename tokens>
+    template<char separator, tuple tokens>
     using split_t = typename split<separator, tokens>::type;
-}// namespace e_regex
+} // namespace e_regex
 
-#endif /* UTILITIES_SPLIT */
+#endif /* E_REGEX_UTILITIES_SPLIT_HPP_*/

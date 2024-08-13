@@ -6,6 +6,7 @@
 #include "nodes.hpp"
 #include "tokenizer.hpp"
 #include "utilities/admitted_set.hpp"
+#include "utilities/pack_string.hpp"
 
 TEST_CASE("Exact matchers merging")
 {
@@ -20,7 +21,7 @@ TEST_CASE("Exact matchers merging")
                                                   e_regex::pack_string<'a', 'b', 'c', 'd', 'e', '1'>>>>,
                        matcher>);
 
-    REQUIRE(matcher::expression::string.to_view() == "abcde1");
+    REQUIRE(matcher::expression.to_view() == "abcde1");
 }
 
 TEST_CASE("Terminals merging")
@@ -37,7 +38,7 @@ TEST_CASE("Terminals merging")
                                                       e_regex::pack_string<'e', 'f', 'g'>>>>,
                            matcher>);
 
-    REQUIRE(matcher::expression::string.to_view() == R"(abc\defg)");
+    REQUIRE(matcher::expression.to_view() == R"(abc\defg)");
 }
 
 TEST_CASE("Expression rebuilding")
@@ -47,7 +48,7 @@ TEST_CASE("Expression rebuilding")
     using test    = e_regex::build_pack_string_t<regex>;
     using matcher = typename e_regex::tree_builder<test>::tree;
 
-    REQUIRE(matcher::expression::string.to_view() == R"(.{3,})");
+    REQUIRE(matcher::expression.to_view() == R"(.{3,})");
 }
 
 TEST_CASE("Admission set of a node")
@@ -86,5 +87,5 @@ TEST_CASE("Greedy backtracking removal")
     using test    = e_regex::build_pack_string_t<regex>;
     using matcher = typename e_regex::tree_builder<test>::tree;
 
-    REQUIRE(matcher::expression::string.to_view() == R"(\d++\s++123)");
+    REQUIRE(matcher::expression.to_view() == R"(\d++\s++123)");
 }

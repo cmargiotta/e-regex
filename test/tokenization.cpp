@@ -3,8 +3,7 @@
 #include <vector>
 
 #include "e_regex.hpp"
-#include "tokenization/result.hpp"
-#include "tokenizer.hpp"
+#include "tokenization/tokenizer.hpp"
 
 TEST_CASE("Classified tokenization")
 {
@@ -18,11 +17,13 @@ TEST_CASE("Classified tokenization")
     };
 
     constexpr auto tokenizer
-        = e_regex::tokenize<token {type::WORD, "\\w+"}, token {type::NUMBER, "\\d+"}, separator {"\\s"}>;
+        = e_regex::tokenization::tokenizer<token {type::WORD, "\\w+"},
+                                           token {type::NUMBER, "\\d+"},
+                                           separator {"\\s"}> {};
 
-    constexpr auto res = tokenizer("a abc 123");
+    auto res = tokenizer("a abc 123");
 
-    std::vector<decltype(*res.begin())> tokens;
+    std::vector<decltype(*res)> tokens;
 
     for (auto token: res)
     {
@@ -30,10 +31,10 @@ TEST_CASE("Classified tokenization")
     }
 
     REQUIRE(tokens.size() == 3);
-    REQUIRE(tokens[0].string == "a");
+    REQUIRE(tokens[0].value == "a");
     REQUIRE(tokens[0].type == type::WORD);
-    REQUIRE(tokens[1].string == "abc");
+    REQUIRE(tokens[1].value == "abc");
     REQUIRE(tokens[1].type == type::WORD);
-    REQUIRE(tokens[2].string == "123");
+    REQUIRE(tokens[2].value == "123");
     REQUIRE(tokens[2].type == type::NUMBER);
 }

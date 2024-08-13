@@ -1,62 +1,67 @@
-#ifndef TOKENIZATION_TOKEN_HPP
-#define TOKENIZATION_TOKEN_HPP
+#ifndef E_REGEX_TOKENIZATION_TOKEN_HPP_
+#define E_REGEX_TOKENIZATION_TOKEN_HPP_
 
 #include <array>
 
-#include "static_string.hpp"
 #include "utilities/literal_string_view.hpp"
+#include "utilities/static_string.hpp"
 
-namespace e_regex::tokenization
+namespace e_regex
 {
-    template<typename Token_Type, typename String_Type = literal_string_view<char>>
+    template<typename T, auto size>
     struct token
     {
-            Token_Type  type;
-            String_Type string;
+            T                   type;
+            static_string<size> matcher;
+
+            template<auto S>
+            constexpr token(T type, const char (&matcher)[S])
+                : type {type}, matcher {matcher}
+            {}
     };
 
-    template<typename String_Type>
-    struct token<void, String_Type>
+    template<typename T, auto S>
+    token(T type, const char (&matcher)[S]) -> token<T, S - 1>;
+
+    template<auto size>
+    struct separator
     {
-            String_Type string;
+            static_string<size> matcher;
+
+            template<auto S>
+            constexpr separator(const char (&matcher)[S])
+                : matcher {matcher}
+            {}
     };
 
-    template<typename Token_Type, auto... data>
-    struct token_container
-    {
-            static constexpr std::array tokens {token<Token_Type> {data.type, data.string.to_view()}...};
-    };
-
-    template<auto... data>
-    struct token_container<void, data...>
-    {
-            static constexpr std::array tokens {data.to_view()...};
-    };
-
-    template<typename tokens1, typename tokens2>
-    struct merge_tokens;
-
-    template<typename Token_Type, auto... data1, auto... data2>
-    struct merge_tokens<token_container<Token_Type, data1...>, token_container<Token_Type, data2...>>
-    {
-            using type = token_container<Token_Type, data1..., data2...>;
-    };
+    template<auto S>
+    separator(const char (&matcher)[S]) -> separator<S - 1>;
 
     template<typename T>
-    concept has_end = requires(T d) { d.end(); };
+    struct is_token : public std::false_type
+    {};
 
-    template<typename Token_Type, static_string string>
-    consteval auto build_token(auto token_with_literal)
-        requires(!std::is_same_v<Token_Type, void>)
-    {
-        return token<Token_Type, decltype(string)> {.type = token_with_literal.type, .string = string};
-    };
+    template<typename T, auto size>
+    struct is_token<e_regex::token<T, size>> : public std::true_type
+    {};
 
-    template<std::same_as<void> Token_Type, static_string string>
-    consteval auto build_token(auto /*unused*/)
-    {
-        return string;
-    };
-}// namespace e_regex::tokenization
+    template<typename T>
+    concept is_token_c = is_token<T>::value;
 
-#endif /* TOKENIZATION_TOKEN_HPP */
+    template<typename T>
+    struct is_separator : public std::false_type
+    {};
+
+    template<auto size>
+    struct is_separator<e_regex::separator<size>> : public std::true_type
+    {};
+
+    template<typename T>
+    concept is_separator_c = is_separator<T>::value;
+
+    template<typename T>
+    concept token_definition = is_separator_c<T> || is_token_c<T>;
+
+} // namespace e_regex
+
+#endif /* E_REGEX_TOKENIZATION_TOKEN_HPP_*/

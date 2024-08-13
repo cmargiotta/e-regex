@@ -1,5 +1,5 @@
-#ifndef TREE_BUILDER_HPP
-#define TREE_BUILDER_HPP
+#ifndef E_REGEX_TREE_BUILDER_HPP_
+#define E_REGEX_TREE_BUILDER_HPP_
 
 #include "nodes.hpp"
 #include "operators.hpp"
@@ -12,13 +12,17 @@ namespace e_regex
     struct tree_builder_branches;
 
     template<typename... parsed, typename subregex, typename... subregexes, auto group_index>
-    struct tree_builder_branches<std::tuple<parsed...>, std::tuple<subregex, subregexes...>, group_index>
+    struct tree_builder_branches<std::tuple<parsed...>,
+                                 std::tuple<subregex, subregexes...>,
+                                 group_index>
     {
-            using subtree = typename tree_builder_helper<void, subregex, group_index>::tree;
+            using subtree =
+                typename tree_builder_helper<void, subregex, group_index>::tree;
 
-            using tree = typename tree_builder_branches<std::tuple<parsed..., subtree>,
-                                                        std::tuple<subregexes...>,
-                                                        subtree::next_group_index>::tree;
+            using tree =
+                typename tree_builder_branches<std::tuple<parsed..., subtree>,
+                                               std::tuple<subregexes...>,
+                                               subtree::next_group_index>::tree;
     };
 
     template<typename... parsed, auto group_index>
@@ -32,10 +36,12 @@ namespace e_regex
 
     template<char... regex>
     struct tree_builder<pack_string<regex...>>
-        : public tree_builder_branches<std::tuple<>, split_t<'|', tokenizer_t<pack_string<regex...>>>, 0>
-    {
-    };
+        : public tree_builder_branches<
+              std::tuple<>,
+              split_t<'|', tokenizer_t<pack_string<regex...>>>,
+              0>
+    {};
 
-}// namespace e_regex
+} // namespace e_regex
 
-#endif /* TREE_BUILDER_HPP */
+#endif /* E_REGEX_TREE_BUILDER_HPP_*/
