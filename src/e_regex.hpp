@@ -31,6 +31,8 @@ namespace e_regex
             {
                 return ast::expression.to_view();
             }
+
+            static constexpr const auto& groups = ast::groups;
     };
 
 } // namespace e_regex
