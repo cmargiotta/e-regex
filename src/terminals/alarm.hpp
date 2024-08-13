@@ -1,16 +1,17 @@
-#ifndef TERMINALS_ALARM_HPP
-#define TERMINALS_ALARM_HPP
+#ifndef E_REGEX_TERMINALS_ALARM_HPP_
+#define E_REGEX_TERMINALS_ALARM_HPP_
 
 #include "common.hpp"
 #include "exact_matcher.hpp"
-#include "static_string.hpp"
 
 namespace e_regex::terminals
 {
     template<>
-    struct terminal<pack_string<'\\', 'a'>> : public exact_matcher<pack_string<0x07>>
+    struct terminal<pack_string<'\\', 'a'>>
+        : public exact_matcher<pack_string<0x07>>
     {
+            static constexpr auto expression = static_string {"\\a"};
     };
-}// namespace e_regex::terminals
+} // namespace e_regex::terminals
 
-#endif /* TERMINALS_ALARM_HPP */
+#endif /* E_REGEX_TERMINALS_ALARM_HPP_*/

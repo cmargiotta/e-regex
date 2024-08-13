@@ -1,10 +1,10 @@
-#ifndef TERMINALS_COMMON_HPP
-#define TERMINALS_COMMON_HPP
+#ifndef E_REGEX_TERMINALS_COMMON_HPP_
+#define E_REGEX_TERMINALS_COMMON_HPP_
 
 #include <utility>
 
-#include "static_string.hpp"
 #include "utilities/admitted_set.hpp"
+#include "utilities/static_string.hpp"
 
 namespace e_regex::terminals
 {
@@ -50,7 +50,11 @@ namespace e_regex::terminals
     template<typename head, typename... tail>
     struct terminal<head, tail...>
     {
-            using admitted_first_chars = typename terminal<head>::admitted_first_chars;
+            static constexpr auto expression
+                = terminal<head>::expression
+                  + (terminal<tail>::expression + ...);
+            using admitted_first_chars =
+                typename terminal<head>::admitted_first_chars;
 
             static constexpr auto match(auto result)
             {
@@ -65,23 +69,6 @@ namespace e_regex::terminals
             }
     };
 
-    template<typename terminal>
-    struct rebuild_expression;
+} // namespace e_regex::terminals
 
-    template<>
-    struct rebuild_expression<terminal<>>
-    {
-            using string = pack_string<>;
-    };
-
-    template<char... chars, typename... tail>
-    struct rebuild_expression<terminal<pack_string<chars...>, tail...>>
-    {
-            using string
-                = merge_pack_strings_t<pack_string<chars...>,
-                                       typename rebuild_expression<terminal<tail...>>::string>;
-    };
-
-}// namespace e_regex::terminals
-
-#endif /* TERMINALS_COMMON_HPP */
+#endif /* E_REGEX_TERMINALS_COMMON_HPP_*/

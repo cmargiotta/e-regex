@@ -1,5 +1,5 @@
-#ifndef OPERATORS_BRACES_HPP
-#define OPERATORS_BRACES_HPP
+#ifndef E_REGEX_OPERATORS_BRACES_HPP_
+#define E_REGEX_OPERATORS_BRACES_HPP_
 
 #include <limits>
 
@@ -8,7 +8,6 @@
 #include "nodes/basic.hpp"
 #include "nodes/greedy.hpp"
 #include "nodes/repeated.hpp"
-#include "static_string.hpp"
 #include "utilities/extract_delimited_content.hpp"
 #include "utilities/pack_string_to_number.hpp"
 
@@ -41,71 +40,96 @@ namespace e_regex
     struct quantified_node_builder<matcher, std::tuple<first>, policy>
     {
             // Exact quantifier e.g. a{3}
-            static constexpr auto value = pack_string_to_number<first>::value;
-            using type                  = nodes::repeated<matcher, value>;
+            static constexpr auto value
+                = pack_string_to_number<first>::value;
+            using type = nodes::repeated<matcher, value>;
     };
 
     // {n,} quantifiers
     template<typename matcher, typename first>
-    struct quantified_node_builder<matcher, std::tuple<first, pack_string<','>>, pack_string<'?'>>
+    struct quantified_node_builder<matcher,
+                                   std::tuple<first, pack_string<','>>,
+                                   pack_string<'?'>>
     {
-            using type = nodes::lazy<matcher, pack_string_to_number<first>::value>;
+            using type
+                = nodes::lazy<matcher, pack_string_to_number<first>::value>;
     };
 
     template<typename matcher, typename first>
-    struct quantified_node_builder<matcher, std::tuple<first, pack_string<','>>, pack_string<'+'>>
+    struct quantified_node_builder<matcher,
+                                   std::tuple<first, pack_string<','>>,
+                                   pack_string<'+'>>
     {
-            using type = nodes::possessive<matcher, pack_string_to_number<first>::value>;
+            using type
+                = nodes::possessive<matcher, pack_string_to_number<first>::value>;
     };
 
     template<typename matcher, typename first, typename policy>
     struct quantified_node_builder<matcher, std::tuple<first, pack_string<','>>, policy>
     {
-            using type = nodes::greedy<matcher, pack_string_to_number<first>::value>;
+            using type
+                = nodes::greedy<matcher, pack_string_to_number<first>::value>;
     };
 
     // {n, n} quantifiers
     template<typename matcher, typename first, typename second>
-    struct quantified_node_builder<matcher, std::tuple<first, pack_string<','>, second>, pack_string<'?'>>
+    struct quantified_node_builder<matcher,
+                                   std::tuple<first, pack_string<','>, second>,
+                                   pack_string<'?'>>
     {
             using type
-                = nodes::lazy<matcher, pack_string_to_number<first>::value, pack_string_to_number<second>::value>;
+                = nodes::lazy<matcher,
+                              pack_string_to_number<first>::value,
+                              pack_string_to_number<second>::value>;
     };
 
     template<typename matcher, typename first, typename second>
-    struct quantified_node_builder<matcher, std::tuple<first, pack_string<','>, second>, pack_string<'+'>>
+    struct quantified_node_builder<matcher,
+                                   std::tuple<first, pack_string<','>, second>,
+                                   pack_string<'+'>>
     {
             using type
-                = nodes::possessive<matcher, pack_string_to_number<first>::value, pack_string_to_number<second>::value>;
+                = nodes::possessive<matcher,
+                                    pack_string_to_number<first>::value,
+                                    pack_string_to_number<second>::value>;
     };
 
     template<typename matcher, typename first, typename second, typename policy>
-    struct quantified_node_builder<matcher, std::tuple<first, pack_string<','>, second>, policy>
+    struct quantified_node_builder<matcher,
+                                   std::tuple<first, pack_string<','>, second>,
+                                   policy>
     {
             using type
-                = nodes::greedy<matcher, pack_string_to_number<first>::value, pack_string_to_number<second>::value>;
+                = nodes::greedy<matcher,
+                                pack_string_to_number<first>::value,
+                                pack_string_to_number<second>::value>;
     };
 
     template<typename last_node, typename... tail, auto group_index>
     struct tree_builder_helper<last_node, std::tuple<pack_string<'{'>, tail...>, group_index>
     {
             // { found
-            using substring = extract_delimited_content_t<'{', '}', std::tuple<tail...>>;
+            using substring
+                = extract_delimited_content_t<'{', '}', std::tuple<tail...>>;
 
-            using remaining_head = first_type<typename substring::remaining>;
-            using policy         = typename remaining_head::type;
+            using remaining_head
+                = first_type<typename substring::remaining>;
+            using policy = typename remaining_head::type;
 
-            using remaining
-                = std::conditional_t<std::is_same_v<typename remaining_head::type, pack_string<'+'>>
-                                         || std::is_same_v<typename remaining_head::type, pack_string<'?'>>,
-                                     typename remaining_head::remaining,
-                                     typename substring::remaining>;
+            using remaining = std::conditional_t<
+                std::is_same_v<typename remaining_head::type, pack_string<'+'>>
+                    || std::is_same_v<typename remaining_head::type, pack_string<'?'>>,
+                typename remaining_head::remaining,
+                typename substring::remaining>;
 
             using new_node =
-                typename quantified_node_builder<last_node, typename substring::result, policy>::type;
+                typename quantified_node_builder<last_node,
+                                                 typename substring::result,
+                                                 policy>::type;
 
-            using tree = typename tree_builder_helper<new_node, remaining, group_index>::tree;
+            using tree =
+                typename tree_builder_helper<new_node, remaining, group_index>::tree;
     };
-}// namespace e_regex
+} // namespace e_regex
 
-#endif /* OPERATORS_BRACES_HPP */
+#endif /* E_REGEX_OPERATORS_BRACES_HPP_*/

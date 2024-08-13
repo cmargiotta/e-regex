@@ -27,7 +27,7 @@ TEST_CASE("Tokenization")
 
 TEST_CASE("Construction")
 {
-    constexpr auto matcher = e_regex::match<"\\w">;
+    constexpr e_regex::regex<"\\w"> matcher;
 
     REQUIRE(matcher("a").to_view() == "a");
     REQUIRE(!matcher("0").is_accepted());
@@ -35,7 +35,7 @@ TEST_CASE("Construction")
 
 TEST_CASE("Star operator")
 {
-    constexpr auto matcher = e_regex::match<"aa*">;
+    constexpr e_regex::regex<"aa*"> matcher;
 
     REQUIRE(matcher("aaa").to_view() == "aaa");
     REQUIRE(matcher("a").to_view() == "a");
@@ -47,7 +47,7 @@ TEST_CASE("Star operator")
 
 TEST_CASE("Optional operator")
 {
-    constexpr auto matcher = e_regex::match<"a[a-f]?">;
+    constexpr e_regex::regex<"a[a-f]?"> matcher;
 
     REQUIRE(matcher("aaa").to_view() == "aa");
     REQUIRE(matcher("a").is_accepted());
@@ -56,7 +56,7 @@ TEST_CASE("Optional operator")
 
 TEST_CASE("Plus operator")
 {
-    constexpr auto matcher = e_regex::match<"aa+">;
+    constexpr e_regex::regex<"aa+"> matcher;
 
     REQUIRE(matcher("aaa").to_view() == "aaa");
     REQUIRE(!matcher("a").is_accepted());
@@ -68,7 +68,7 @@ TEST_CASE("Plus operator")
 
 TEST_CASE("Round brackets")
 {
-    constexpr auto matcher = e_regex::match<"a(ab)+">;
+    constexpr e_regex::regex<"a(ab)+"> matcher;
 
     REQUIRE(!matcher("aaa").is_accepted());
     REQUIRE(!matcher("a").is_accepted());
@@ -78,20 +78,20 @@ TEST_CASE("Round brackets")
 
 TEST_CASE("Braces")
 {
-    auto matcher = e_regex::match<"ab{2,10}c">;
+    constexpr e_regex::regex<"ab{2,10}c"> matcher;
 
     REQUIRE(matcher("abbc").is_accepted());
     REQUIRE(matcher("abbbbbbbbbbc").is_accepted());
     REQUIRE(!matcher("abbbbbbbbbbbc").is_accepted());
     REQUIRE(!matcher("abc").is_accepted());
 
-    constexpr auto matcher1 = e_regex::match<"ab{2,}c">;
+    constexpr e_regex::regex<"ab{2,}c"> matcher1;
 
     REQUIRE(matcher1("abbc").is_accepted());
     REQUIRE(matcher1("abbbbbbbbbbc").is_accepted());
     REQUIRE(!matcher1("abc").is_accepted());
 
-    constexpr auto matcher2 = e_regex::match<"ab{2}c">;
+    constexpr e_regex::regex<"ab{2}c"> matcher2;
 
     REQUIRE(matcher2("abbc").is_accepted());
     REQUIRE(!matcher2("abbbbbbbbbbc").is_accepted());
@@ -100,7 +100,7 @@ TEST_CASE("Braces")
 
 TEST_CASE("Nested group matching")
 {
-    constexpr auto match = e_regex::match<"a(a(b))cd">("aabcdef");
+  constexpr auto  match = e_regex::regex<"a(a(b))cd">{} ("aabcdef");
 
     REQUIRE(match.is_accepted());
     REQUIRE(match[0] == "aabcd");
@@ -110,7 +110,7 @@ TEST_CASE("Nested group matching")
 
 TEST_CASE("Branched group matching")
 {
-    constexpr auto matcher = e_regex::match<"a(a|b)+">;
+    constexpr e_regex::regex<"a(a|b)+"> matcher;
 
     REQUIRE(matcher("aa").is_accepted());
     REQUIRE(matcher("ab").is_accepted());
@@ -123,7 +123,7 @@ TEST_CASE("Branched group matching")
 
 TEST_CASE("Ranged square bracket - 1")
 {
-    constexpr auto matcher = e_regex::match<R"((10[0-7]0))">;
+    constexpr e_regex::regex<R"((10[0-7]0))"> matcher;
 
     auto match = matcher("274.06 102	1000	");
     auto full  = match;
@@ -133,7 +133,7 @@ TEST_CASE("Ranged square bracket - 1")
 
 TEST_CASE("Group matching order")
 {
-    constexpr auto match = e_regex::match<"a(a[a-g])+">("aabacad");
+  constexpr auto match = e_regex::regex<"a(a[a-g])+">::match ("aabacad");
 
     REQUIRE(match.is_accepted());
     REQUIRE(match[0] == "aabacad");
@@ -142,7 +142,7 @@ TEST_CASE("Group matching order")
 
 TEST_CASE("Group matching with more branches")
 {
-    constexpr auto matcher = e_regex::match<R"(\w(\w+)|(\d+))">;
+    constexpr e_regex::regex<R"(\w(\w+)|(\d+))"> matcher;
 
     auto match                 = matcher("abc");
     auto [full, first, second] = match;
@@ -161,7 +161,7 @@ TEST_CASE("Group matching with more branches")
 
 TEST_CASE("Iteration on group matching with more branches")
 {
-    constexpr auto matcher = e_regex::match<R"(\w(\w+)|(\d+))">;
+    constexpr e_regex::regex<R"(\w(\w+)|(\d+))"> matcher;
 
     auto match                 = matcher("abc123ab");
     auto [full, first, second] = match;
@@ -188,7 +188,7 @@ TEST_CASE("Iteration on group matching with more branches")
 
 TEST_CASE("Branches collisions handling")
 {
-    constexpr auto matcher = e_regex::match<"aaa|a+">;
+    constexpr e_regex::regex<"aaa|a+"> matcher;
 
     auto res = matcher("aaaa");
 
@@ -197,7 +197,7 @@ TEST_CASE("Branches collisions handling")
 
 TEST_CASE("Non-capturing round brackts")
 {
-    constexpr auto match = e_regex::match<"a(?:a(b))cd">("aabcdef");
+  constexpr auto match = e_regex::regex<"a(?:a(b))cd">{}("aabcdef");
 
     REQUIRE(match.is_accepted());
     REQUIRE(match[0] == "aabcd");
@@ -206,7 +206,7 @@ TEST_CASE("Non-capturing round brackts")
 
 TEST_CASE("Iterating matches")
 {
-    auto match = e_regex::match<"ab">("abaab");
+  auto match = e_regex::regex<"ab">{}("abaab");
 
     REQUIRE(match.is_accepted());
     REQUIRE(match[0] == "ab");
@@ -218,7 +218,7 @@ TEST_CASE("Iterating matches")
 
 TEST_CASE("Square brackets")
 {
-    constexpr auto matcher = e_regex::match<"a[\\w\\-]+">;
+    constexpr e_regex::regex<"a[\\w\\-]+"> matcher;
 
     REQUIRE(matcher("aaa").to_view() == "aaa");
     REQUIRE(!matcher("a").is_accepted());
@@ -232,7 +232,7 @@ TEST_CASE("Square brackets")
 
 TEST_CASE("Hex matching")
 {
-    constexpr auto matcher = e_regex::match<"a\\x41">;
+    constexpr e_regex::regex<"a\\x41"> matcher;
 
     REQUIRE(matcher("aA").to_view() == "aA");
     REQUIRE(!matcher("a").is_accepted());
@@ -240,7 +240,7 @@ TEST_CASE("Hex matching")
 
 TEST_CASE("Hex string matching")
 {
-    constexpr auto matcher = e_regex::match<"a\\x{414141}">;
+    constexpr e_regex::regex<"a\\x{414141}"> matcher;
 
     REQUIRE(matcher("aAAA").to_view() == "aAAA");
     REQUIRE(!matcher("aAA").is_accepted());
@@ -248,7 +248,7 @@ TEST_CASE("Hex string matching")
 
 TEST_CASE("Octal matching")
 {
-    constexpr auto matcher = e_regex::match<"a\\101">;
+    constexpr e_regex::regex<"a\\101"> matcher;
 
     REQUIRE(matcher("aA").to_view() == "aA");
     REQUIRE(!matcher("a").is_accepted());
@@ -256,7 +256,7 @@ TEST_CASE("Octal matching")
 
 TEST_CASE("Octal string matching")
 {
-    constexpr auto matcher = e_regex::match<"a\\o{101101101}">;
+    constexpr e_regex::regex<"a\\o{101101101}"> matcher;
 
     REQUIRE(matcher("aAAA").to_view() == "aAAA");
     REQUIRE(!matcher("aAA").is_accepted());
@@ -264,7 +264,7 @@ TEST_CASE("Octal string matching")
 
 TEST_CASE("Start anchor")
 {
-    constexpr auto matcher = e_regex::match<"^a">;
+    constexpr e_regex::regex<"^a"> matcher;
 
     REQUIRE(matcher("abc").is_accepted());
     REQUIRE(!matcher("bc").is_accepted());
@@ -272,7 +272,7 @@ TEST_CASE("Start anchor")
 
 TEST_CASE("End anchor")
 {
-    constexpr auto matcher = e_regex::match<"a$">;
+    constexpr e_regex::regex<"a$"> matcher;
 
     REQUIRE(matcher("a").is_accepted());
     REQUIRE(!matcher("abc").is_accepted());
@@ -281,7 +281,7 @@ TEST_CASE("End anchor")
 
 TEST_CASE("Range matchers")
 {
-    constexpr auto matcher = e_regex::match<"a[a-fhm-o]+">;
+    constexpr e_regex::regex<"a[a-fhm-o]+"> matcher;
 
     REQUIRE(matcher("aaa").to_view() == "aaa");
     REQUIRE(!matcher("a").is_accepted());
@@ -295,7 +295,7 @@ TEST_CASE("Range matchers")
 
 TEST_CASE("Multiple branches")
 {
-    constexpr auto matcher = e_regex::match<"a|bc|cd|d">;
+    constexpr e_regex::regex<"a|bc|cd|d"> matcher;
 
     auto match = matcher("abcd");
     REQUIRE(match.is_accepted());
@@ -312,7 +312,7 @@ TEST_CASE("Multiple branches")
 
 TEST_CASE("Negated matchers")
 {
-    constexpr auto matcher = e_regex::match<"a[^a-fh]+">;
+    constexpr e_regex::regex<"a[^a-fh]+"> matcher;
 
     REQUIRE(matcher("axx").to_view() == "axx");
     REQUIRE(!matcher("a").is_accepted());
@@ -322,7 +322,7 @@ TEST_CASE("Negated matchers")
 
 TEST_CASE("Structured binding")
 {
-    constexpr auto matcher = e_regex::match<R"((\d+)-(\d+)-(\d+))">;
+    constexpr e_regex::regex<R"((\d+)-(\d+)-(\d+))"> matcher;
 
     auto [string, year, month, day] = matcher("2023-01-01");
 
@@ -334,7 +334,7 @@ TEST_CASE("Structured binding")
 
 TEST_CASE("General use")
 {
-    constexpr auto matcher = e_regex::match<R"([\w.\-]+@[\w\-]+\.[\w.]+)">;
+    constexpr e_regex::regex<R"([\w.\-]+@[\w\-]+\.[\w.]+)"> matcher;
 
     constexpr std::string_view email = "Test email <first.last@learnxinyminutes.com>";
 
@@ -343,7 +343,7 @@ TEST_CASE("General use")
     REQUIRE(match.is_accepted());
     REQUIRE(match[0] == "first.last@learnxinyminutes.com");
 
-    constexpr auto matcher1 = e_regex::match<"\"(.*)\"">;
+    constexpr e_regex::regex<"\"(.*)\""> matcher1;
 
     constexpr std::string_view test = "wrong \"match\"";
 
@@ -356,7 +356,7 @@ TEST_CASE("General use")
 
 TEST_CASE("Lazy and greedy plus")
 {
-    constexpr auto matcher_greedy = e_regex::match<"(a+)a">;
+    constexpr e_regex::regex<"(a+)a"> matcher_greedy;
 
     std::string_view test = "aaaa";
 
@@ -366,7 +366,7 @@ TEST_CASE("Lazy and greedy plus")
     REQUIRE(match_greedy[0] == "aaaa");
     REQUIRE(match_greedy[1] == "aaa");
 
-    constexpr auto matcher_lazy = e_regex::match<"(a+?)a">;
+    constexpr e_regex::regex<"(a+?)a"> matcher_lazy;
 
     std::string_view test1 = "aaaa";
 
@@ -379,7 +379,7 @@ TEST_CASE("Lazy and greedy plus")
 
 TEST_CASE("Lazy, greedy and possessive optional")
 {
-    constexpr auto matcher_greedy = e_regex::match<"a?a">;
+    constexpr e_regex::regex<"a?a"> matcher_greedy;
 
     std::string_view test = "aa";
 
@@ -388,7 +388,7 @@ TEST_CASE("Lazy, greedy and possessive optional")
     REQUIRE(match_greedy.is_accepted());
     REQUIRE(match_greedy[0] == "aa");
 
-    constexpr auto matcher_lazy = e_regex::match<"a??a">;
+    constexpr e_regex::regex<"a??a"> matcher_lazy;
 
     auto match_lazy = matcher_lazy(test);
 
@@ -398,7 +398,7 @@ TEST_CASE("Lazy, greedy and possessive optional")
     REQUIRE(match_lazy.is_accepted());
     REQUIRE(match_lazy[0] == "a");
 
-    constexpr auto matcher_possessive = e_regex::match<"a?+a">;
+    constexpr e_regex::regex<"a?+a"> matcher_possessive;
 
     auto match_possessive = matcher_possessive(test);
 
@@ -410,7 +410,7 @@ TEST_CASE("Lazy, greedy and possessive optional")
 
 TEST_CASE("Lazy, greedy and possessive braces")
 {
-    constexpr auto matcher_greedy = e_regex::match<"(a{1,})a">;
+    constexpr e_regex::regex<"(a{1,})a"> matcher_greedy;
 
     std::string_view test = "aaaa";
 
@@ -420,7 +420,7 @@ TEST_CASE("Lazy, greedy and possessive braces")
     REQUIRE(match_greedy[0] == "aaaa");
     REQUIRE(match_greedy[1] == "aaa");
 
-    constexpr auto matcher_lazy = e_regex::match<"(a{1,}?)a">;
+    constexpr e_regex::regex<"(a{1,}?)a"> matcher_lazy;
 
     auto match_lazy = matcher_lazy(test);
 
@@ -428,7 +428,7 @@ TEST_CASE("Lazy, greedy and possessive braces")
     REQUIRE(match_lazy[0] == "aa");
     REQUIRE(match_lazy[1] == "a");
 
-    constexpr auto matcher_possessive = e_regex::match<"(a{1,}+)a">;
+    constexpr e_regex::regex<"(a{1,}+)a"> matcher_possessive;
 
     auto match_possessive = matcher_possessive(test);
 

@@ -1,5 +1,5 @@
-#ifndef MATCH_RESULT
-#define MATCH_RESULT
+#ifndef E_REGEX_MATCH_RESULT_HPP_
+#define E_REGEX_MATCH_RESULT_HPP_
 
 #include <array>
 
@@ -10,13 +10,15 @@ namespace e_regex
     template<std::size_t groups, typename Char_Type>
     struct match_result_data
     {
-            literal_string_view<Char_Type>                     query;
-            typename literal_string_view<Char_Type>::iterator  actual_iterator_start;
-            typename literal_string_view<Char_Type>::iterator  actual_iterator_end;
-            std::array<literal_string_view<Char_Type>, groups> match_groups = {};
-            bool                                               accepted     = true;
+            literal_string_view<Char_Type> query;
+            typename literal_string_view<Char_Type>::iterator actual_iterator_start;
+            typename literal_string_view<Char_Type>::iterator actual_iterator_end;
+            std::array<literal_string_view<Char_Type>, groups> match_groups
+                = {};
+            bool accepted = true;
 
-            constexpr auto operator=(bool accepted) noexcept -> match_result_data &
+            constexpr auto operator=(bool accepted) noexcept
+                -> match_result_data &
             {
                 this->accepted = accepted;
 
@@ -33,7 +35,7 @@ namespace e_regex
     class match_result
     {
         public:
-            using expression = typename matcher::expression;
+            static constexpr auto expression = matcher::expression;
 
         private:
             match_result_data<matcher::groups, Char_Type> data;
@@ -43,7 +45,7 @@ namespace e_regex
             {
                 data.query                 = query;
                 data.actual_iterator_start = query.begin();
-                data.actual_iterator_end   = data.actual_iterator_start;
+                data.actual_iterator_end = data.actual_iterator_start;
 
                 data = matcher::match(data);
                 if (!data)
@@ -52,7 +54,8 @@ namespace e_regex
                 }
             }
 
-            constexpr auto operator=(bool accepted) noexcept -> match_result &
+            constexpr auto operator=(bool accepted) noexcept
+                -> match_result &
             {
                 this->accepted = accepted;
 
@@ -72,8 +75,9 @@ namespace e_regex
             template<std::size_t index>
             constexpr auto get() const noexcept
             {
-                static_assert(index <= matcher::groups,
-                              "Group index is greater than the number of groups.");
+                static_assert(
+                    index <= matcher::groups,
+                    "Group index is greater than the number of groups.");
 
                 return get_group(index);
             }
@@ -85,7 +89,8 @@ namespace e_regex
                     return to_view();
                 }
 
-                return static_cast<std::string_view>(data.match_groups[index - 1]);
+                return static_cast<std::string_view>(
+                    data.match_groups[index - 1]);
             }
 
             constexpr auto operator[](std::size_t index) const noexcept
@@ -100,7 +105,8 @@ namespace e_regex
                     return std::string_view {};
                 }
 
-                return std::string_view {data.actual_iterator_start, data.actual_iterator_end};
+                return std::string_view {data.actual_iterator_start,
+                                         data.actual_iterator_end};
             }
 
             constexpr operator literal_string_view<Char_Type>() const noexcept
@@ -129,10 +135,10 @@ namespace e_regex
 
                 while (data.actual_iterator_start < data.query.end())
                 {
-                    data.match_groups        = {};
+                    data.match_groups = {};
                     data.actual_iterator_end = data.actual_iterator_start;
-                    data.accepted            = true;
-                    auto result              = matcher::match(data);
+                    data.accepted = true;
+                    auto result   = matcher::match(data);
 
                     if (result)
                     {
@@ -147,7 +153,7 @@ namespace e_regex
                 return false;
             }
     };
-}// namespace e_regex
+} // namespace e_regex
 
 // For structured decomposition
 namespace std
@@ -170,6 +176,6 @@ namespace std
         return t.template get<N>();
     }
 
-}// namespace std
+} // namespace std
 
-#endif /* MATCH_RESULT */
+#endif /* E_REGEX_MATCH_RESULT_HPP_*/

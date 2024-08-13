@@ -1,5 +1,5 @@
-#ifndef TERMINALS_ANCHORS_END
-#define TERMINALS_ANCHORS_END
+#ifndef E_REGEX_NODES_TERMINALS_ANCHORS_END_HPP_
+#define E_REGEX_NODES_TERMINALS_ANCHORS_END_HPP_
 
 #include "terminals/common.hpp"
 
@@ -7,16 +7,17 @@ namespace e_regex::terminals::anchors
 {
     struct end
     {
-            using expression           = pack_string<'$'>;
-            using admitted_first_chars = admitted_set<char>;
+            static constexpr auto expression = static_string {"$"};
+            using admitted_first_chars       = admitted_set<char>;
 
             static constexpr auto match(auto result)
             {
-                result = (result.actual_iterator_end == result.query.end());
+                result = (result.actual_iterator_end
+                          == result.query.end());
 
                 return result;
             }
     };
-}// namespace e_regex::terminals::anchors
+} // namespace e_regex::terminals::anchors
 
-#endif /* TERMINALS_ANCHORS_END */
+#endif /* E_REGEX_NODES_TERMINALS_ANCHORS_END_HPP_*/

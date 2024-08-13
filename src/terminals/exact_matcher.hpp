@@ -1,9 +1,9 @@
-#ifndef TERMINALS_EXACT_MATCHER_HPP
-#define TERMINALS_EXACT_MATCHER_HPP
+#ifndef E_REGEX_TERMINALS_EXACT_MATCHER_HPP_
+#define E_REGEX_TERMINALS_EXACT_MATCHER_HPP_
 
 #include "common.hpp"
-#include "static_string.hpp"
 #include "utilities/admitted_set.hpp"
+#include "utilities/static_string.hpp"
 
 namespace e_regex::terminals
 {
@@ -12,13 +12,17 @@ namespace e_regex::terminals
 
     template<char identifier, char... identifiers>
     struct exact_matcher<pack_string<identifier, identifiers...>>
-        : public terminal_common<exact_matcher<pack_string<identifier, identifiers...>>>
+        : public terminal_common<
+              exact_matcher<pack_string<identifier, identifiers...>>>
     {
+            static constexpr auto expression
+                = pack_string<identifier, identifiers...>::string;
             using admitted_first_chars = admitted_set<char, identifier>;
 
             static constexpr auto match_(auto result)
             {
-                for (auto c: pack_string<identifier, identifiers...>::string.to_view())
+                for (auto c:
+                     pack_string<identifier, identifiers...>::string.to_view())
                 {
                     result = c == *result.actual_iterator_end;
                     result.actual_iterator_end++;
@@ -38,12 +42,6 @@ namespace e_regex::terminals
     {
             static constexpr bool exact = true;
     };
+} // namespace e_regex::terminals
 
-    template<char... chars>
-    struct rebuild_expression<exact_matcher<pack_string<chars...>>>
-    {
-            using string = pack_string<chars...>;
-    };
-}// namespace e_regex::terminals
-
-#endif /* TERMINALS_EXACT_MATCHER_HPP */
+#endif /* E_REGEX_TERMINALS_EXACT_MATCHER_HPP_*/

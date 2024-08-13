@@ -1,12 +1,11 @@
-#ifndef OPERATORS_END_ANCHOR_HPP
-#define OPERATORS_END_ANCHOR_HPP
+#ifndef E_REGEX_OPERATORS_END_ANCHOR_HPP_
+#define E_REGEX_OPERATORS_END_ANCHOR_HPP_
 
 #include <tuple>
 
 #include "common.hpp"
 #include "heuristics.hpp"
 #include "nodes.hpp"
-#include "static_string.hpp"
 #include "terminals/anchors/end.hpp"
 
 namespace e_regex
@@ -20,6 +19,6 @@ namespace e_regex
 
             using tree = add_child_t<last_node, new_node>;
     };
-}// namespace e_regex
+} // namespace e_regex
 
-#endif /* OPERATORS_END_ANCHOR_HPP */
+#endif /* E_REGEX_OPERATORS_END_ANCHOR_HPP_*/

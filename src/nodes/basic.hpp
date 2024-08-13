@@ -1,13 +1,13 @@
-#ifndef NODES_BASIC_HPP
-#define NODES_BASIC_HPP
+#ifndef E_REGEX_NODES_BASIC_HPP_
+#define E_REGEX_NODES_BASIC_HPP_
 
 #include <type_traits>
 
 #include "common.hpp"
 #include "get_expression.hpp"
-#include "static_string.hpp"
 #include "terminals.hpp"
 #include "utilities/admitted_set.hpp"
+#include "utilities/static_string.hpp"
 
 namespace e_regex::nodes
 {
@@ -26,15 +26,27 @@ namespace e_regex::nodes
     template<typename matcher, typename... children>
     struct simple : public base<matcher, children...>
     {
-            using expression           = typename get_expression_base<matcher, children...>::type;
-            using admitted_first_chars = typename extract_admission_set<matcher, children...>::type;
+            static constexpr auto expression = []() {
+                if constexpr (!std::is_void_v<matcher>)
+                {
+                    return matcher::expression
+                           + get_children_expression<children...>();
+                }
+                else
+                {
+                    return get_children_expression<children...>();
+                }
+            }();
+            using admitted_first_chars =
+                typename extract_admission_set<matcher, children...>::type;
 
             template<typename... second_layer_children>
             static constexpr auto match(auto res)
             {
                 if constexpr (!std::is_same_v<matcher, void>)
                 {
-                    res = matcher::template match<second_layer_children...>(res);
+                    res = matcher::template match<second_layer_children...>(
+                        res);
                 }
 
                 return dfs<children...>(res);
@@ -43,23 +55,26 @@ namespace e_regex::nodes
 
     template<typename child>
     struct simple<void, child> : public child
-    {
-            using expression = typename get_expression_base<child>::type;
-    };
+    {};
 
     template<node_with_second_layer_children matcher, typename... children>
-    struct simple<matcher, children...> : public base<matcher, children...>
+    struct simple<matcher, children...>
+        : public base<matcher, children...>
     {
-            using expression           = typename get_expression_base<matcher, children...>::type;
-            using admitted_first_chars = typename matcher::admitted_first_chars;
+            static constexpr auto expression
+                = matcher::expression
+                  + get_children_expression<children...>();
+            using admitted_first_chars =
+                typename matcher::admitted_first_chars;
 
             template<typename... second_layer_children>
             static constexpr auto match(auto res)
             {
-                res = matcher::template match<second_layer_children...>(res);
+                res = matcher::template match<second_layer_children...>(
+                    res);
                 return dfs<children...>(res);
             }
     };
-}// namespace e_regex::nodes
+} // namespace e_regex::nodes
 
-#endif /* NODES_BASIC_HPP */
+#endif /* E_REGEX_NODES_BASIC_HPP_*/

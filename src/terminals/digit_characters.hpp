@@ -1,5 +1,5 @@
-#ifndef TERMINALS_DIGIT_CHARACTERS_HPP
-#define TERMINALS_DIGIT_CHARACTERS_HPP
+#ifndef E_REGEX_NODES_TERMINALS_DIGIT_CHARACTERS_HPP_
+#define E_REGEX_NODES_TERMINALS_DIGIT_CHARACTERS_HPP_
 
 #include "common.hpp"
 #include "utilities/admitted_set.hpp"
@@ -7,9 +7,12 @@
 namespace e_regex::terminals
 {
     template<>
-    struct terminal<pack_string<'\\', 'd'>> : public terminal_common<terminal<pack_string<'\\', 'd'>>>
+    struct terminal<pack_string<'\\', 'd'>>
+        : public terminal_common<terminal<pack_string<'\\', 'd'>>>
     {
-            using admitted_first_chars = admitted_set_range_t<char, '0', '9'>;
+            static constexpr auto expression = static_string {"\\d"};
+            using admitted_first_chars
+                = admitted_set_range_t<char, '0', '9'>;
 
             static constexpr auto match_(auto result)
             {
@@ -23,9 +26,11 @@ namespace e_regex::terminals
     };
 
     template<>
-    struct terminal<pack_string<'\\', 'D'>> : public negated_terminal<terminal<pack_string<'\\', 'd'>>>
+    struct terminal<pack_string<'\\', 'D'>>
+        : public negated_terminal<terminal<pack_string<'\\', 'd'>>>
     {
+            static constexpr auto expression = static_string {"\\D"};
     };
-}// namespace e_regex::terminals
+} // namespace e_regex::terminals
 
-#endif /* TERMINALS_DIGIT_CHARACTERS_HPP */
+#endif /* E_REGEX_NODES_TERMINALS_DIGIT_CHARACTERS_HPP_*/

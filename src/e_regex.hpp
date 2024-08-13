@@ -1,36 +1,38 @@
-#ifndef E_REGEX_HPP
-#define E_REGEX_HPP
+#ifndef E_REGEX_E_REGEX_HPP_
+#define E_REGEX_E_REGEX_HPP_
 
 #include "match_result.hpp"
-#include "static_string.hpp"
-#include "tokenization/result.hpp"
 #include "tree_builder.hpp"
 #include "utilities/literal_string_view.hpp"
+#include "utilities/pack_string.hpp"
+#include "utilities/static_string.hpp"
 
 namespace e_regex
 {
-    template<static_string regex>
-    constexpr auto match = [](literal_string_view<> expression)
+    template<static_string expression>
+    class regex
     {
-        using packed  = build_pack_string_t<regex>;
-        using matcher = typename tree_builder<packed>::tree;
+        private:
+            using ast =
+                typename tree_builder<build_pack_string_t<expression>>::tree;
 
-        return match_result<matcher> {expression};
+        public:
+            static constexpr auto match(literal_string_view<> data)
+            {
+                return match_result<ast> {data};
+            }
+
+            constexpr auto operator()(literal_string_view<> data) const
+            {
+                return match(data);
+            }
+
+            static constexpr auto get_expression()
+            {
+                return ast::expression.to_view();
+            }
     };
 
-    template<e_regex::tokenization::token_definition auto... matchers>
-    constexpr auto tokenize = [](literal_string_view<> expression)
-    {
-        using data             = typename e_regex::tokenization::result_builder<matchers...>::data;
-        auto matcher           = match<data::token_matcher::string>;
-        auto separator_matcher = match<data::separator_matcher::string>;
+} // namespace e_regex
 
-        return tokenization::result<matcher, separator_matcher, data::types> {expression};
-    };
-
-    // template<static_string regex, static_string data, static_string separator = static_string
-    // {""}, typename token_type = void> using token_t = tokenization::prebuilt_result<match<regex>,
-    // match<separator>, data, token_type>;
-}// namespace e_regex
-
-#endif /* E_REGEX_HPP */
+#endif /* E_REGEX_E_REGEX_HPP_*/

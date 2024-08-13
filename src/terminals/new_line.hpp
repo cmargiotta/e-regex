@@ -1,5 +1,5 @@
-#ifndef TERMINALS_NEW_LINE
-#define TERMINALS_NEW_LINE
+#ifndef E_REGEX_NODES_TERMINALS_NEW_LINE_HPP_
+#define E_REGEX_NODES_TERMINALS_NEW_LINE_HPP_
 
 #include "common.hpp"
 #include "exact_matcher.hpp"
@@ -7,14 +7,18 @@
 namespace e_regex::terminals
 {
     template<>
-    struct terminal<pack_string<'\\', 'n'>> : public exact_matcher<pack_string<'\n'>>
+    struct terminal<pack_string<'\\', 'n'>>
+        : public exact_matcher<pack_string<'\n'>>
     {
+            static constexpr auto expression = static_string {"\\n"};
     };
 
     template<>
-    struct terminal<pack_string<'\\', 'N'>> : public negated_terminal<terminal<pack_string<'\\', 'n'>>>
+    struct terminal<pack_string<'\\', 'N'>>
+        : public negated_terminal<terminal<pack_string<'\\', 'n'>>>
     {
+            static constexpr auto expression = static_string {"\\N"};
     };
-}// namespace e_regex::terminals
+} // namespace e_regex::terminals
 
-#endif /* TERMINALS_NEW_LINE */
+#endif /* E_REGEX_NODES_TERMINALS_NEW_LINE_HPP_*/
