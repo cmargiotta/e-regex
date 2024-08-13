@@ -460,3 +460,14 @@ TEST_CASE("Lazy, greedy and possessive braces")
 
     REQUIRE(!match_possessive.is_accepted());
 }
+
+TEST_CASE("Intersection")
+{
+    constexpr e_regex::regex<"\\dabcd">      matcher;
+    constexpr e_regex::regex<"\\wabcd">      matcher1;
+    constexpr e_regex::regex<"\\d*\\w+abcd"> matcher2;
+
+    REQUIRE(matcher.is_independent(matcher1));
+    REQUIRE(!matcher.is_independent(matcher2));
+    REQUIRE(!matcher1.is_independent(matcher2));
+}
