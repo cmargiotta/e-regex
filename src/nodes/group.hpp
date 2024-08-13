@@ -12,8 +12,7 @@ namespace e_regex::nodes
     struct group
     {
             static constexpr auto expression
-                = static_string {"("} + matcher::expression
-                  + static_string {")"}
+                = '(' + matcher::expression + ')'
                   + get_children_expression<children...>();
 
             using admitted_first_chars =

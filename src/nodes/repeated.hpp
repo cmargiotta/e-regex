@@ -12,10 +12,9 @@ namespace e_regex::nodes
     struct repeated : public base<matcher, children...>
     {
             static constexpr auto expression = []() {
-                return matcher::expression + static_string {"{"}
+                return matcher::expression + '{'
                        + number_to_pack_string_t<repetitions>::string
-                       + static_string {"}"}
-                       + get_children_expression<children...>();
+                       + '}' + get_children_expression<children...>();
             }();
 
             using admitted_first_chars =

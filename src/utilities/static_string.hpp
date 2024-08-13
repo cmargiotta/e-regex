@@ -25,6 +25,11 @@ namespace e_regex
                 }
             }
 
+            constexpr static_string(Char_Type data) noexcept
+            {
+                this->data[0] = data;
+            }
+
             template<auto S = size>
                 requires(size != 0)
             constexpr static_string(const std::array<Char_Type, size>& data) noexcept
@@ -105,20 +110,39 @@ namespace e_regex
         }
     }
 
+    template<auto S1, auto S2, typename C>
+    constexpr auto operator+(const C (&first)[S1],
+                             static_string<S2, C> other)
+    {
+        return static_string {first} + other;
+    }
+
+    template<auto S1, auto S2, typename C>
+    constexpr auto operator+(static_string<S1, C> first,
+                             const C (&other)[S2])
+    {
+        return first + static_string {other};
+    }
+
+    template<auto S2, typename C>
+    constexpr auto operator+(C first, static_string<S2, C> other)
+    {
+        return static_string {first} + other;
+    }
+
+    template<auto S1, typename C>
+    constexpr auto operator+(static_string<S1, C> first, C other)
+    {
+        return first + static_string {other};
+    }
+
     // CTAD
+    template<typename C>
+    static_string(C data) -> static_string<1, C>;
+
     template<auto S, typename C>
     static_string(const C (&data)[S]) -> static_string<S - 1, C>;
 
-    // template<std::size_t size>
-    // constexpr auto to_static_string(auto string) noexcept
-    // {
-    //     static_string<size + 1> result;
-
-    //     std::copy(string.begin(), string.end(),
-    //     result.data.begin());
-
-    //     return result;
-    // }
 } // namespace e_regex
 
 #endif /* E_REGEX_UTILITIES_STATIC_STRING_HPP_*/

@@ -52,9 +52,9 @@ namespace e_regex::nodes
                     {
                         return static_string {"{"}
                                + number_to_pack_string_t<repetitions_min>::string
-                               + static_string {","}
+                               + ','
                                + number_to_pack_string_t<repetitions_max>::string
-                               + static_string {"}"};
+                               + '}';
                     }
                 }();
 

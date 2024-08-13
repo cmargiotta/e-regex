@@ -11,9 +11,8 @@ namespace e_regex::nodes
     template<typename matcher>
     struct negated_node : public base<matcher>
     {
-            static constexpr auto expression = static_string {"[^"}
-                                               + matcher::expression
-                                               + static_string {"]"};
+            static constexpr auto expression
+                = "[^" + matcher::expression + "]";
             using admitted_first_chars
                 = admitted_set_complement_t<typename matcher::admitted_first_chars>;
 

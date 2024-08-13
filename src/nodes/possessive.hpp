@@ -34,17 +34,17 @@ namespace e_regex::nodes
                     else if constexpr (repetitions_max
                                        == std::numeric_limits<std::size_t>::max())
                     {
-                        return static_string {"{"}
+                        return '{'
                                + number_to_pack_string_t<repetitions_min>::string
-                               + static_string {",}+"};
+                               + ",}+";
                     }
                     else
                     {
-                        return static_string {"{"}
+                        return '{'
                                + number_to_pack_string_t<repetitions_min>::string
-                               + static_string {","}
+                               + ','
                                + number_to_pack_string_t<repetitions_max>::string
-                               + static_string {"}+"};
+                               + "}+";
                     }
                 }();
 
