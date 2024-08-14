@@ -19,18 +19,23 @@ namespace e_regex::nodes
                 typename matcher::admitted_first_chars;
             static constexpr auto next_group_index = group_index + 1;
 
+            template<typename... injected_children>
+            using optimize
+                = group<typename matcher::template optimize<children..., injected_children...>,
+                        group_index,
+                        typename children::template optimize<>...>;
+
             static constexpr std::size_t groups
                 = group_getter<matcher>::value
                   + sum(group_getter<children>::value...) + 1;
 
-            template<typename... second_layer_children>
+            template<typename... injected_children>
             static constexpr auto match(auto result)
             {
                 auto begin = result.actual_iterator_end;
 
-                result
-                    = matcher::template match<children..., second_layer_children...>(
-                        result);
+                // This node's children matter in backtracking
+                result = matcher::template match<children...>(result);
 
                 if (result)
                 {

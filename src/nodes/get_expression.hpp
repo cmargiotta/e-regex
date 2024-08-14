@@ -22,7 +22,7 @@ namespace e_regex::nodes
         {
             return concatenate_pack_strings_t<
                 pack_string<'|'>,
-                build_pack_string_t<children::expression>...>::string;
+                build_pack_string_t<("(?:" + children::expression + ")")>...>::string;
         }
     }
 } // namespace e_regex::nodes

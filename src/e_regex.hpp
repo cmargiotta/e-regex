@@ -2,6 +2,7 @@
 #define E_REGEX_E_REGEX_HPP_
 
 #include "match_result.hpp"
+#include "nodes/common.hpp"
 #include "tree_builder.hpp"
 #include "utilities/admitted_set.hpp"
 #include "utilities/literal_string_view.hpp"
@@ -13,8 +14,8 @@ namespace e_regex
     template<static_string expression>
     struct regex
     {
-            using ast =
-                typename tree_builder<build_pack_string_t<expression>>::tree;
+            using ast = typename tree_builder<
+                build_pack_string_t<expression>>::tree::template optimize<>;
 
             static constexpr auto match(literal_string_view<> data)
             {
@@ -47,7 +48,8 @@ namespace e_regex
                 return is_independent<T>();
             }
 
-            static constexpr auto& groups = ast::groups;
+            static constexpr auto& groups
+                = nodes::group_getter<ast>::value;
     };
 
 } // namespace e_regex

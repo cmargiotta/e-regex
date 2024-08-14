@@ -1,5 +1,5 @@
-#ifndef E_REGEX_NODES_TERMINALS_RANGE_HPP_
-#define E_REGEX_NODES_TERMINALS_RANGE_HPP_
+#ifndef E_REGEX_TERMINALS_RANGE_HPP_
+#define E_REGEX_TERMINALS_RANGE_HPP_
 
 #include "common.hpp"
 #include "utilities/admitted_set.hpp"
@@ -19,6 +19,7 @@ namespace e_regex::terminals
             using admitted_first_chars
                 = admitted_set_range_t<char, start, end>;
 
+            template<typename... injected_children>
             static constexpr auto match(auto result)
             {
                 static_assert(end >= start,
@@ -34,4 +35,4 @@ namespace e_regex::terminals
     };
 } // namespace e_regex::terminals
 
-#endif /* E_REGEX_NODES_TERMINALS_RANGE_HPP_*/
+#endif /* E_REGEX_TERMINALS_RANGE_HPP_*/

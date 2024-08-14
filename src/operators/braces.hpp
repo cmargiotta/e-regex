@@ -40,9 +40,9 @@ namespace e_regex
     struct quantified_node_builder<matcher, std::tuple<first>, policy>
     {
             // Exact quantifier e.g. a{3}
-            static constexpr auto value
-                = pack_string_to_number<first>::value;
-            using type = nodes::repeated<matcher, value>;
+
+            using type
+                = nodes::repeated<matcher, pack_string_to_number<first>::value>;
     };
 
     // {n,} quantifiers
@@ -112,10 +112,14 @@ namespace e_regex
             using substring
                 = extract_delimited_content_t<'{', '}', std::tuple<tail...>>;
 
+            // Get first character after }, can be + or ? for
+            // specifying the policy
             using remaining_head
                 = first_type<typename substring::remaining>;
             using policy = typename remaining_head::type;
 
+            // If a policy is specified, remaining is everything after
+            // remaining_head, otherwise it is everything after }
             using remaining = std::conditional_t<
                 std::is_same_v<typename remaining_head::type, pack_string<'+'>>
                     || std::is_same_v<typename remaining_head::type, pack_string<'?'>>,

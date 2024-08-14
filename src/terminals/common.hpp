@@ -11,8 +11,11 @@ namespace e_regex::terminals
     template<typename terminal>
     struct terminal_common
     {
+            template<typename... injected_children>
+            using optimize = terminal;
+
             // Template used only for compatibility with nodes
-            template<typename... second_layer_children>
+            template<typename... injected_children>
             static constexpr auto match(auto result)
             {
                 if (result.actual_iterator_end >= result.query.end())
@@ -34,6 +37,10 @@ namespace e_regex::terminals
             using admitted_first_chars
                 = admitted_set_complement_t<typename terminal::admitted_first_chars>;
 
+            template<typename... injected_children>
+            using optimize = negated_terminal;
+
+            template<typename... injected_children>
             static constexpr auto match(auto result)
             {
                 result = terminal::match_(std::move(result));
@@ -56,6 +63,10 @@ namespace e_regex::terminals
             using admitted_first_chars =
                 typename terminal<head>::admitted_first_chars;
 
+            template<typename... injected_children>
+            using optimize = terminal;
+
+            template<typename... injected_children>
             static constexpr auto match(auto result)
             {
                 result = terminal<head>::match(std::move(result));

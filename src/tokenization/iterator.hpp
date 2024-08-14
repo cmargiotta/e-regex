@@ -156,7 +156,10 @@ namespace e_regex::tokenization
             constexpr explicit iterator(literal_string_view<> input)
                 : current {input}, original_input {input}
             {
-                operator++();
+                if (!input.empty())
+                {
+                    operator++();
+                }
             }
 
             constexpr iterator(const iterator& other) noexcept = default;

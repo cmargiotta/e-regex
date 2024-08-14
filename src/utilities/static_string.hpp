@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <string_view>
 #include <type_traits>
 
 #include "literal_string_view.hpp"
@@ -50,12 +51,11 @@ namespace e_regex
             {
                 if constexpr (size > 0)
                 {
-                    return literal_string_view<Char_Type> {
-                        data.begin(), data.end()};
+                    return std::string_view {data.begin(), data.end()};
                 }
                 else
                 {
-                    return literal_string_view<Char_Type> {};
+                    return std::string_view {};
                 }
             }
 

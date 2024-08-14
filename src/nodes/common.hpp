@@ -1,5 +1,5 @@
-#ifndef NODES_COMMON_HPP
-#define NODES_COMMON_HPP
+#ifndef E_REGEX_NODES_COMMON_HPP_
+#define E_REGEX_NODES_COMMON_HPP_
 
 #include <algorithm>
 
@@ -15,14 +15,16 @@ namespace e_regex::nodes
     template<typename child, typename... children>
     struct extract_admission_set<child, children...>
     {
-            using type = merge_admitted_sets_t<typename child::admitted_first_chars,
-                                               typename extract_admission_set<children...>::type>;
+            using type = merge_admitted_sets_t<
+                typename child::admitted_first_chars,
+                typename extract_admission_set<children...>::type>;
     };
 
     template<typename... children>
     struct extract_admission_set<void, children...>
     {
-            using type = typename extract_admission_set<children...>::type;
+            using type =
+                typename extract_admission_set<children...>::type;
     };
 
     template<>
@@ -32,7 +34,7 @@ namespace e_regex::nodes
     };
 
     template<typename T>
-    concept node_with_second_layer_children = requires() {
+    concept node_with_injected_children = requires() {
         // template match (auto) -> auto
 
         T::template match<void, void>;
@@ -72,10 +74,12 @@ namespace e_regex::nodes
     struct base
     {
             static constexpr auto next_group_index
-                = max(group_index_getter<matcher>::value, group_index_getter<children>::value...);
+                = max(group_index_getter<matcher>::value,
+                      group_index_getter<children>::value...);
 
             static constexpr std::size_t groups
-                = group_getter<matcher>::value + sum(group_getter<children>::value...);
+                = group_getter<matcher>::value
+                  + sum(group_getter<children>::value...);
     };
 
     constexpr auto dfs(auto match_result) noexcept
@@ -97,11 +101,15 @@ namespace e_regex::nodes
         }
         else
         {
-            auto result = Child::match(match_result);
+            auto result
+                = Child::template match<Children...>(match_result);
 
             match_result = dfs<Children...>(std::move(match_result));
 
-            if (!result || (result.actual_iterator_end < match_result.actual_iterator_end))
+            if (!result
+                || (match_result
+                    && result.actual_iterator_end
+                           < match_result.actual_iterator_end))
             {
                 return match_result;
             }
@@ -109,6 +117,6 @@ namespace e_regex::nodes
             return result;
         }
     }
-}// namespace e_regex::nodes
+} // namespace e_regex::nodes
 
-#endif /* NODES_COMMON_HPP */
+#endif /* E_REGEX_NODES_COMMON_HPP_*/

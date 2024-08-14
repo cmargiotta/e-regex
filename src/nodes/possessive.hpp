@@ -17,7 +17,7 @@ namespace e_regex::nodes
     struct possessive : public base<matcher, children...>
     {
             static constexpr auto expression = []() {
-                auto self = matcher::expression + []() {
+                auto quantifier = []() {
                     if constexpr (repetitions_min == 0
                                   && repetitions_max
                                          == std::numeric_limits<std::size_t>::max())
@@ -30,6 +30,11 @@ namespace e_regex::nodes
                                                   std::size_t>::max())
                     {
                         return static_string {"++"};
+                    }
+                    else if constexpr (repetitions_min == 0
+                                       && repetitions_max == 1)
+                    {
+                        return static_string {"?+"};
                     }
                     else if constexpr (repetitions_max
                                        == std::numeric_limits<std::size_t>::max())
@@ -48,7 +53,19 @@ namespace e_regex::nodes
                     }
                 }();
 
-                return self + get_children_expression<children...>();
+                auto self = matcher::expression;
+
+                if constexpr (sizeof...(children) <= 1)
+                {
+                    return self + quantifier
+                           + get_children_expression<children...>();
+                }
+                else
+                {
+                    return self + quantifier + "(?:"
+                           + +get_children_expression<children...>()
+                           + ')';
+                }
             }();
 
             // If matcher is optional (aka repetitions_min==0),
@@ -58,13 +75,26 @@ namespace e_regex::nodes
                 typename extract_admission_set<matcher, children...>::type,
                 typename matcher::admitted_first_chars>;
 
-            template<typename... second_layer_children>
+            template<typename... injected_children>
+            using optimize
+                = possessive<typename matcher::template optimize<>,
+                             repetitions_min,
+                             repetitions_max,
+                             typename children::template optimize<>...>;
+
+            template<typename... injected_children>
             static constexpr auto match(auto result)
             {
+                if (result.actual_iterator_end > result.query.end())
+                {
+                    result = false;
+                    return result;
+                }
+
                 for (std::size_t i = 0; i < repetitions_max; ++i)
                 {
                     auto last_result
-                        = matcher::template match<second_layer_children...>(
+                        = matcher::template match<injected_children...>(
                             result);
 
                     if (last_result)

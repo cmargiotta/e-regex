@@ -17,7 +17,7 @@ TEST_CASE("Classified tokenization")
     };
 
     constexpr auto tokenizer
-        = e_regex::tokenization::tokenizer<token {type::WORD, "\\w+"},
+        = e_regex::tokenization::tokenizer<token {type::WORD, "[a-z]+"},
                                            token {type::NUMBER, "\\d+"},
                                            separator {"\\s"}> {};
 

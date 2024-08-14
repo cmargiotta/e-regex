@@ -3,6 +3,7 @@
 
 #include <array>
 
+#include "nodes/common.hpp"
 #include "utilities/literal_string_view.hpp"
 
 namespace e_regex
@@ -18,7 +19,7 @@ namespace e_regex
             bool accepted = true;
 
             constexpr auto operator=(bool accepted) noexcept
-                -> match_result_data &
+                -> match_result_data&
             {
                 this->accepted = accepted;
 
@@ -38,7 +39,7 @@ namespace e_regex
             static constexpr auto expression = matcher::expression;
 
         private:
-            match_result_data<matcher::groups, Char_Type> data;
+            match_result_data<nodes::group_getter<matcher>::value, Char_Type> data;
 
         public:
             constexpr match_result(literal_string_view<> query) noexcept
@@ -55,11 +56,43 @@ namespace e_regex
             }
 
             constexpr auto operator=(bool accepted) noexcept
-                -> match_result &
+                -> match_result&
             {
                 this->accepted = accepted;
 
                 return *this;
+            }
+
+            constexpr auto begin() const noexcept
+            {
+                return match_result {data.query};
+            }
+
+            constexpr auto operator!=(const match_result& other) const noexcept
+            {
+                return data != other.data;
+            }
+
+            constexpr auto operator++() noexcept -> auto&
+            {
+                next();
+
+                return *this;
+            }
+
+            constexpr auto end() const noexcept
+            {
+                auto res = *this;
+                res.data.actual_iterator_start
+                    = res.data.actual_iterator_end;
+                res.data.accepted = false;
+
+                return res;
+            }
+
+            constexpr auto operator*() const noexcept
+            {
+                return to_view();
             }
 
             constexpr operator bool() const noexcept

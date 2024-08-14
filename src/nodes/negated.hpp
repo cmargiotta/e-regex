@@ -16,13 +16,20 @@ namespace e_regex::nodes
             using admitted_first_chars
                 = admitted_set_complement_t<typename matcher::admitted_first_chars>;
 
-            template<typename... second_layer_children>
+            template<typename... injected_children>
+            using optimize
+                = negated_node<typename matcher::template optimize<>>;
+
+            template<typename... injected_children>
             static constexpr auto match(auto result)
             {
-                result
-                    = matcher::template match<second_layer_children...>(
-                        std::move(result));
+                if (result.actual_iterator_end >= result.query.end())
+                {
+                    result = false;
+                    return result;
+                }
 
+                result = matcher::template match<>(result);
                 result = !static_cast<bool>(result);
 
                 return result;
