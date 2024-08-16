@@ -6,174 +6,174 @@
 #include <e_regex.hpp>
 #include <tokenizer.hpp>
 
-// TEST_CASE("Tokenization")
-// {
-//     constexpr e_regex::static_string regex {R"(bb(a\)c)zz)"};
+TEST_CASE("Tokenization")
+{
+    constexpr e_regex::static_string regex {R"(bb(a\)c)zz)"};
 
-//     using test   = e_regex::build_pack_string_t<regex>;
-//     using tokens = e_regex::tokenizer_t<test>;
+    using test   = e_regex::build_pack_string_t<regex>;
+    using tokens = e_regex::tokenizer_t<test>;
 
-//     using expected = std::tuple<e_regex::pack_string<'b'>,
-//                                 e_regex::pack_string<'b'>,
-//                                 e_regex::pack_string<'('>,
-//                                 e_regex::pack_string<'a'>,
-//                                 e_regex::pack_string<'\\', ')'>,
-//                                 e_regex::pack_string<'c'>,
-//                                 e_regex::pack_string<')'>,
-//                                 e_regex::pack_string<'z'>,
-//                                 e_regex::pack_string<'z'>>;
+    using expected = std::tuple<e_regex::pack_string<'b'>,
+                                e_regex::pack_string<'b'>,
+                                e_regex::pack_string<'('>,
+                                e_regex::pack_string<'a'>,
+                                e_regex::pack_string<'\\', ')'>,
+                                e_regex::pack_string<'c'>,
+                                e_regex::pack_string<')'>,
+                                e_regex::pack_string<'z'>,
+                                e_regex::pack_string<'z'>>;
 
-//     REQUIRE(std::is_same_v<tokens, expected>);
-// }
+    REQUIRE(std::is_same_v<tokens, expected>);
+}
 
-// TEST_CASE("Construction")
-// {
-//     constexpr e_regex::regex<"\\w"> matcher;
+TEST_CASE("Construction")
+{
+    constexpr e_regex::regex<"\\w"> matcher;
 
-//     REQUIRE(matcher.groups == 0);
-//     REQUIRE(matcher("a").to_view() == "a");
-//     REQUIRE(!matcher(" ").is_accepted());
-// }
+    REQUIRE(matcher.groups == 0);
+    REQUIRE(matcher("a").to_view() == "a");
+    REQUIRE(!matcher(" ").is_accepted());
+}
 
-// TEST_CASE("Star operator")
-// {
-//     constexpr e_regex::regex<"aa*"> matcher;
+TEST_CASE("Star operator")
+{
+    constexpr e_regex::regex<"aa*"> matcher;
 
-//     REQUIRE(matcher("aaa").to_view() == "aaa");
-//     REQUIRE(matcher("a").to_view() == "a");
+    REQUIRE(matcher("aaa").to_view() == "aaa");
+    REQUIRE(matcher("a").to_view() == "a");
 
-//     constexpr auto aab = matcher("aab");
+    constexpr auto aab = matcher("aab");
 
-//     REQUIRE(matcher.groups == 0);
-//     REQUIRE(aab.is_accepted());
-//     REQUIRE(aab[0] == "aa");
-// }
+    REQUIRE(matcher.groups == 0);
+    REQUIRE(aab.is_accepted());
+    REQUIRE(aab[0] == "aa");
+}
 
-// TEST_CASE("Optional operator")
-// {
-//     constexpr e_regex::regex<"a[a-f]?"> matcher;
+TEST_CASE("Optional operator")
+{
+    constexpr e_regex::regex<"a[a-f]?"> matcher;
 
-//     REQUIRE(matcher.groups == 0);
-//     REQUIRE(matcher("aaa").to_view() == "aa");
-//     REQUIRE(matcher("a").is_accepted());
-//     REQUIRE(matcher("af").to_view() == "af");
-// }
+    REQUIRE(matcher.groups == 0);
+    REQUIRE(matcher("aaa").to_view() == "aa");
+    REQUIRE(matcher("a").is_accepted());
+    REQUIRE(matcher("af").to_view() == "af");
+}
 
-// TEST_CASE("Plus operator")
-// {
-//     constexpr e_regex::regex<"aa+"> matcher;
+TEST_CASE("Plus operator")
+{
+    constexpr e_regex::regex<"aa+"> matcher;
 
-//     REQUIRE(matcher.groups == 0);
-//     REQUIRE(matcher("aaa").to_view() == "aaa");
-//     REQUIRE(!matcher("a").is_accepted());
+    REQUIRE(matcher.groups == 0);
+    REQUIRE(matcher("aaa").to_view() == "aaa");
+    REQUIRE(!matcher("a").is_accepted());
 
-//     constexpr auto aab = matcher("aab");
-//     REQUIRE(aab.is_accepted());
-//     REQUIRE(aab.to_view() == "aa");
-// }
+    constexpr auto aab = matcher("aab");
+    REQUIRE(aab.is_accepted());
+    REQUIRE(aab.to_view() == "aa");
+}
 
-// TEST_CASE("Round brackets")
-// {
-//     constexpr e_regex::regex<"a(ab)+"> matcher;
+TEST_CASE("Round brackets")
+{
+    constexpr e_regex::regex<"a(ab)+"> matcher;
 
-//     REQUIRE(matcher.groups == 1);
-//     REQUIRE(!matcher("aaa").is_accepted());
-//     REQUIRE(!matcher("a").is_accepted());
-//     REQUIRE(matcher("aab").to_view() == "aab");
-//     REQUIRE(matcher("aabab").to_view() == "aabab");
-// }
+    REQUIRE(matcher.groups == 1);
+    REQUIRE(!matcher("aaa").is_accepted());
+    REQUIRE(!matcher("a").is_accepted());
+    REQUIRE(matcher("aab").to_view() == "aab");
+    REQUIRE(matcher("aabab").to_view() == "aabab");
+}
 
-// TEST_CASE("Braces")
-// {
-//     constexpr e_regex::regex<"ab{2,10}c"> matcher;
+TEST_CASE("Braces")
+{
+    constexpr e_regex::regex<"ab{2,10}c"> matcher;
 
-//     REQUIRE(matcher.groups == 0);
-//     REQUIRE(matcher("abbc").is_accepted());
-//     REQUIRE(matcher("abbbbbbbbbbc").is_accepted());
-//     REQUIRE(!matcher("abbbbbbbbbbbc").is_accepted());
-//     REQUIRE(!matcher("abc").is_accepted());
+    REQUIRE(matcher.groups == 0);
+    REQUIRE(matcher("abbc").is_accepted());
+    REQUIRE(matcher("abbbbbbbbbbc").is_accepted());
+    REQUIRE(!matcher("abbbbbbbbbbbc").is_accepted());
+    REQUIRE(!matcher("abc").is_accepted());
 
-//     constexpr e_regex::regex<"ab{2,}c"> matcher1;
+    constexpr e_regex::regex<"ab{2,}c"> matcher1;
 
-//     REQUIRE(matcher1.groups == 0);
-//     REQUIRE(matcher1("abbc").is_accepted());
-//     REQUIRE(matcher1("abbbbbbbbbbc").is_accepted());
-//     REQUIRE(!matcher1("abc").is_accepted());
+    REQUIRE(matcher1.groups == 0);
+    REQUIRE(matcher1("abbc").is_accepted());
+    REQUIRE(matcher1("abbbbbbbbbbc").is_accepted());
+    REQUIRE(!matcher1("abc").is_accepted());
 
-//     constexpr e_regex::regex<"ab{2}c"> matcher2;
+    constexpr e_regex::regex<"ab{2}c"> matcher2;
 
-//     REQUIRE(matcher2.groups == 0);
-//     REQUIRE(matcher2("abbc").is_accepted());
-//     REQUIRE(!matcher2("abbbbbbbbbbc").is_accepted());
-//     REQUIRE(!matcher2("abc").is_accepted());
-// }
+    REQUIRE(matcher2.groups == 0);
+    REQUIRE(matcher2("abbc").is_accepted());
+    REQUIRE(!matcher2("abbbbbbbbbbc").is_accepted());
+    REQUIRE(!matcher2("abc").is_accepted());
+}
 
-// TEST_CASE("Nested group matching")
-// {
-//     constexpr auto matcher = e_regex::regex<"a(a(b))cd"> {};
-//     // decltype(matcher)::ast a       = 10;
-//     // static_assert(matcher.groups == 2);
-//     constexpr auto match = matcher("aabcdef");
+TEST_CASE("Nested group matching")
+{
+    constexpr auto matcher = e_regex::regex<"a(a(b))cd"> {};
+    // decltype(matcher)::ast a       = 10;
+    // static_assert(matcher.groups == 2);
+    constexpr auto match = matcher("aabcdef");
 
-//     REQUIRE(matcher.groups == 2);
-//     REQUIRE(match.is_accepted());
-//     REQUIRE(match[0] == "aabcd");
-//     REQUIRE(match[1] == "ab");
-//     REQUIRE(match[2] == "b");
-// }
+    REQUIRE(matcher.groups == 2);
+    REQUIRE(match.is_accepted());
+    REQUIRE(match[0] == "aabcd");
+    REQUIRE(match[1] == "ab");
+    REQUIRE(match[2] == "b");
+}
 
-// TEST_CASE("Branched group matching")
-// {
-//     constexpr e_regex::regex<"a(a|b)+"> matcher;
+TEST_CASE("Branched group matching")
+{
+    constexpr e_regex::regex<"a(a|b)+"> matcher;
 
-//     REQUIRE(matcher("aa").is_accepted());
-//     REQUIRE(matcher("ab").is_accepted());
-//     REQUIRE(matcher("abaab").is_accepted());
+    REQUIRE(matcher("aa").is_accepted());
+    REQUIRE(matcher("ab").is_accepted());
+    REQUIRE(matcher("abaab").is_accepted());
 
-//     constexpr auto match = matcher("aab");
-//     REQUIRE(match[0] == "aab");
-//     REQUIRE(match[1] == "b");
-// }
+    constexpr auto match = matcher("aab");
+    REQUIRE(match[0] == "aab");
+    REQUIRE(match[1] == "b");
+}
 
-// TEST_CASE("Ranged square bracket - 1")
-// {
-//     constexpr e_regex::regex<R"((10[0-7]0))"> matcher;
+TEST_CASE("Ranged square bracket - 1")
+{
+    constexpr e_regex::regex<R"((10[0-7]0))"> matcher;
 
-//     auto match = matcher("274.06 102	1000	");
-//     auto full  = match;
+    auto match = matcher("274.06 102	1000	");
+    auto full  = match;
 
-//     REQUIRE(matcher.groups == 1);
-//     REQUIRE(full.to_view() == "1000");
-// }
+    REQUIRE(matcher.groups == 1);
+    REQUIRE(full.to_view() == "1000");
+}
 
-// TEST_CASE("Group matching order")
-// {
-//     constexpr auto match
-//         = e_regex::regex<"a(a[a-g])+">::match("aabacad");
+TEST_CASE("Group matching order")
+{
+    constexpr auto match
+        = e_regex::regex<"a(a[a-g])+">::match("aabacad");
 
-//     REQUIRE(match.is_accepted());
-//     REQUIRE(match[0] == "aabacad");
-//     REQUIRE(match[1] == "ad");
-// }
+    REQUIRE(match.is_accepted());
+    REQUIRE(match[0] == "aabacad");
+    REQUIRE(match[1] == "ad");
+}
 
-// TEST_CASE("Group matching with more branches")
-// {
-//     constexpr e_regex::regex<R"(\w(\w+)|(\d+))"> matcher;
+TEST_CASE("Group matching with more branches")
+{
+    constexpr e_regex::regex<R"(\w(\w+)|(\d+))"> matcher;
 
-//     auto match                 = matcher("abc");
-//     auto [full, first, second] = match;
+    auto match                 = matcher("abc");
+    auto [full, first, second] = match;
 
-//     REQUIRE(matcher.groups == 2);
-//     REQUIRE(full == "abc");
-//     REQUIRE(first == "bc");
-//     REQUIRE(second.empty());
+    REQUIRE(matcher.groups == 2);
+    REQUIRE(full == "abc");
+    REQUIRE(first == "bc");
+    REQUIRE(second.empty());
 
-//     auto [full1, first1, second1] = matcher("-2-");
+    auto [full1, first1, second1] = matcher("-2-");
 
-//     REQUIRE(full1 == "2");
-//     REQUIRE(first1.empty());
-//     REQUIRE(second1 == "2");
-// }
+    REQUIRE(full1 == "2");
+    REQUIRE(first1.empty());
+    REQUIRE(second1 == "2");
+}
 
 TEST_CASE("IP matching")
 {
@@ -397,8 +397,8 @@ TEST_CASE("Multiline input")
     constexpr e_regex::regex<R"([\w.\-]+@[\w\-]+\.[\w.]+)"> matcher;
 
     constexpr std::string_view email = "\
-//  ABCDTESTTESTEST fir@aaaaaa@aaa     \
-//  Test email <first.last@learnxinyminutes.com>";
+ABCDTESTTESTEST fir@aaaaaa@aaa     \
+Test email <first.last@learnxinyminutes.com>";
 
     auto match = matcher(email);
 

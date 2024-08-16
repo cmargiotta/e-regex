@@ -15,7 +15,7 @@ void measure(const std::string& data)
     unsigned   count = 0;
     if constexpr (N == 0)
     {
-        constexpr e_regex::regex<"[\\w.+\\-]+@[\\w.\\-]+\\.[\\w.\\-]+"> matcher;
+        constexpr e_regex::regex<R"([\w.\-]+@[\w\-]+\.[\w.]+)"> matcher;
 
         // Email
         for (auto match: matcher(std::string_view {data}))
@@ -27,6 +27,7 @@ void measure(const std::string& data)
     {
         constexpr e_regex::regex<"[\\w]+:\\/\\/[^\\/\\s?#]+[^\\s?#]+(?:\\?[^\\s#]*)?(?:#[^\\s]*)?">
             matcher;
+
         // URI
         for (auto match: matcher(std::string_view {data}))
         {
@@ -37,6 +38,7 @@ void measure(const std::string& data)
     {
         constexpr e_regex::regex<"(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9])\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9])">
             matcher;
+
         // IP
         for (auto match: matcher(std::string_view {data}))
         {

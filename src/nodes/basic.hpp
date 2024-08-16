@@ -54,7 +54,7 @@ namespace e_regex::nodes
             }();
 
             using admitted_first_chars =
-                typename extract_admission_set<matcher, children...>::type;
+                typename extract_admission_set<matcher>::type;
 
             template<typename... injected_children>
             using optimize
