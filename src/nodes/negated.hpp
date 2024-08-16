@@ -4,6 +4,7 @@
 #include <utility>
 
 #include "basic.hpp"
+#include "common.hpp"
 #include "nodes/get_expression.hpp"
 
 namespace e_regex::nodes
@@ -13,8 +14,15 @@ namespace e_regex::nodes
     {
             static constexpr auto expression
                 = "[^" + matcher::expression + "]";
-            using admitted_first_chars
-                = admitted_set_complement_t<typename matcher::admitted_first_chars>;
+
+            using admission_set = admitted_set_complement_t<
+                typename extract_admission_set<matcher>::type>;
+
+            static constexpr auto meta = e_regex::meta<admission_set> {
+                .policy_ = policy::NONE,
+                .minimum_match_size = matcher::meta.minimum_match_size,
+                .maximum_match_size = matcher::meta.minimum_match_size,
+            };
 
             template<typename... injected_children>
             using optimize

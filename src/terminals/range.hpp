@@ -12,16 +12,15 @@ namespace e_regex::terminals
     template<char start, char end>
     struct range_terminal<pack_string<start>, pack_string<end>>
         : public terminal_common<
-              range_terminal<pack_string<start>, pack_string<end>>>
+              range_terminal<pack_string<start>, pack_string<end>>,
+              admitted_set_range_t<char, start, end>>
     {
             static constexpr auto expression
                 = pack_string<'[', start, '-', end, ']'>::string;
-            using admitted_first_chars
-                = admitted_set_range_t<char, start, end>;
 
             template<typename... injected_children>
             static constexpr __attribute__((always_inline)) auto
-                match(auto& result) -> auto&
+                match_(auto& result) -> auto&
             {
                 static_assert(end >= start,
                               "Range [a-b] must respect b >= a");

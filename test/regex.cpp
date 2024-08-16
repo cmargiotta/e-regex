@@ -6,6 +6,8 @@
 #include <e_regex.hpp>
 #include <tokenizer.hpp>
 
+#include "match_result.hpp"
+
 TEST_CASE("Tokenization")
 {
     constexpr e_regex::static_string regex {R"(bb(a\)c)zz)"};

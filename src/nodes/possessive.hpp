@@ -5,29 +5,46 @@
 #include <limits>
 
 #include "basic.hpp"
+#include "meta.hpp"
 #include "utilities/number_to_pack_string.hpp"
 
 namespace e_regex::nodes
 {
     template<typename matcher,
-             std::size_t repetitions_min,
-             std::size_t repetitions_max
-             = std::numeric_limits<std::size_t>::max(),
+             unsigned repetitions_min,
+             unsigned repetitions_max = std::numeric_limits<unsigned>::max(),
              typename... children>
     struct possessive : public base<matcher, children...>
     {
+            // If matcher is optional (aka repetitions_min==0),
+            // admission set must include children too
+            using admission_set = std::conditional_t<
+                repetitions_min == 0,
+                typename extract_admission_set<matcher, children...>::type,
+                typename decltype(matcher::meta)::admission_set>;
+
+            static constexpr auto meta = e_regex::meta<admission_set> {
+                .policy_ = e_regex::policy::POSSESSIVE,
+                .minimum_match_size
+                = matcher::meta.minimum_match_size * repetitions_min,
+                .maximum_match_size
+                = repetitions_max == std::numeric_limits<unsigned>::max()
+                      ? std::numeric_limits<unsigned>::max()
+                      : matcher::meta.maximum_match_size * repetitions_max,
+            };
+
             static constexpr auto expression = []() {
                 auto quantifier = []() {
                     if constexpr (repetitions_min == 0
                                   && repetitions_max
-                                         == std::numeric_limits<std::size_t>::max())
+                                         == std::numeric_limits<unsigned>::max())
                     {
                         return static_string {"*+"};
                     }
                     else if constexpr (repetitions_min == 1
                                        && repetitions_max
                                               == std::numeric_limits<
-                                                  std::size_t>::max())
+                                                  unsigned>::max())
                     {
                         return static_string {"++"};
                     }
@@ -37,7 +54,7 @@ namespace e_regex::nodes
                         return static_string {"?+"};
                     }
                     else if constexpr (repetitions_max
-                                       == std::numeric_limits<std::size_t>::max())
+                                       == std::numeric_limits<unsigned>::max())
                     {
                         return '{'
                                + number_to_pack_string_t<repetitions_min>::string
@@ -68,13 +85,6 @@ namespace e_regex::nodes
                 }
             }();
 
-            // If matcher is optional (aka repetitions_min==0),
-            // admission set must include children too
-            using admitted_first_chars = std::conditional_t<
-                repetitions_min == 0,
-                typename extract_admission_set<matcher, children...>::type,
-                typename matcher::admitted_first_chars>;
-
             template<typename... injected_children>
             using optimize
                 = possessive<typename matcher::template optimize<>,
@@ -91,7 +101,7 @@ namespace e_regex::nodes
                     return result;
                 }
 
-                for (std::size_t i = 0; i < repetitions_max; ++i)
+                for (unsigned i = 0; i < repetitions_max; ++i)
                 {
                     auto last_result = result;
                     matcher::template match<injected_children...>(

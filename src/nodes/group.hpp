@@ -4,7 +4,9 @@
 #include <algorithm>
 
 #include "basic.hpp"
-#include "utilities/sum.hpp"
+#include "common.hpp"
+#include "meta.hpp"
+#include "utilities/math.hpp"
 
 namespace e_regex::nodes
 {
@@ -15,8 +17,14 @@ namespace e_regex::nodes
                 = '(' + matcher::expression + ')'
                   + get_children_expression<children...>();
 
-            using admitted_first_chars =
-                typename matcher::admitted_first_chars;
+            using admission_set =
+                typename extract_admission_set<matcher>::type;
+
+            static constexpr auto meta = e_regex::meta<admission_set> {
+                .policy_ = e_regex::policy::NONE,
+                .minimum_match_size = matcher::meta.minimum_match_size,
+                .maximum_match_size = matcher::meta.maximum_match_size};
+
             static constexpr auto next_group_index = group_index + 1;
 
             template<typename... injected_children>
@@ -25,7 +33,7 @@ namespace e_regex::nodes
                         group_index,
                         typename children::template optimize<>...>;
 
-            static constexpr std::size_t groups
+            static constexpr unsigned groups
                 = group_getter<matcher>::value
                   + sum(group_getter<children>::value...) + 1;
 

@@ -110,11 +110,12 @@ namespace e_regex
      * Build a pack string from a static string
      */
     template<static_string instance,
-             typename indices = std::make_index_sequence<instance.size>>
+             typename indices
+             = std::make_integer_sequence<unsigned, instance.size>>
     struct build_pack_string;
 
-    template<static_string instance, std::size_t... indices>
-    struct build_pack_string<instance, std::index_sequence<indices...>>
+    template<static_string instance, unsigned... indices>
+    struct build_pack_string<instance, std::integer_sequence<unsigned, indices...>>
     {
             using type = pack_string<instance.data[indices]...>;
     };

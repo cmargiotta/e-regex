@@ -5,6 +5,11 @@ if get_option('buildtype') == 'debug'
   add_project_arguments('-Og', '-g3',  language : 'cpp')
 endif
 
+if get_option('buildtype') == 'custom'
+  message('Building in profile mode!')
+  add_project_arguments('-O3',  language : 'cpp')
+endif
+
 subdir('src')
 subdir('test')
 subdir('benchmark')

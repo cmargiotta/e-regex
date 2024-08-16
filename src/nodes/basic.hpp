@@ -6,24 +6,14 @@
 
 #include "common.hpp"
 #include "get_expression.hpp"
-#include "match_result.hpp"
+#include "meta.hpp"
 #include "terminals.hpp"
 #include "utilities/admitted_set.hpp"
+#include "utilities/math.hpp"
 #include "utilities/static_string.hpp"
 
 namespace e_regex::nodes
 {
-    template<typename T>
-    concept valid_matcher
-        = requires(match_result_data<T::groups, char> data) {
-              {
-                  T::template match<T>(data)
-              } -> std::same_as<decltype(data)>;
-
-              T::expression.get_view();
-              T::admitted_first_chars;
-          };
-
     template<typename matcher>
     struct admitted_first_chars_getter
     {
@@ -53,8 +43,20 @@ namespace e_regex::nodes
                 }
             }();
 
-            using admitted_first_chars =
-                typename extract_admission_set<matcher>::type;
+            using admission_set = std::conditional_t<
+                matcher::meta.minimum_match_size == 0,
+                typename extract_admission_set<matcher, children...>::type,
+                typename extract_admission_set<matcher>::type>;
+
+            static constexpr auto meta = e_regex::meta<admission_set> {
+                .policy_ = policy::NONE,
+                .minimum_match_size
+                = matcher::meta.minimum_match_size
+                  + min(children::meta.minimum_match_size...),
+                .maximum_match_size
+                = matcher::meta.maximum_match_size
+                  + max(children::meta.minimum_match_size...),
+            };
 
             template<typename... injected_children>
             using optimize
@@ -82,8 +84,16 @@ namespace e_regex::nodes
             static constexpr auto expression
                 = get_children_expression<children...>();
 
-            using admitted_first_chars =
+            using admission_set =
                 typename extract_admission_set<children...>::type;
+
+            static constexpr auto meta = e_regex::meta<admission_set> {
+                .policy_ = policy::NONE,
+                .minimum_match_size
+                = min(children::meta.minimum_match_size...),
+                .maximum_match_size
+                = max(children::meta.minimum_match_size...),
+            };
 
             template<typename... injected_children>
             using optimize
@@ -103,8 +113,14 @@ namespace e_regex::nodes
             static constexpr auto expression
                 = get_children_expression<child>();
 
-            using admitted_first_chars =
+            using admission_set =
                 typename extract_admission_set<child>::type;
+
+            static constexpr auto meta = e_regex::meta<admission_set> {
+                .policy_            = policy::NONE,
+                .minimum_match_size = child::meta.minimum_match_size,
+                .maximum_match_size = child::meta.minimum_match_size,
+            };
 
             template<typename... injected_children>
             using optimize =
@@ -122,8 +138,14 @@ namespace e_regex::nodes
     {
             static constexpr auto expression = matcher::expression;
 
-            using admitted_first_chars =
+            using admission_set =
                 typename extract_admission_set<matcher>::type;
+
+            static constexpr auto meta = e_regex::meta<admission_set> {
+                .policy_ = policy::NONE,
+                .minimum_match_size = matcher::meta.minimum_match_size,
+                .maximum_match_size = matcher::meta.maximum_match_size,
+            };
 
             template<typename... injected_children>
             using optimize =

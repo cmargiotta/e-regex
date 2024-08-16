@@ -11,7 +11,7 @@
 
 namespace e_regex
 {
-    template<std::size_t size_, typename Char_Type = char>
+    template<unsigned size_, typename Char_Type = char>
     struct static_string
     {
             static constexpr auto size = size_;
@@ -64,7 +64,7 @@ namespace e_regex
                 return size == 0;
             }
 
-            template<std::size_t begin, std::size_t end = size>
+            template<unsigned begin, unsigned end = size>
             constexpr auto substring() const noexcept
             {
                 if constexpr (size > 0)

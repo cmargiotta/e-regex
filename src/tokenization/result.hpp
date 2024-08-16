@@ -78,7 +78,7 @@
 
 //             constexpr auto count() const noexcept
 //             {
-//                 std::size_t result = 0;
+//                 unsigned result = 0;
 //                 auto        i      = begin();
 
 //                 while (i)
@@ -118,7 +118,7 @@
 //     template<typename T>
 //     concept token_definition = is_separator_c<T> || is_token_c<T>;
 
-//     template<typename T, std::size_t N, std::size_t... I>
+//     template<typename T, unsigned N, unsigned... I>
 //     constexpr auto append_aux(std::array<T, N> a,
 //                               T                t,
 //                               std::index_sequence<I...>)
@@ -127,7 +127,7 @@
 //         return std::array<T, N + 1> {a[I]..., t};
 //     }
 
-//     template<typename T, std::size_t N>
+//     template<typename T, unsigned N>
 //     constexpr auto append(std::array<T, N> a, T t)
 //         -> std::array<T, N + 1>
 //     {

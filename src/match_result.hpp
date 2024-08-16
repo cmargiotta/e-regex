@@ -2,13 +2,14 @@
 #define E_REGEX_MATCH_RESULT_HPP_
 
 #include <array>
+#include <cstddef>
 
 #include "nodes/common.hpp"
 #include "utilities/literal_string_view.hpp"
 
 namespace e_regex
 {
-    template<std::size_t groups, typename Char_Type>
+    template<unsigned groups, typename Char_Type>
     struct match_result_data
     {
             literal_string_view<Char_Type> query;
@@ -18,8 +19,7 @@ namespace e_regex
                 = {};
             bool accepted = true;
 
-            constexpr auto operator=(bool accepted) noexcept
-                -> match_result_data&
+            constexpr auto operator=(bool accepted) noexcept -> match_result_data&
             {
                 this->accepted = accepted;
 
@@ -39,7 +39,10 @@ namespace e_regex
             static constexpr auto expression = matcher::expression;
 
         private:
-            match_result_data<nodes::group_getter<matcher>::value, Char_Type> data;
+            static constexpr auto groups_
+                = nodes::group_getter<matcher>::value;
+
+            match_result_data<groups_, Char_Type> data;
 
         public:
             constexpr match_result(literal_string_view<> query) noexcept
@@ -55,8 +58,7 @@ namespace e_regex
                 }
             }
 
-            constexpr auto operator=(bool accepted) noexcept
-                -> match_result&
+            constexpr auto operator=(bool accepted) noexcept -> match_result&
             {
                 this->accepted = accepted;
 
@@ -105,7 +107,7 @@ namespace e_regex
                 return operator bool();
             }
 
-            template<std::size_t index>
+            template<unsigned index>
             constexpr auto get() const noexcept
             {
                 static_assert(
@@ -115,7 +117,7 @@ namespace e_regex
                 return get_group(index);
             }
 
-            constexpr auto get_group(std::size_t index) const noexcept
+            constexpr auto get_group(unsigned index) const noexcept
             {
                 if (index == 0)
                 {
@@ -126,7 +128,7 @@ namespace e_regex
                     data.match_groups[index - 1]);
             }
 
-            constexpr auto operator[](std::size_t index) const noexcept
+            constexpr auto operator[](unsigned index) const noexcept
             {
                 return get_group(index);
             }
@@ -154,7 +156,7 @@ namespace e_regex
 
             static constexpr auto groups() noexcept
             {
-                return matcher::groups;
+                return groups_;
             }
 
             /**
@@ -194,16 +196,18 @@ namespace std
     template<typename matcher>
     struct tuple_size<e_regex::match_result<matcher>>
     {
-            static const std::size_t value = matcher::groups + 1;
+            static const unsigned value = matcher::groups + 1;
     };
 
     template<std::size_t N, typename matcher, typename Char_Type>
     struct tuple_element<N, e_regex::match_result<matcher, Char_Type>>
     {
+            static_assert(N <= e_regex::nodes::group_getter<matcher>::value);
+
             using type = std::string_view;
     };
 
-    template<std::size_t N, typename matcher>
+    template<unsigned N, typename matcher>
     auto get(e_regex::match_result<matcher> t) noexcept
     {
         return t.template get<N>();

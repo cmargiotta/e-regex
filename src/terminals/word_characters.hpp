@@ -6,16 +6,16 @@
 
 namespace e_regex::terminals
 {
+    using word_characters_admission_set = merge_admitted_sets_t<
+        merge_admitted_sets_t<admitted_set_range_t<char, 'A', 'Z'>,
+                              admitted_set_range_t<char, 'a', 'z'>>,
+        merge_admitted_sets_t<admitted_set_range_t<char, '0', '9'>,
+                              admitted_set<char, '_'>>>;
+
     template<>
     struct terminal<pack_string<'\\', 'w'>>
-        : public terminal_common<terminal<pack_string<'\\', 'w'>>>
+        : public terminal_common<terminal<pack_string<'\\', 'w'>>, word_characters_admission_set>
     {
-            using admitted_first_chars = merge_admitted_sets_t<
-                merge_admitted_sets_t<admitted_set_range_t<char, 'A', 'Z'>,
-                                      admitted_set_range_t<char, 'a', 'z'>>,
-                merge_admitted_sets_t<admitted_set_range_t<char, '0', '9'>,
-                                      admitted_set<char, '_'>>>;
-
             static constexpr auto expression = static_string {"\\w"};
 
             static constexpr __attribute__((always_inline)) auto
@@ -35,7 +35,7 @@ namespace e_regex::terminals
 
     template<>
     struct terminal<pack_string<'\\', 'W'>>
-        : public negated_terminal<terminal<pack_string<'\\', 'w'>>>
+        : public negated_terminal<terminal<pack_string<'\\', 'w'>>, word_characters_admission_set>
     {
             static constexpr auto expression = static_string {"\\W"};
     };

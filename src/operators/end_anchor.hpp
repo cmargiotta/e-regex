@@ -4,9 +4,9 @@
 #include <tuple>
 
 #include "common.hpp"
-#include "heuristics.hpp"
 #include "nodes.hpp"
 #include "terminals/anchors/end.hpp"
+#include "tree_builder/common.hpp"
 
 namespace e_regex
 {

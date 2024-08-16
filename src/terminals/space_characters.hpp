@@ -9,12 +9,13 @@
 
 namespace e_regex::terminals
 {
+    using space_characters_admission_set
+        = admitted_set<char, '\t', '\n', '\f', '\r', ' '>;
+
     template<>
     struct terminal<pack_string<'\\', 's'>>
-        : public terminal_common<terminal<pack_string<'\\', 's'>>>
+        : public terminal_common<terminal<pack_string<'\\', 's'>>, space_characters_admission_set>
     {
-            using admitted_first_chars
-                = admitted_set<char, '\t', '\n', '\f', '\r', ' '>;
             static constexpr auto expression = static_string {"\\s"};
 
             static constexpr auto match_(auto& result) -> auto&
@@ -35,7 +36,8 @@ namespace e_regex::terminals
 
     template<>
     struct terminal<pack_string<'\\', 'S'>>
-        : public negated_terminal<terminal<pack_string<'\\', 's'>>>
+        : public negated_terminal<terminal<pack_string<'\\', 's'>>,
+                                  space_characters_admission_set>
     {
             static constexpr auto expression = static_string {"\\S"};
     };

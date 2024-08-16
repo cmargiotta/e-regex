@@ -1,10 +1,10 @@
-#ifndef OPERATORS_COMMON_HPP
-#define OPERATORS_COMMON_HPP
+#ifndef E_REGEX_OPERATORS_COMMON_HPP_
+#define E_REGEX_OPERATORS_COMMON_HPP_
 
 #include <tuple>
 
-#include "heuristics.hpp"
 #include "nodes/basic.hpp"
+#include "tree_builder/common.hpp"
 
 namespace e_regex
 {
@@ -23,12 +23,13 @@ namespace e_regex
     struct tree_builder_helper<last_node, std::tuple<head, tail...>, group_index>
     {
             // Simple case, iterate
-            using new_node = typename tree_builder_helper<nodes::simple<terminals::terminal<head>>,
-                                                          std::tuple<tail...>,
-                                                          group_index>::tree;
+            using new_node = typename tree_builder_helper<
+                nodes::simple<terminals::terminal<head>>,
+                std::tuple<tail...>,
+                group_index>::tree;
 
             using tree = add_child_t<last_node, new_node>;
     };
-}// namespace e_regex
+} // namespace e_regex
 
-#endif /* OPERATORS_COMMON_HPP */
+#endif /* E_REGEX_OPERATORS_COMMON_HPP_*/

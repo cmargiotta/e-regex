@@ -13,11 +13,11 @@ namespace e_regex::terminals
     template<char identifier, char... identifiers>
     struct exact_matcher<pack_string<identifier, identifiers...>>
         : public terminal_common<
-              exact_matcher<pack_string<identifier, identifiers...>>>
+              exact_matcher<pack_string<identifier, identifiers...>>,
+              admitted_set<char, identifier>>
     {
             static constexpr auto expression
                 = pack_string<identifier, identifiers...>::string;
-            using admitted_first_chars = admitted_set<char, identifier>;
 
             static constexpr __attribute__((always_inline)) auto
                 match_(auto& result) -> auto&

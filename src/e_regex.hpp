@@ -3,7 +3,7 @@
 
 #include "match_result.hpp"
 #include "nodes/common.hpp"
-#include "tree_builder.hpp"
+#include "tree_builder/tree_builder.hpp"
 #include "utilities/admitted_set.hpp"
 #include "utilities/literal_string_view.hpp"
 #include "utilities/pack_string.hpp"
@@ -55,8 +55,8 @@ namespace e_regex
             static constexpr auto is_independent() -> bool
             {
                 using intersection = admitted_sets_intersection_t<
-                    typename ast::admitted_first_chars,
-                    typename other::ast::admitted_first_chars>;
+                    typename nodes::extract_admission_set<ast>::type,
+                    typename nodes::extract_admission_set<typename other::ast>::type>;
 
                 return intersection::empty;
             }

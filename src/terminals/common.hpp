@@ -3,16 +3,23 @@
 
 #include <utility>
 
+#include "nodes/meta.hpp"
 #include "utilities/admitted_set.hpp"
 #include "utilities/static_string.hpp"
 
 namespace e_regex::terminals
 {
-    template<typename terminal>
+    template<typename terminal, typename admission_set>
     struct terminal_common
     {
             template<typename... injected_children>
             using optimize = terminal;
+
+            static constexpr auto meta = e_regex::meta<admission_set> {
+                .policy_            = e_regex::policy::NONE,
+                .minimum_match_size = 1,
+                .maximum_match_size = 1,
+            };
 
             // Template used only for compatibility with nodes
             template<typename... injected_children>
@@ -29,13 +36,11 @@ namespace e_regex::terminals
             }
     };
 
-    template<typename terminal>
+    template<typename terminal, typename admission_set>
     struct negated_terminal
-        : public terminal_common<negated_terminal<terminal>>
+        : public terminal_common<negated_terminal<terminal, admission_set>,
+                                 admitted_set_complement_t<admission_set>>
     {
-            using admitted_first_chars
-                = admitted_set_complement_t<typename terminal::admitted_first_chars>;
-
             template<typename... injected_children>
             using optimize = negated_terminal;
 
@@ -52,34 +57,6 @@ namespace e_regex::terminals
 
     template<typename... identifiers>
     struct terminal;
-
-    // Avoids instantiating nodes code for consecutive matchers
-    template<typename head, typename... tail>
-    struct terminal<head, tail...>
-    {
-            static constexpr auto expression
-                = terminal<head>::expression
-                  + (terminal<tail>::expression + ...);
-            using admitted_first_chars =
-                typename terminal<head>::admitted_first_chars;
-
-            template<typename... injected_children>
-            using optimize = terminal;
-
-            template<typename... injected_children>
-            static constexpr auto match(auto& result) -> auto&
-            {
-                terminal<head>::match(result);
-
-                if (result)
-                {
-                    terminal<tail...>::match(result);
-                }
-
-                return result;
-            }
-    };
-
 } // namespace e_regex::terminals
 
 #endif /* E_REGEX_TERMINALS_COMMON_HPP_*/

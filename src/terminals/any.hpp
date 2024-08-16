@@ -8,11 +8,10 @@ namespace e_regex::terminals
 {
     template<>
     struct terminal<pack_string<'.'>>
-        : public terminal_common<terminal<pack_string<'.'>>>
+        : public terminal_common<terminal<pack_string<'.'>>,
+                                 admitted_set_range_t<char, '\0', '\x7F'>>
     {
             static constexpr auto expression = static_string {"."};
-            using admitted_first_chars
-                = admitted_set_range_t<char, '\0', '\x7F'>;
 
             static constexpr auto match_(auto& result) -> auto&
             {

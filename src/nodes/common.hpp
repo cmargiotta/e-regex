@@ -7,8 +7,7 @@
 
 #include "utilities/admitted_set.hpp"
 #include "utilities/first_type.hpp"
-#include "utilities/max.hpp"
-#include "utilities/sum.hpp"
+#include "utilities/math.hpp"
 
 namespace e_regex::nodes
 {
@@ -19,7 +18,7 @@ namespace e_regex::nodes
     struct extract_admission_set<child, children...>
     {
             using type = merge_admitted_sets_t<
-                typename child::admitted_first_chars,
+                typename decltype(child::meta)::admission_set,
                 typename extract_admission_set<children...>::type>;
     };
 
@@ -42,7 +41,7 @@ namespace e_regex::nodes
     template<typename T>
     struct group_getter
     {
-            static constexpr auto value = 0;
+            static constexpr auto value = 0U;
     };
 
     template<has_groups T>
@@ -73,7 +72,7 @@ namespace e_regex::nodes
                 = max(group_index_getter<matcher>::value,
                       group_index_getter<children>::value...);
 
-            static constexpr std::size_t groups
+            static constexpr unsigned groups
                 = group_getter<matcher>::value
                   + sum(group_getter<children>::value...);
     };

@@ -8,11 +8,10 @@ namespace e_regex::terminals
 {
     template<>
     struct terminal<pack_string<'\\', 'd'>>
-        : public terminal_common<terminal<pack_string<'\\', 'd'>>>
+        : public terminal_common<terminal<pack_string<'\\', 'd'>>,
+                                 admitted_set_range_t<char, '0', '9'>>
     {
             static constexpr auto expression = static_string {"\\d"};
-            using admitted_first_chars
-                = admitted_set_range_t<char, '0', '9'>;
 
             static constexpr __attribute__((always_inline)) auto
                 match_(auto& result) -> auto&
@@ -28,7 +27,8 @@ namespace e_regex::terminals
 
     template<>
     struct terminal<pack_string<'\\', 'D'>>
-        : public negated_terminal<terminal<pack_string<'\\', 'd'>>>
+        : public negated_terminal<terminal<pack_string<'\\', 'd'>>,
+                                  admitted_set_range_t<char, '0', '9'>>
     {
             static constexpr auto expression = static_string {"\\D"};
     };

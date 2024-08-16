@@ -1,6 +1,7 @@
 #ifndef E_REGEX_TERMINALS_ANCHORS_START_HPP_
 #define E_REGEX_TERMINALS_ANCHORS_START_HPP_
 
+#include "nodes/meta.hpp"
 #include "terminals/common.hpp"
 
 namespace e_regex::terminals::anchors
@@ -8,7 +9,13 @@ namespace e_regex::terminals::anchors
     struct start
     {
             static constexpr auto expression = static_string {"^"};
-            using admitted_first_chars       = admitted_set<char>;
+
+            static constexpr auto meta
+                = e_regex::meta<admitted_set_complement_t<admitted_set<char>>> {
+                    .policy_            = e_regex::policy::NONE,
+                    .minimum_match_size = 0,
+                    .maximum_match_size = 0,
+                };
 
             template<typename... injected_children>
             using optimize = start;
