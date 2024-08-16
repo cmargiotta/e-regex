@@ -17,9 +17,10 @@
             [
               meson
               ninja
-              gcc13
+              gcc14
+              gnat14
               gdb
-              clang-tools_17
+              clang-tools
 
               (
                 mach-nix.lib."${system}".mkPython {
