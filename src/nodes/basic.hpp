@@ -62,11 +62,17 @@ namespace e_regex::nodes
                          typename children::template optimize<>...>;
 
             template<typename... injected_children>
-            static constexpr auto match(auto res)
+            static constexpr auto match(auto& res) -> auto&
             {
-                res = matcher::template match<children...>(res);
+                matcher::match(res);
 
-                return dfs<children...>(res);
+                if (!res)
+                {
+                    return res;
+                }
+
+                return dfs<std::tuple<children...>,
+                           std::tuple<injected_children...>>(res);
             }
     };
 
@@ -84,9 +90,10 @@ namespace e_regex::nodes
                 = simple<void, typename children::template optimize<>...>;
 
             template<typename... injected_children>
-            static constexpr auto match(auto res)
+            static constexpr auto match(auto& res) -> auto&
             {
-                return dfs<children...>(res);
+                return dfs<std::tuple<children...>,
+                           std::tuple<injected_children...>>(res);
             }
     };
 
@@ -104,7 +111,7 @@ namespace e_regex::nodes
                 typename child::template optimize<injected_children...>;
 
             template<typename... injected_children>
-            static constexpr auto match(auto res)
+            static constexpr auto match(auto& res) -> auto&
             {
                 return child::template match<injected_children...>(res);
             }
@@ -123,9 +130,9 @@ namespace e_regex::nodes
                 typename matcher::template optimize<injected_children...>;
 
             template<typename... injected_children>
-            static constexpr auto match(auto res)
+            static constexpr auto match(auto& res) -> auto&
             {
-                return matcher::template match<>(res);
+                return matcher::match(res);
             }
     };
 

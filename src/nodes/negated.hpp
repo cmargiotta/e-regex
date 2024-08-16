@@ -21,7 +21,7 @@ namespace e_regex::nodes
                 = negated_node<typename matcher::template optimize<>>;
 
             template<typename... injected_children>
-            static constexpr auto match(auto result)
+            static constexpr auto match(auto& result) -> auto&
             {
                 if (result.actual_iterator_end >= result.query.end())
                 {
@@ -29,8 +29,8 @@ namespace e_regex::nodes
                     return result;
                 }
 
-                result = matcher::template match<>(result);
-                result = !static_cast<bool>(result);
+                matcher::match(result);
+                result.accepted = !result.accepted;
 
                 return result;
             }

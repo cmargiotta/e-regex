@@ -32,29 +32,23 @@ namespace e_regex::nodes
                 typename matcher::admitted_first_chars;
 
             template<typename... injected_children>
-            using optimize = repeated;
+            using optimize
+                = repeated<typename matcher::template optimize<>,
+                           repetitions,
+                           typename children::template optimize<>...>;
 
             template<typename... injected_children>
-            static constexpr auto match(auto res)
+            static constexpr auto match(auto& res) -> auto&
             {
                 for (std::size_t i = 0; i < repetitions; ++i)
                 {
-                    if (res.actual_iterator_end >= res.query.end())
-                    {
-                        res = false;
-                        return res;
-                    }
-
-                    res = matcher::template match<injected_children...>(
-                        res);
-
-                    if (!res)
+                    if (!matcher::match(res))
                     {
                         return res;
                     }
                 }
 
-                return dfs<children...>(res);
+                return dfs<std::tuple<children...>>(res);
             }
     };
 } // namespace e_regex::nodes

@@ -9,30 +9,11 @@
 #include "nodes/greedy.hpp"
 #include "nodes/repeated.hpp"
 #include "utilities/extract_delimited_content.hpp"
+#include "utilities/first_type.hpp"
 #include "utilities/pack_string_to_number.hpp"
 
 namespace e_regex
 {
-    template<typename data>
-    struct first_type;
-
-    template<typename head, typename... tail>
-    struct first_type<std::tuple<head, tail...>>
-    {
-            using type      = head;
-            using remaining = std::tuple<tail...>;
-    };
-
-    template<>
-    struct first_type<std::tuple<>>
-    {
-            using type      = void;
-            using remaining = std::tuple<>;
-    };
-
-    template<typename data>
-    using first_type_t = typename first_type<data>::type;
-
     template<typename matcher, typename data, typename policy_>
     struct quantified_node_builder;
 

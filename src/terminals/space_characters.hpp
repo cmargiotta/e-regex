@@ -1,5 +1,5 @@
-#ifndef E_REGEX_NODES_TERMINALS_SPACE_CHARACTERS_HPP_
-#define E_REGEX_NODES_TERMINALS_SPACE_CHARACTERS_HPP_
+#ifndef E_REGEX_TERMINALS_SPACE_CHARACTERS_HPP_
+#define E_REGEX_TERMINALS_SPACE_CHARACTERS_HPP_
 
 #include <algorithm>
 #include <array>
@@ -17,7 +17,7 @@ namespace e_regex::terminals
                 = admitted_set<char, '\t', '\n', '\f', '\r', ' '>;
             static constexpr auto expression = static_string {"\\s"};
 
-            static constexpr auto match_(auto result)
+            static constexpr auto match_(auto& result) -> auto&
             {
                 constexpr std::array matched {
                     '\t', '\n', '\f', '\r', ' '};
@@ -41,4 +41,4 @@ namespace e_regex::terminals
     };
 } // namespace e_regex::terminals
 
-#endif /* E_REGEX_NODES_TERMINALS_SPACE_CHARACTERS_HPP_*/
+#endif /* E_REGEX_TERMINALS_SPACE_CHARACTERS_HPP_*/

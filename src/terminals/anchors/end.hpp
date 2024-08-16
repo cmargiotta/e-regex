@@ -14,10 +14,17 @@ namespace e_regex::terminals::anchors
             using optimize = end;
 
             template<typename... injected_children>
-            static constexpr auto match(auto result)
+            static constexpr auto match(auto& result) -> auto&
             {
-                result = (result.actual_iterator_end
-                          == result.query.end());
+                if (result.actual_iterator_end > result.query.end())
+                {
+                    result = false;
+                    return result;
+                }
+
+                result
+                    = (result.actual_iterator_end == result.query.end())
+                      || *result.actual_iterator_end == '\n';
 
                 return result;
             }

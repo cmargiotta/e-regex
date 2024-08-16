@@ -18,14 +18,15 @@ namespace e_regex::terminals
 
             static constexpr auto expression = static_string {"\\w"};
 
-            static constexpr auto match_(auto result)
+            static constexpr __attribute__((always_inline)) auto
+                match_(auto& result) -> auto&
             {
-                auto current = result.actual_iterator_end;
+                const auto& current = *result.actual_iterator_end;
 
-                result = (*current >= 'A' && *current <= 'Z')
-                         || (*current >= 'a' && *current <= 'z')
-                         || (*current >= '0' && *current <= '9')
-                         || (*current == '_');
+                result = (current >= 'A' && current <= 'Z')
+                         || (current >= 'a' && current <= 'z')
+                         || (current >= '0' && current <= '9')
+                         || (current == '_');
                 result.actual_iterator_end++;
 
                 return result;

@@ -19,9 +19,10 @@ namespace e_regex::terminals
                 = pack_string<identifier, identifiers...>::string;
             using admitted_first_chars = admitted_set<char, identifier>;
 
-            static constexpr auto match_(auto result)
+            static constexpr __attribute__((always_inline)) auto
+                match_(auto& result) -> auto&
             {
-                for (auto c:
+                for (const auto& c:
                      pack_string<identifier, identifiers...>::string.to_view())
                 {
                     result = c == *result.actual_iterator_end;
@@ -29,7 +30,7 @@ namespace e_regex::terminals
 
                     if (!result)
                     {
-                        break;
+                        return result;
                     }
                 }
 

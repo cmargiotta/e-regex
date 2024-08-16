@@ -16,23 +16,22 @@ namespace e_regex::terminals
 
             // Template used only for compatibility with nodes
             template<typename... injected_children>
-            static constexpr auto match(auto result)
+            static constexpr __attribute__((always_inline)) auto
+                match(auto& result) -> auto&
             {
                 if (result.actual_iterator_end >= result.query.end())
                 {
                     result = false;
-                }
-                else if (result)
-                {
-                    return terminal::match_(result);
+                    return result;
                 }
 
-                return result;
+                return terminal::match_(result);
             }
     };
 
     template<typename terminal>
     struct negated_terminal
+        : public terminal_common<negated_terminal<terminal>>
     {
             using admitted_first_chars
                 = admitted_set_complement_t<typename terminal::admitted_first_chars>;
@@ -41,7 +40,8 @@ namespace e_regex::terminals
             using optimize = negated_terminal;
 
             template<typename... injected_children>
-            static constexpr auto match(auto result)
+            static constexpr __attribute__((always_inline)) auto
+                match_(auto& result) -> auto&
             {
                 result = terminal::match_(std::move(result));
                 result = !result.accepted;
@@ -67,13 +67,13 @@ namespace e_regex::terminals
             using optimize = terminal;
 
             template<typename... injected_children>
-            static constexpr auto match(auto result)
+            static constexpr auto match(auto& result) -> auto&
             {
-                result = terminal<head>::match(std::move(result));
+                terminal<head>::match(result);
 
                 if (result)
                 {
-                    return terminal<tail...>::match(std::move(result));
+                    terminal<tail...>::match(result);
                 }
 
                 return result;

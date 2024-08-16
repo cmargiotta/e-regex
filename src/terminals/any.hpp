@@ -1,5 +1,5 @@
-#ifndef E_REGEX_NODES_TERMINALS_ANY_HPP_
-#define E_REGEX_NODES_TERMINALS_ANY_HPP_
+#ifndef E_REGEX_TERMINALS_ANY_HPP_
+#define E_REGEX_TERMINALS_ANY_HPP_
 
 #include "common.hpp"
 #include "utilities/admitted_set.hpp"
@@ -14,7 +14,7 @@ namespace e_regex::terminals
             using admitted_first_chars
                 = admitted_set_range_t<char, '\0', '\x7F'>;
 
-            static constexpr auto match_(auto result)
+            static constexpr auto match_(auto& result) -> auto&
             {
                 result = *result.actual_iterator_end != '\n';
                 result.actual_iterator_end++;
@@ -24,4 +24,4 @@ namespace e_regex::terminals
     };
 } // namespace e_regex::terminals
 
-#endif /* E_REGEX_NODES_TERMINALS_ANY_HPP_*/
+#endif /* E_REGEX_TERMINALS_ANY_HPP_*/

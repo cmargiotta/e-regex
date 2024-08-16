@@ -83,7 +83,7 @@ namespace e_regex::nodes
                              typename children::template optimize<>...>;
 
             template<typename... injected_children>
-            static constexpr auto match(auto result)
+            static constexpr auto match(auto& result) -> auto&
             {
                 if (result.actual_iterator_end > result.query.end())
                 {
@@ -93,9 +93,9 @@ namespace e_regex::nodes
 
                 for (std::size_t i = 0; i < repetitions_max; ++i)
                 {
-                    auto last_result
-                        = matcher::template match<injected_children...>(
-                            result);
+                    auto last_result = result;
+                    matcher::template match<injected_children...>(
+                        last_result);
 
                     if (last_result)
                     {
@@ -106,7 +106,8 @@ namespace e_regex::nodes
                         if (i < repetitions_min)
                         {
                             // Failed too early
-                            return last_result;
+                            result.accepted = false;
+                            return result;
                         }
 
                         // Failed but repetitions_min was satisfied,
@@ -115,7 +116,7 @@ namespace e_regex::nodes
                     }
                 }
 
-                return dfs<children...>(result);
+                return dfs<std::tuple<children...>>(result);
             }
     };
 

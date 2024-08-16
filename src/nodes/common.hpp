@@ -2,8 +2,11 @@
 #define E_REGEX_NODES_COMMON_HPP_
 
 #include <algorithm>
+#include <tuple>
+#include <type_traits>
 
 #include "utilities/admitted_set.hpp"
+#include "utilities/first_type.hpp"
 #include "utilities/max.hpp"
 #include "utilities/sum.hpp"
 
@@ -31,13 +34,6 @@ namespace e_regex::nodes
     struct extract_admission_set<>
     {
             using type = admitted_set<char>;
-    };
-
-    template<typename T>
-    concept node_with_injected_children = requires() {
-        // template match (auto) -> auto
-
-        T::template match<void, void>;
     };
 
     template<typename T>
@@ -82,39 +78,51 @@ namespace e_regex::nodes
                   + sum(group_getter<children>::value...);
     };
 
-    constexpr auto dfs(auto match_result) noexcept
-    {
-        return match_result;
-    }
+    template<typename injected_children>
+    struct invoke_match;
 
-    template<typename Child, typename... Children>
-    constexpr auto dfs(auto match_result) noexcept
+    template<typename... injected_children>
+    struct invoke_match<std::tuple<injected_children...>>
     {
-        if (!match_result)
+            template<typename T>
+            static constexpr auto match(auto& res) -> auto&
+            {
+                return T::template match<injected_children...>(res);
+            }
+    };
+
+    template<typename children          = std::tuple<>,
+             typename injected_children = std::tuple<>>
+    constexpr auto dfs(auto& match_result) noexcept -> auto&
+    {
+        if constexpr (std::tuple_size_v<children> == 0)
         {
             return match_result;
         }
-
-        if constexpr (sizeof...(Children) == 0)
-        {
-            return Child::match(std::move(match_result));
-        }
         else
         {
-            auto result
-                = Child::template match<Children...>(match_result);
+            using _children = first_type<children>;
+            using invoker   = invoke_match<injected_children>;
 
-            match_result = dfs<Children...>(std::move(match_result));
-
-            if (!result
-                || (match_result
-                    && result.actual_iterator_end
-                           < match_result.actual_iterator_end))
+            if constexpr (std::tuple_size_v<children> == 1)
             {
-                return match_result;
+                return invoker::template match<typename _children::type>(
+                    match_result);
             }
+            else
+            {
+                auto bak = match_result.actual_iterator_end;
 
-            return result;
+                if (invoker::template match<typename _children::type>(
+                        match_result))
+                {
+                    return match_result;
+                }
+
+                match_result.actual_iterator_end = bak;
+                match_result                     = true;
+                return dfs<typename _children::remaining>(match_result);
+            }
         }
     }
 } // namespace e_regex::nodes

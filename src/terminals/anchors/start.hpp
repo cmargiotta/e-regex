@@ -14,8 +14,14 @@ namespace e_regex::terminals::anchors
             using optimize = start;
 
             template<typename... injected_children>
-            static constexpr auto match(auto result)
+            static constexpr auto match(auto& result) -> auto&
             {
+                if (result.actual_iterator_end >= result.query.end())
+                {
+                    result = false;
+                    return result;
+                }
+
                 result = (result.actual_iterator_end
                           == result.query.begin());
 

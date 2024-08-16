@@ -93,53 +93,61 @@ namespace e_regex::nodes
                      typename children::template optimize<>...>>;
 
             template<typename... injected_children>
-            static constexpr auto match(auto result)
+            static constexpr auto match(auto& result) -> auto&
             {
                 if constexpr (std::is_same_v<matcher, void>)
                 {
-                    return dfs<children...>(result);
+                    return dfs<std::tuple<children...>>(result);
                 }
                 else
                 {
-                    std::size_t matches = 0;
-
                     for (std::size_t i = 0; i < repetitions_min; ++i)
                     {
                         if (result.actual_iterator_end
-                            > result.query.end())
+                            >= result.query.end())
                         {
                             result = false;
                             return result;
                         }
 
-                        result
-                            = matcher::template match<injected_children...>(
-                                result);
-                        matches++;
-
-                        if (!result)
+                        if (!matcher::match(result))
                         {
                             return result;
                         }
                     }
 
+                    std::size_t matches = repetitions_min;
+
                     while (result.actual_iterator_end < result.query.end()
                            && matches < repetitions_max)
                     {
-                        auto dfs_result = dfs<children...>(result);
-
-                        if constexpr (sizeof...(injected_children) > 0)
+                        if (result.actual_iterator_end
+                            >= result.query.end())
                         {
+                            break;
+                        }
+
+                        auto dfs_result = result;
+
+                        if constexpr (sizeof...(children) > 0)
+                        {
+                            dfs<std::tuple<children...>>(dfs_result);
+
                             if (dfs_result)
                             {
-                                dfs_result = dfs<injected_children...>(
-                                    dfs_result);
+                                result = dfs_result;
+                                return result;
                             }
+                        }
+                        else
+                        {
+                            dfs<std::tuple<injected_children...>>(
+                                dfs_result);
                         }
 
                         if (!dfs_result)
                         {
-                            result = matcher::template match<>(result);
+                            matcher::match(result);
                             matches++;
 
                             if (!result)
@@ -153,8 +161,7 @@ namespace e_regex::nodes
                         }
                     }
 
-                    result.accepted = matches < repetitions_max;
-                    return result;
+                    return dfs<std::tuple<children...>>(result);
                 }
             }
     };

@@ -30,12 +30,12 @@ namespace e_regex::nodes
                   + sum(group_getter<children>::value...) + 1;
 
             template<typename... injected_children>
-            static constexpr auto match(auto result)
+            static constexpr auto match(auto& result) -> auto&
             {
                 auto begin = result.actual_iterator_end;
 
                 // This node's children matter in backtracking
-                result = matcher::template match<children...>(result);
+                matcher::template match<children...>(result);
 
                 if (result)
                 {
@@ -43,7 +43,8 @@ namespace e_regex::nodes
                         = literal_string_view {
                             begin, result.actual_iterator_end};
 
-                    result = dfs<children...>(result);
+                    dfs<std::tuple<children...>, std::tuple<children...>>(
+                        result);
                 }
 
                 return result;

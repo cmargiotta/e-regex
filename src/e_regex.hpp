@@ -11,11 +11,30 @@
 
 namespace e_regex
 {
+    namespace __private
+    {
+        template<typename T, typename N = void>
+        struct optimizer
+            : public optimizer<N, typename N::template optimize<>>
+        {};
+
+        template<typename T>
+        struct optimizer<T, void>
+            : public optimizer<T, typename T::template optimize<>>
+        {};
+
+        template<typename T>
+        struct optimizer<T, T>
+        {
+                using type = T;
+        };
+    } // namespace __private
+
     template<static_string expression>
     struct regex
     {
-            using ast = typename tree_builder<
-                build_pack_string_t<expression>>::tree::template optimize<>;
+            using ast = typename __private::optimizer<
+                typename tree_builder<build_pack_string_t<expression>>::tree>::type;
 
             static constexpr auto match(literal_string_view<> data)
             {

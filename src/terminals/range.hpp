@@ -20,14 +20,15 @@ namespace e_regex::terminals
                 = admitted_set_range_t<char, start, end>;
 
             template<typename... injected_children>
-            static constexpr auto match(auto result)
+            static constexpr __attribute__((always_inline)) auto
+                match(auto& result) -> auto&
             {
                 static_assert(end >= start,
                               "Range [a-b] must respect b >= a");
 
-                auto current = result.actual_iterator_end;
+                const auto& current = *result.actual_iterator_end;
 
-                result = *current >= start && *current <= end;
+                result = current >= start && current <= end;
                 result.actual_iterator_end++;
 
                 return result;

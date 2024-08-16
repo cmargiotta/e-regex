@@ -25,7 +25,8 @@ namespace e_regex::nodes
     struct greedy : public base<matcher, children...>
     {
             static constexpr std::size_t groups
-                = group_getter<matcher>::value + sum(children::groups...);
+                = group_getter<matcher>::value
+                  + sum(group_getter<children>::value...);
 
             static constexpr auto expression = []() {
                 auto quantifier = []() {
@@ -103,100 +104,98 @@ namespace e_regex::nodes
                        typename children::template optimize<>...>>;
 
             template<typename... injected_children>
-            static constexpr auto backtrack(auto result)
+            static constexpr auto backtrack(auto& result) -> auto&
             {
-                auto dfs_result = dfs<children...>(result);
-
-                if (dfs_result)
+                if constexpr (sizeof...(children) > 0)
                 {
-                    dfs_result.accepted
-                        = dfs<injected_children...>(result).accepted;
-                }
-
-                return dfs_result;
-            }
-
-            template<typename... injected_children>
-            static constexpr auto match(auto result)
-            {
-                if constexpr (std::is_same_v<matcher, void>)
-                {
-                    return dfs<children...>(result);
+                    return dfs<std::tuple<children...>>(result);
                 }
                 else
                 {
-                    for (std::size_t i = 0; i < repetitions_min; ++i)
+                    if (result)
                     {
-                        if (result.actual_iterator_end
-                            > result.query.end())
-                        {
-                            result = false;
-                            return result;
-                        }
+                        auto bak = result.actual_iterator_end;
 
-                        result = matcher::template match<children...>(
-                            result);
-
-                        if (!result)
-                        {
-                            return result;
-                        }
+                        dfs<std::tuple<injected_children...>>(result);
+                        result.actual_iterator_end = bak;
                     }
 
-                    // Iterate until this matcher accepts
-                    auto last_result = result;
-                    auto repetitions = repetitions_min;
+                    return result;
+                }
+            }
 
-                    for (std::size_t i = repetitions_min;
-                         i < repetitions_max;
-                         ++i)
+            template<typename... injected_children>
+            static constexpr auto match(auto& result) -> auto&
+            {
+                if constexpr (std::is_same_v<matcher, void>)
+                {
+                    return dfs<std::tuple<children...>>(result);
+                }
+                else
+                {
+                    if constexpr (repetitions_min > 0)
                     {
-                        if (result.actual_iterator_end
-                            >= result.query.end())
+                        for (std::size_t i = 0; i < repetitions_min; ++i)
                         {
-                            break;
-                        }
-
-                        result = matcher::template match<children...>(
-                            result);
-
-                        if (!result)
-                        {
-                            break;
-                        }
-
-                        last_result = result;
-                        repetitions++;
-                    }
-
-                    // Now backtrack, if needed
-                    if (auto res
-                        = backtrack<injected_children...>(last_result);
-                        res)
-                    {
-                        return res;
-                    }
-
-                    for (std::size_t i = repetitions; i > repetitions_min;
-                         --i)
-                    {
-                        last_result.actual_iterator_end--;
-
-                        if (matcher::template match<children...>(
-                                last_result))
-                        {
-                            if (auto res
-                                = backtrack<injected_children...>(
-                                    last_result);
-                                res)
+                            if (!matcher::match(result))
                             {
-                                return res;
+                                return result;
                             }
                         }
                     }
 
-                    last_result.accepted = false;
-                    return last_result;
+                    // Iterate while this matcher accepts
+                    auto       repetitions = repetitions_min;
+                    const auto start     = result.actual_iterator_end;
+                    auto       last_iter = start;
+
+                    while (repetitions < repetitions_max)
+                    {
+                        if (!matcher::match(result))
+                        {
+                            // Restore last good match
+                            result.actual_iterator_end = last_iter;
+                            result                     = true;
+                            break;
+                        }
+
+                        last_iter = result.actual_iterator_end;
+                        repetitions++;
+                    }
+
+                    // Now backtrack
+                    while (repetitions >= repetitions_min)
+                    {
+                        if (backtrack<injected_children...>(result))
+                        {
+                            return result;
+                        }
+
+                        for (; last_iter >= start; --last_iter)
+                        {
+                            result.actual_iterator_end = last_iter;
+
+                            if (matcher::match(result))
+                            {
+                                break;
+                            }
+                        }
+
+                        if (!result || repetitions == repetitions_min)
+                        {
+                            result.actual_iterator_end = last_iter;
+                            break;
+                        }
+
+                        --repetitions;
+                    }
+
+                    if (repetitions >= repetitions_min)
+                    {
+                        return dfs<std::tuple<children...>>(result);
+                    }
+                    result = repetitions >= repetitions_min;
+                    return result;
                 }
             }
     };
