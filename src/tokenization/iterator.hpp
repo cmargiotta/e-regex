@@ -8,7 +8,7 @@
 #include <tuple>
 #include <type_traits>
 
-#include "e_regex.hpp"
+#include "regex.hpp"
 #include "token.hpp"
 #include "utilities/literal_string_view.hpp"
 
@@ -198,15 +198,13 @@ namespace e_regex::tokenization
                 return iterator {{}}; // Invalid by definition
             }
 
-            constexpr auto operator==(const iterator& other) const noexcept
-                -> bool
+            constexpr auto operator==(const iterator& other) const noexcept -> bool
             {
                 return (current == other.current
                         && last_match.value == other.last_match.value);
             }
 
-            constexpr auto operator!=(const iterator& other) const noexcept
-                -> bool
+            constexpr auto operator!=(const iterator& other) const noexcept -> bool
             {
                 return !operator==(other);
             }

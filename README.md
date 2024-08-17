@@ -2,12 +2,12 @@
 
 ![Alla pugna!](https://img.shields.io/badge/ALLA-PUGNA-F70808?style=for-the-badge)
 
-Extremely fast regular expression library, with full matching support, even at compile time!
+Fast regular expression library, with full matching support, even at compile time!
 
-## Basic usage
+## Regex matching
 
 ```cpp
-constexpr auto matcher = e_regex::match<"a(a*)">;
+constexpr e_regex::regex<"a(a*)"> matcher;
 
 auto result = matcher("zaaa1");
 result.to_view(); //"aaa"
@@ -27,13 +27,14 @@ Invoking the matcher with an `std::string_view` returns an `e_regex::match_resul
 `result.next()` computes the next match in the query and evalutes to `true` only if it is found.
 
 Every function is `constexpr` and `noexcept`: if the query is constexpr too, no runtime will be involved!
+The regex expression will be automatically optimized using a built-in heuristics engine.
 
 ### Decomposition
 
 An handy way of accessing multiple groups in a match is decomposition:
 
 ```cpp
-constexpr auto matcher = e_regex::match<R"((\d+)-(\d+)-(\d+))">;
+constexpr e_regex::match<R"((\d+)-(\d+)-(\d+))"> matcher;
 
 auto [match, year, month, day] = matcher("1970-01-01");
 ```
@@ -44,29 +45,102 @@ When a match is not found, this will only produce empty strings.
 
 The number of variables in the decomposition must be **exactly** the number of groups in the regex, otherwise a static assertion will fail. If the regex contains `|` operators, then the number of variables must be the sum of groups in the branches.
 
-### Lambdas
+### Inspection
 
-`e_regex::match<...>` is simply a lambda expression.
+Regex matchers provide methods to inspect their properties.
 
-```cpp
-constexpr auto matcher = e_regex::match<"a(a*)">;
-auto result = matcher("zaaa1");
+Given a regex `matcher`:
 
-auto result = e_regex::match<"a(a*)">("zaaa1");
+``` cpp
+matcher.get_expression()
 ```
 
-Both are totally identical.
+Will return the expression derived for the regex tree. This expression will have every optimization applied, so:
+`\d+\s+123` will become `[0-9]++\s++123`.
 
-### Tokenization
+``` cpp
+matcher.groups
+```
 
-Regexes with different branches (at least one) can be used to easily build tokenizers.
+Will be the number of groups detected in the regex.
 
-`e_regex::tokenize<token_regex, separator_regex>` will produce a `constexpr` functor capable of tokenizing a string; `token_regex` is the regex that matches tokens, `separator_regex` is the **optional** regex that matches separators, if it is not provided it is assumed that tokens are not separated.
+### Heuristics
+
+The regex engine will automatically apply optimization heuristics recursively to an instanced regex.
+Those heuristics will not alter the matched set of the regex, but can heavily affect matching performance.
+
+| **Rule**                | **Conditions**                                                                         | **Result**                                                                                            |
+|:------------------------|:---------------------------------------------------------------------------------------|:------------------------------------------------------------------------------------------------------|
+| Greedy removal          | A greedy node's children set of accepted strings does not present intersection with it | The greedy node becomes a possessive node, removing backtracking logics (e.g. `\d+A` becomes `\d++A`) |
+| Lazy removal            | A greedy node's children set of accepted strings does not present intersection with it | The lazy node becomes a possessive node (e.g. `\d+?A` becomes `\d++A`)                                |
+| Empty node substitution | An empty node has only one child                                                       | The node becomes its child                                                                            |
+
+### Operators
+
+| **Identifier**  | **Description**                                                                                         |
+|:----------------|:--------------------------------------------------------------------------------------------------------|
+| `[delim]`       | Matches one of characters described by `delim`: a sequence of characters or a range in form `x-y`       |
+| `[^delim]`      | Negation of `[delim]`                                                                                   |
+| `(delim)`       | Identifies a group, `delim` can be any valid regex                                                      |
+| `(?:delim)`     | Identifies an anonymous group: it does not produce a group in parsing, but delimits content             |
+| `+`, `++`, `+?` | Respectively greedy, possessive and lazy at-least-one operator                                          |
+| `*`, `*+`, `*?` | Respectively greedy, possessive and lazy Kleene star operator                                           |
+| `?`, `?+`, `??` | Respectively greedy, possessive and lazy optional operator                                              |
+| `{n}`           | Accepts only `n` repetitions of the previous identifier                                                 |
+| `{n,}`          | Accepts at least `n` repetitions of the previous identifier                                             |
+| `{n,m}`         | Accepts at least `n` and at most `m` repetitions of the previous identifier                             |
+| `$`             | Matches end of line or end of input                                                                     |
+| `^`             | Matches start of line or start of input                                                                 |
+| `\xN`           | Matches hex data: N can be an hex nibble, two hex nibbles or `{N...}`, a brace enclosed nibble sequence |
+| `\oN`           | Matches octal data: N can be three octal nibbles or `{N...}`, a brace enclosed nibble sequence          |
+
+Operators can be escaped with `\` to match their character.
+
+### Character classes
+
+| **Identifier** | **Description**                               |
+|:---------------|:----------------------------------------------|
+| `\s`           | Space characters: '\t', '\n', '\f', '\r', ' ' |
+| `\d`           | Digits: `[0-9]`                               |
+| `\D`           | Not digit: `[^0-9]`                           |
+| `\w`           | Word character: `[A-Za-z0-9_]`                |
+| `\W`           | Not word character: `[^A-Za-z0-9_]`           |
+| `\a`           | Alarm: `\x07`                                 |
+| `.`            | Any character                                 |
+
+## Tokenization
+
+This library provides a regex-based tokenization engine, that can be used to easily build tokenizers.
+
+`e_regex::tokenization::tokenizer<auto... definitions>` accepts a sequence of `e_regex::separator` and `e_regex::token` instances.
+Every `e_regex::token` instance will describe a token matcher with a `type`: every instance must use the same enum for this field!
+`e_regex::separator` instances will describe separators, aka matchers that will not produce tokens.
+
+A tokenizer will stop parsing if:
+- input string is fully parsed;
+- input string is not accepted by any token matcher or separator matcher;
+- after a token, a separator is not found.
+
+Tokenization is `constexpr` flagged: if the input is `constexpr`, the result can be iterated at compile time.
+
+Invoking a tokenizer with a `std::string_view` will produce a `e_regex::tokenization::iterator`: this iterator can be used in a range-based for loop or can be manually iterated using the increment operator.
 
 ```cpp
-constexpr auto tokenizer = e_regex::tokenize<"\\s+|\\d+", "\\s">;
+using e_regex::separator;
+using e_regex::token;
 
-auto res = tokenizer("a abc def");
+enum class type
+{
+    WORD,
+    NUMBER
+};
+
+constexpr auto tokenizer
+    = e_regex::tokenization::tokenizer<token {type::WORD, "[a-z]+"},
+                                       token {type::NUMBER, "\\d+"},
+                                       separator {"\\s"}> {};
+
+auto res = tokenizer("a 123 def");
 
 for (auto token: res)
 {
@@ -74,49 +148,7 @@ for (auto token: res)
 }
 ```
 
-In this example, `tokenizer` will tokenize words and numbers separated by spaces. The `token` in the range loop will be `"a"`, `"abc"` and `"def"`.
-
-In a `consteval` context it is possible to prebuild a token array using:
-
-```cpp
-using t = e_regex::token_t<"\\s+|\\d+", "a abc def", "\\s">;
-
-constexpr auto tokens = t::tokens::tokens;
-```
-
-`tokens` will be a prebuilt `std::array` of `string_view` of size `3`.
-
-`t::tokens` is a `std::integer_sequence`-like type of tokens, useful in template-heavy code.
-
-#### **Typed tokenization**
-
-It is possible to define an `enum class` with categories of tokens. This syntax requires a regex where every branch contains **exactly** one group and an enum with only consecutive values, starting from 0, and at least the same number of values and groups in the regex.
-
-```cpp
-enum class type
-{
-    WORD,
-    NUMBER
-};
-
-constexpr auto tokenizer = e_regex::tokenize<"(\\w+)|(\\d+)", "\\s", type>;
-
-constexpr auto res = tokenizer("a abc 123");
-
-// Or, for prebuilding
-using t = e_regex::token_t<"(\\w+)|(\\d+)", "a abc 123", "\\s", type>;
-```
-
-Here every generated token will a structure containing tha matching type:
-
-```cpp
-t::tokens::tokens[0].type == type::WORD;
-t::tokens::tokens[0].string == "a";
-
-t::tokens::tokens[2].type == type::NUMBER;
-t::tokens::tokens[2].string == "123";
-```
-
+In this example, `tokenizer` will tokenize words and numbers separated by spaces. The `token` in the range loop will be `{.type = type::WORD, .value = "a"}`, `{.type = type::NUMBER, .value = "abc"}` and `{.type = type::WORD, .value = "def"}`.
 
 ## Building and testing
 

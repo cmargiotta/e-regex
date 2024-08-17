@@ -18,7 +18,7 @@ quom = find_program('quom', required: false)
 
 if quom.found()
 	single_include = custom_target(
-		output: 'single_include.hpp',
+		output: 'e_regex.hpp',
 		command: [quom, '-I', meson.project_source_root() + '/src/', meson.project_source_root() + '/src/e_regex.hpp', '@OUTPUT@'],
 		build_by_default: true
 	)
