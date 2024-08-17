@@ -13,6 +13,12 @@ namespace e_regex
         template<typename node, typename child>
         struct add_branch;
 
+        template<typename identifier>
+        struct add_branch<nodes::simple<void>, terminals::exact_matcher<identifier>>
+        {
+                using type = terminals::exact_matcher<identifier>;
+        };
+
         template<template<typename, typename...> typename matcher,
                  typename... children,
                  typename match,

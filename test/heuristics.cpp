@@ -47,5 +47,5 @@ TEST_CASE("Greedy backtracking removal")
 {
     using matcher = typename e_regex::regex<R"(\d+\s+123)">::ast;
 
-    REQUIRE(matcher::expression.to_view() == R"(\d++\s++123)");
+    REQUIRE(matcher::expression.to_view() == R"([0-9]++\s++123)");
 }

@@ -45,7 +45,8 @@ namespace e_regex
             match_result_data<groups_, Char_Type> data;
 
         public:
-            constexpr match_result(literal_string_view<> query) noexcept
+            constexpr __attribute__((always_inline))
+            match_result(literal_string_view<> query) noexcept
             {
                 data.query                 = query;
                 data.actual_iterator_start = query.begin();
@@ -58,31 +59,34 @@ namespace e_regex
                 }
             }
 
-            constexpr auto operator=(bool accepted) noexcept -> match_result&
+            constexpr __attribute__((always_inline)) auto
+                operator=(bool accepted) noexcept -> match_result&
             {
                 this->accepted = accepted;
 
                 return *this;
             }
 
-            constexpr auto begin() const noexcept
+            constexpr __attribute__((always_inline)) auto begin() const noexcept
             {
                 return match_result {data.query};
             }
 
-            constexpr auto operator!=(const match_result& other) const noexcept
+            constexpr __attribute__((always_inline)) auto
+                operator!=(const match_result& other) const noexcept
             {
                 return data != other.data;
             }
 
-            constexpr auto operator++() noexcept -> auto&
+            constexpr __attribute__((always_inline)) auto
+                operator++() noexcept -> auto&
             {
                 next();
 
                 return *this;
             }
 
-            constexpr auto end() const noexcept
+            constexpr __attribute__((always_inline)) auto end() const noexcept
             {
                 auto res = *this;
                 res.data.actual_iterator_start
@@ -92,23 +96,24 @@ namespace e_regex
                 return res;
             }
 
-            constexpr auto operator*() const noexcept
+            constexpr __attribute__((always_inline)) auto operator*() const noexcept
             {
                 return to_view();
             }
 
-            constexpr operator bool() const noexcept
+            constexpr
+                __attribute__((always_inline)) operator bool() const noexcept
             {
                 return data;
             }
 
-            constexpr auto is_accepted() const noexcept
+            constexpr __attribute__((always_inline)) auto is_accepted() const noexcept
             {
                 return operator bool();
             }
 
             template<unsigned index>
-            constexpr auto get() const noexcept
+            constexpr __attribute__((always_inline)) auto get() const noexcept
             {
                 static_assert(
                     index <= matcher::groups,
@@ -117,7 +122,8 @@ namespace e_regex
                 return get_group(index);
             }
 
-            constexpr auto get_group(unsigned index) const noexcept
+            constexpr __attribute__((always_inline)) auto
+                get_group(unsigned index) const noexcept
             {
                 if (index == 0)
                 {
@@ -128,12 +134,13 @@ namespace e_regex
                     data.match_groups[index - 1]);
             }
 
-            constexpr auto operator[](unsigned index) const noexcept
+            constexpr __attribute__((always_inline)) auto
+                operator[](unsigned index) const noexcept
             {
                 return get_group(index);
             }
 
-            constexpr auto to_view() const noexcept
+            constexpr __attribute__((always_inline)) auto to_view() const noexcept
             {
                 if (!is_accepted())
                 {
@@ -144,17 +151,18 @@ namespace e_regex
                                          data.actual_iterator_end};
             }
 
-            constexpr operator literal_string_view<Char_Type>() const noexcept
+            constexpr __attribute__((always_inline))
+            operator literal_string_view<Char_Type>() const noexcept
             {
                 return to_view();
             }
 
-            constexpr auto size() const noexcept
+            constexpr __attribute__((always_inline)) auto size() const noexcept
             {
                 return data.matches;
             }
 
-            static constexpr auto groups() noexcept
+            static __attribute__((always_inline)) constexpr auto groups() noexcept
             {
                 return groups_;
             }
@@ -164,7 +172,7 @@ namespace e_regex
              *
              * @return false if there are no other matches
              */
-            constexpr auto next() noexcept
+            constexpr __attribute__((always_inline)) auto next() noexcept
             {
                 data.actual_iterator_start = data.actual_iterator_end;
 
@@ -208,7 +216,8 @@ namespace std
     };
 
     template<unsigned N, typename matcher>
-    auto get(e_regex::match_result<matcher> t) noexcept
+    constexpr __attribute__((always_inline)) auto
+        get(e_regex::match_result<matcher> t) noexcept
     {
         return t.template get<N>();
     }

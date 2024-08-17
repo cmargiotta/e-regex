@@ -27,7 +27,11 @@ namespace e_regex::terminals
                          || (current >= 'a' && current <= 'z')
                          || (current >= '0' && current <= '9')
                          || (current == '_');
-                result.actual_iterator_end++;
+
+                if (result)
+                {
+                    result.actual_iterator_end++;
+                }
 
                 return result;
             }

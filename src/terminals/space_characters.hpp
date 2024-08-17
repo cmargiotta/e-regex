@@ -18,7 +18,8 @@ namespace e_regex::terminals
     {
             static constexpr auto expression = static_string {"\\s"};
 
-            static constexpr auto match_(auto& result) -> auto&
+            static constexpr __attribute__((always_inline)) auto
+                match_(auto& result) -> auto&
             {
                 constexpr std::array matched {
                     '\t', '\n', '\f', '\r', ' '};

@@ -93,35 +93,25 @@ namespace e_regex::nodes
                              typename children::template optimize<>...>;
 
             template<typename... injected_children>
-            static constexpr auto match(auto& result) -> auto&
+            static constexpr __attribute__((always_inline))
+            __attribute__((always_inline)) auto
+                match(auto& result) -> auto&
             {
-                if (result.actual_iterator_end > result.query.end())
-                {
-                    result = false;
-                    return result;
-                }
-
                 for (unsigned i = 0; i < repetitions_max; ++i)
                 {
-                    auto last_result = result;
-                    matcher::template match<injected_children...>(
-                        last_result);
+                    matcher::template match<injected_children...>(result);
 
-                    if (last_result)
-                    {
-                        result = last_result;
-                    }
-                    else
+                    if (!result)
                     {
                         if (i < repetitions_min)
                         {
                             // Failed too early
-                            result.accepted = false;
                             return result;
                         }
 
                         // Failed but repetitions_min was satisfied,
                         // run dfs
+                        result = true;
                         break;
                     }
                 }

@@ -28,7 +28,10 @@ namespace e_regex::terminals
                 const auto& current = *result.actual_iterator_end;
 
                 result = current >= start && current <= end;
-                result.actual_iterator_end++;
+                if (result)
+                {
+                    result.actual_iterator_end++;
+                }
 
                 return result;
             }

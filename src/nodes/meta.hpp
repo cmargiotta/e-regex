@@ -10,6 +10,7 @@ namespace e_regex
         GREEDY,
         LAZY,
         POSSESSIVE,
+        EXACT,
         NONE
     };
 

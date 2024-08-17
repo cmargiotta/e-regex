@@ -38,7 +38,8 @@ namespace e_regex::nodes
                   + sum(group_getter<children>::value...) + 1;
 
             template<typename... injected_children>
-            static constexpr auto match(auto& result) -> auto&
+            static constexpr __attribute__((always_inline)) auto
+                match(auto& result) -> auto&
             {
                 auto begin = result.actual_iterator_end;
 
@@ -51,7 +52,8 @@ namespace e_regex::nodes
                         = literal_string_view {
                             begin, result.actual_iterator_end};
 
-                    dfs<std::tuple<children...>, std::tuple<children...>>(
+                    return dfs<std::tuple<children...>,
+                               std::tuple<children..., injected_children...>>(
                         result);
                 }
 

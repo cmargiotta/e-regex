@@ -103,26 +103,25 @@ namespace e_regex::nodes
                      typename children::template optimize<>...>>;
 
             template<typename... injected_children>
-            static constexpr auto match(auto& result) -> auto&
+            static constexpr __attribute__((always_inline)) auto
+                match(auto& result) -> auto&
             {
+                auto start = result.actual_iterator_end;
+
                 if constexpr (std::is_same_v<matcher, void>)
                 {
                     return dfs<std::tuple<children...>>(result);
                 }
                 else
                 {
-                    for (unsigned i = 0; i < repetitions_min; ++i)
+                    if constexpr (repetitions_min != 0)
                     {
-                        if (result.actual_iterator_end
-                            >= result.query.end())
+                        for (unsigned i = 0; i < repetitions_min; ++i)
                         {
-                            result = false;
-                            return result;
-                        }
-
-                        if (!matcher::match(result))
-                        {
-                            return result;
+                            if (!matcher::match(result))
+                            {
+                                return result;
+                            }
                         }
                     }
 
@@ -131,37 +130,30 @@ namespace e_regex::nodes
                     while (result.actual_iterator_end < result.query.end()
                            && matches < repetitions_max)
                     {
-                        if (result.actual_iterator_end
-                            >= result.query.end())
-                        {
-                            break;
-                        }
-
-                        auto dfs_result = result;
-
                         if constexpr (sizeof...(children) > 0)
                         {
-                            dfs<std::tuple<children...>>(dfs_result);
+                            dfs<std::tuple<children...>>(result);
 
-                            if (dfs_result)
+                            if (result)
                             {
-                                result = dfs_result;
                                 return result;
                             }
                         }
                         else
                         {
-                            dfs<std::tuple<injected_children...>>(
-                                dfs_result);
+                            auto bak = result.actual_iterator_end;
+                            dfs<std::tuple<injected_children...>>(result);
+                            result.actual_iterator_end = bak;
                         }
 
-                        if (!dfs_result)
+                        if (!result)
                         {
                             matcher::match(result);
                             matches++;
 
                             if (!result)
                             {
+                                result.actual_iterator_end = start;
                                 return result;
                             }
                         }

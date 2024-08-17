@@ -84,15 +84,28 @@ namespace e_regex::nodes
     struct invoke_match<std::tuple<injected_children...>>
     {
             template<typename T>
-            static constexpr auto match(auto& res) -> auto&
+            static constexpr __attribute__((always_inline)) auto
+                match(auto& res) -> auto&
             {
                 return T::template match<injected_children...>(res);
             }
     };
 
+    template<typename nodes,
+             typename terminals = std::tuple<>,
+             typename others    = std::tuple<>>
+    struct zipper;
+
+    template<typename node, typename... tail, typename... terminals, typename... others>
+    struct zipper<std::tuple<node, tail...>,
+                  std::tuple<terminals...>,
+                  std::tuple<others...>>
+    {};
+
     template<typename children          = std::tuple<>,
              typename injected_children = std::tuple<>>
-    constexpr auto dfs(auto& match_result) noexcept -> auto&
+    constexpr __attribute__((always_inline)) auto
+        dfs(auto& match_result) noexcept -> auto&
     {
         if constexpr (std::tuple_size_v<children> == 0)
         {
@@ -110,16 +123,13 @@ namespace e_regex::nodes
             }
             else
             {
-                auto bak = match_result.actual_iterator_end;
-
                 if (invoker::template match<typename _children::type>(
                         match_result))
                 {
                     return match_result;
                 }
 
-                match_result.actual_iterator_end = bak;
-                match_result                     = true;
+                match_result = true;
                 return dfs<typename _children::remaining>(match_result);
             }
         }

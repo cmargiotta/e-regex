@@ -14,14 +14,23 @@ namespace e_regex::terminals
     struct exact_matcher<pack_string<identifier, identifiers...>>
         : public terminal_common<
               exact_matcher<pack_string<identifier, identifiers...>>,
-              admitted_set<char, identifier>>
+              admitted_set<char, identifier, identifiers...>>
     {
             static constexpr auto expression
                 = pack_string<identifier, identifiers...>::string;
 
+            static constexpr auto meta
+                = e_regex::meta<admitted_set<char, identifier, identifiers...>> {
+                    .policy_            = e_regex::policy::EXACT,
+                    .minimum_match_size = sizeof...(identifiers) + 1,
+                    .maximum_match_size = sizeof...(identifiers) + 1,
+                };
+
             static constexpr __attribute__((always_inline)) auto
                 match_(auto& result) -> auto&
             {
+                auto start = result.actual_iterator_end;
+
                 for (const auto& c:
                      pack_string<identifier, identifiers...>::string.to_view())
                 {
@@ -30,6 +39,7 @@ namespace e_regex::terminals
 
                     if (!result)
                     {
+                        result.actual_iterator_end = start;
                         return result;
                     }
                 }

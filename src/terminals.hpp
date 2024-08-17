@@ -1,5 +1,5 @@
-#ifndef TERMINALS_HPP
-#define TERMINALS_HPP
+#ifndef E_REGEX_TERMINALS_HPP_
+#define E_REGEX_TERMINALS_HPP_
 
 #include "terminals/alarm.hpp"
 #include "terminals/anchors/anchors.hpp"
@@ -16,4 +16,4 @@
 #include "terminals/tab.hpp"
 #include "terminals/word_characters.hpp"
 
-#endif /* TERMINALS_HPP */
+#endif /* E_REGEX_TERMINALS_HPP_*/

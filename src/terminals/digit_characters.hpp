@@ -2,27 +2,16 @@
 #define E_REGEX_TERMINALS_DIGIT_CHARACTERS_HPP_
 
 #include "common.hpp"
+#include "terminals/range.hpp"
 #include "utilities/admitted_set.hpp"
 
 namespace e_regex::terminals
 {
     template<>
     struct terminal<pack_string<'\\', 'd'>>
-        : public terminal_common<terminal<pack_string<'\\', 'd'>>,
-                                 admitted_set_range_t<char, '0', '9'>>
+        : public range_terminal<pack_string<'0'>, pack_string<'9'>>
     {
             static constexpr auto expression = static_string {"\\d"};
-
-            static constexpr __attribute__((always_inline)) auto
-                match_(auto& result) -> auto&
-            {
-                auto current = result.actual_iterator_end;
-
-                result = (*current >= '0' && *current <= '9');
-                result.actual_iterator_end++;
-
-                return result;
-            }
     };
 
     template<>

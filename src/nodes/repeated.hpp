@@ -47,7 +47,8 @@ namespace e_regex::nodes
                            typename children::template optimize<>...>;
 
             template<typename... injected_children>
-            static constexpr auto match(auto& res) -> auto&
+            static constexpr __attribute__((always_inline)) auto
+                match(auto& res) -> auto&
             {
                 for (unsigned i = 0; i < repetitions; ++i)
                 {

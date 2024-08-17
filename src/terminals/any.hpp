@@ -13,10 +13,15 @@ namespace e_regex::terminals
     {
             static constexpr auto expression = static_string {"."};
 
-            static constexpr auto match_(auto& result) -> auto&
+            static constexpr __attribute__((always_inline)) auto
+                match_(auto& result) -> auto&
             {
                 result = *result.actual_iterator_end != '\n';
-                result.actual_iterator_end++;
+
+                if (result)
+                {
+                    result.actual_iterator_end++;
+                }
 
                 return result;
             }

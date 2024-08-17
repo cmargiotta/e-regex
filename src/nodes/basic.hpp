@@ -64,17 +64,25 @@ namespace e_regex::nodes
                          typename children::template optimize<>...>;
 
             template<typename... injected_children>
-            static constexpr auto match(auto& res) -> auto&
+            static constexpr __attribute__((always_inline)) auto
+                match(auto& res) -> auto&
             {
+                auto begin = res.actual_iterator_end;
+
                 matcher::match(res);
 
-                if (!res)
+                if (res)
                 {
-                    return res;
+                    dfs<std::tuple<children...>,
+                        std::tuple<injected_children...>>(res);
+
+                    if (!res)
+                    {
+                        res.actual_iterator_end = begin;
+                    }
                 }
 
-                return dfs<std::tuple<children...>,
-                           std::tuple<injected_children...>>(res);
+                return res;
             }
     };
 
@@ -100,7 +108,8 @@ namespace e_regex::nodes
                 = simple<void, typename children::template optimize<>...>;
 
             template<typename... injected_children>
-            static constexpr auto match(auto& res) -> auto&
+            static constexpr __attribute__((always_inline)) auto
+                match(auto& res) -> auto&
             {
                 return dfs<std::tuple<children...>,
                            std::tuple<injected_children...>>(res);
@@ -127,7 +136,8 @@ namespace e_regex::nodes
                 typename child::template optimize<injected_children...>;
 
             template<typename... injected_children>
-            static constexpr auto match(auto& res) -> auto&
+            static constexpr __attribute__((always_inline)) auto
+                match(auto& res) -> auto&
             {
                 return child::template match<injected_children...>(res);
             }
@@ -152,7 +162,8 @@ namespace e_regex::nodes
                 typename matcher::template optimize<injected_children...>;
 
             template<typename... injected_children>
-            static constexpr auto match(auto& res) -> auto&
+            static constexpr __attribute__((always_inline)) auto
+                match(auto& res) -> auto&
             {
                 return matcher::match(res);
             }

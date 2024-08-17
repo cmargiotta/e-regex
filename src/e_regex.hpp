@@ -36,17 +36,20 @@ namespace e_regex
             using ast = typename __private::optimizer<
                 typename tree_builder<build_pack_string_t<expression>>::tree>::type;
 
-            static constexpr auto match(literal_string_view<> data)
+            static constexpr __attribute__((always_inline)) auto
+                match(literal_string_view<> data)
             {
                 return match_result<ast> {data};
             }
 
-            constexpr auto operator()(literal_string_view<> data) const
+            constexpr __attribute__((always_inline)) auto
+                operator()(literal_string_view<> data) const
             {
                 return match(data);
             }
 
-            static constexpr auto get_expression()
+            static __attribute__((always_inline)) constexpr auto
+                get_expression()
             {
                 return ast::expression.to_view();
             }

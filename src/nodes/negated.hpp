@@ -29,7 +29,8 @@ namespace e_regex::nodes
                 = negated_node<typename matcher::template optimize<>>;
 
             template<typename... injected_children>
-            static constexpr auto match(auto& result) -> auto&
+            static constexpr __attribute__((always_inline)) auto
+                match(auto& result) -> auto&
             {
                 if (result.actual_iterator_end >= result.query.end())
                 {
@@ -39,6 +40,11 @@ namespace e_regex::nodes
 
                 matcher::match(result);
                 result.accepted = !result.accepted;
+
+                if (result)
+                {
+                    result.actual_iterator_end++;
+                }
 
                 return result;
             }
