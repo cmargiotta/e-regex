@@ -173,3 +173,7 @@ starts a 1:1 replica of a working environment for this library with two simple a
 build     - Automatically configure build folder and run build
 run_tests - Run tests
 ```
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
