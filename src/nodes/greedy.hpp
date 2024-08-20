@@ -23,12 +23,15 @@ namespace e_regex::nodes
              typename... children>
     struct greedy : public base<matcher, children...>
     {
+            using self_admission_set =
+                typename decltype(matcher::meta)::admission_set;
+
             // If matcher is optional (aka repetitions_min==0),
             // admission set must include children too
             using admission_set = std::conditional_t<
                 repetitions_min == 0,
                 typename extract_admission_set<matcher, children...>::type,
-                typename decltype(matcher::meta)::admission_set>;
+                self_admission_set>;
 
             static constexpr auto meta = e_regex::meta<admission_set> {
                 .policy_ = e_regex::policy::GREEDY,
@@ -101,7 +104,7 @@ namespace e_regex::nodes
             template<typename... injected_children>
             using optimize = std::conditional_t<
                 admitted_sets_intersection_t<
-                    admission_set,
+                    self_admission_set,
                     typename extract_admission_set<children..., injected_children...>::type>::empty,
                 possessive<typename matcher::template optimize<>,
                            repetitions_min,
