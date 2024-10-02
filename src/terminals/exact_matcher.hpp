@@ -29,19 +29,20 @@ namespace e_regex::terminals
             static constexpr __attribute__((always_inline)) auto
                 match_(auto& result) -> auto&
             {
-                auto start = result.actual_iterator_end;
+                const auto start = result.actual_iterator_end;
+                result.accepted  = true;
 
-                for (const auto& c:
+                for (const auto c:
                      pack_string<identifier, identifiers...>::string.to_view())
                 {
-                    result = c == *result.actual_iterator_end;
-                    result.actual_iterator_end++;
-
-                    if (!result)
+                    if (c != *result.actual_iterator_end)
                     {
                         result.actual_iterator_end = start;
+                        result.accepted            = false;
                         return result;
                     }
+
+                    result.actual_iterator_end++;
                 }
 
                 return result;

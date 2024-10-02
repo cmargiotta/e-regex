@@ -14,6 +14,12 @@ namespace e_regex
             static constexpr auto empty = sizeof...(chars_) == 0;
             static constexpr std::array<Char, sizeof...(chars_)> chars {
                 chars_...};
+
+            static constexpr auto __attribute__((always_inline))
+            can_admit(Char c) -> bool
+            {
+                return (... || (chars_ == c));
+            }
     };
 
     // Generate an admitted_set from a range

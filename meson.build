@@ -2,7 +2,7 @@ project('e-regex', 'cpp', default_options: ['warning_level=3', 'cpp_args=-std=c+
 
 if get_option('buildtype') == 'debug'
   message('Building in debug mode!')
-  add_project_arguments('-Og', '-g3',  language : 'cpp')
+  add_project_arguments('-O0', '-g3',  language : 'cpp')
 endif
 
 if get_option('buildtype') == 'custom'

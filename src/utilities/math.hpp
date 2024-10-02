@@ -15,6 +15,11 @@ namespace e_regex
         return (n + ...);
     }
 
+    consteval auto min()
+    {
+        return 0;
+    }
+
     consteval auto min(auto n)
     {
         return n;
@@ -23,6 +28,11 @@ namespace e_regex
     consteval auto min(auto n1, auto n2, auto... tail)
     {
         return min(std::min(n1, n2), tail...);
+    }
+
+    consteval auto max()
+    {
+        return 0;
     }
 
     consteval auto max(auto n)

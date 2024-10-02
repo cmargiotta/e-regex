@@ -26,11 +26,13 @@ namespace e_regex::nodes
             static constexpr auto meta = e_regex::meta<admission_set> {
                 .policy_ = e_regex::policy::POSSESSIVE,
                 .minimum_match_size
-                = matcher::meta.minimum_match_size * repetitions_min,
+                = matcher::meta.minimum_match_size * repetitions_min
+                  + min(children::meta.minimum_match_size...),
                 .maximum_match_size
                 = repetitions_max == std::numeric_limits<unsigned>::max()
                       ? std::numeric_limits<unsigned>::max()
-                      : matcher::meta.maximum_match_size * repetitions_max,
+                      : matcher::meta.maximum_match_size * repetitions_max
+                            + max(children::meta.maximum_match_size...),
             };
 
             static constexpr auto expression = []() {
@@ -93,8 +95,7 @@ namespace e_regex::nodes
                              typename children::template optimize<>...>;
 
             template<typename... injected_children>
-            static constexpr __attribute__((always_inline))
-            __attribute__((always_inline)) auto
+            static constexpr __attribute__((always_inline)) auto
                 match(auto& result) -> auto&
             {
                 for (unsigned i = 0; i < repetitions_max; ++i)
@@ -111,7 +112,7 @@ namespace e_regex::nodes
 
                         // Failed but repetitions_min was satisfied,
                         // run dfs
-                        result = true;
+                        result.accepted = true;
                         break;
                     }
                 }

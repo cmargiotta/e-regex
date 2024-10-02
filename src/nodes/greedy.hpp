@@ -36,11 +36,13 @@ namespace e_regex::nodes
             static constexpr auto meta = e_regex::meta<admission_set> {
                 .policy_ = e_regex::policy::GREEDY,
                 .minimum_match_size
-                = matcher::meta.minimum_match_size * repetitions_min,
+                = matcher::meta.minimum_match_size * repetitions_min
+                  + min(children::meta.minimum_match_size...),
                 .maximum_match_size
                 = repetitions_max == std::numeric_limits<unsigned>::max()
                       ? std::numeric_limits<unsigned>::max()
-                      : matcher::meta.maximum_match_size * repetitions_max,
+                      : matcher::meta.maximum_match_size * repetitions_max
+                            + max(children::meta.maximum_match_size...),
             };
 
             static constexpr unsigned groups
@@ -150,7 +152,9 @@ namespace e_regex::nodes
                     // Optional node with a terminal matcher
                     matcher::match(result);
 
-                    if (!backtrack<injected_children...>(result))
+                    if (!backtrack<injected_children...>(result)
+                        && result.actual_iterator_end
+                               > result.actual_iterator_start)
                     {
                         result.actual_iterator_end
                             -= matcher::meta.minimum_match_size;

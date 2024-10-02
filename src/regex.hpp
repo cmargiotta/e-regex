@@ -56,7 +56,8 @@ namespace e_regex
             }
 
             template<typename other>
-            static constexpr auto is_independent() -> bool
+            static constexpr __attribute__((always_inline)) auto
+                is_independent() -> bool
             {
                 using intersection = admitted_sets_intersection_t<
                     typename nodes::extract_admission_set<ast>::type,
@@ -66,7 +67,8 @@ namespace e_regex
             }
 
             template<typename T>
-            static constexpr auto is_independent(T /*other*/) -> bool
+            static constexpr __attribute__((always_inline)) auto
+                is_independent(T /*other*/) -> bool
             {
                 return is_independent<T>();
             }

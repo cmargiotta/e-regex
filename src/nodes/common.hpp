@@ -129,7 +129,7 @@ namespace e_regex::nodes
                     return match_result;
                 }
 
-                match_result = true;
+                match_result.accepted = true;
                 return dfs<typename _children::remaining>(match_result);
             }
         }

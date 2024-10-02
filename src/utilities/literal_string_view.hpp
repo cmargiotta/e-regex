@@ -14,20 +14,23 @@ namespace e_regex
             iterator begin_;
             iterator end_;
 
-            constexpr literal_string_view()
+            constexpr __attribute__((always_inline)) literal_string_view()
                 : begin_ {nullptr}, end_ {nullptr}
             {}
 
-            constexpr literal_string_view(iterator begin_, iterator end_)
+            constexpr __attribute__((always_inline))
+            literal_string_view(iterator begin_, iterator end_)
                 : begin_ {begin_}, end_ {end_}
             {}
 
             template<unsigned size>
-            constexpr literal_string_view(const char (&data)[size]) noexcept
+            constexpr __attribute__((always_inline))
+            literal_string_view(const char (&data)[size]) noexcept
                 : begin_ {std::begin(data)}, end_ {std::end(data) - 1}
             {}
 
-            constexpr literal_string_view(std::string_view data)
+            constexpr __attribute__((always_inline))
+            literal_string_view(std::string_view data)
                 : begin_ {data.begin()}, end_ {data.end()}
             {}
 
@@ -41,37 +44,39 @@ namespace e_regex
                 -> literal_string_view&               = default;
             constexpr ~literal_string_view() noexcept = default;
 
-            constexpr auto begin() noexcept
+            constexpr auto __attribute__((always_inline)) begin() noexcept
             {
                 return begin_;
             }
 
-            constexpr auto end() noexcept
+            constexpr auto __attribute__((always_inline)) end() noexcept
             {
                 return end_;
             }
 
-            constexpr auto begin() const noexcept
+            constexpr auto __attribute__((always_inline)) begin() const noexcept
             {
                 return begin_;
             }
 
-            constexpr auto end() const noexcept
+            constexpr auto __attribute__((always_inline)) end() const noexcept
             {
                 return end_;
             }
 
-            constexpr auto size() const noexcept
+            constexpr auto __attribute__((always_inline)) size() const noexcept
             {
                 return end_ - begin_;
             }
 
-            constexpr operator std::string_view() const noexcept
+            constexpr __attribute__((always_inline))
+            operator std::string_view() const noexcept
             {
                 return std::string_view {begin(), end()};
             }
 
-            constexpr bool operator==(literal_string_view other) const
+            constexpr __attribute__((always_inline)) bool
+                operator==(literal_string_view other) const
             {
                 if (begin() == other.begin() && end() == other.end())
                 {
@@ -94,7 +99,7 @@ namespace e_regex
                 return true;
             }
 
-            constexpr auto empty() const noexcept
+            constexpr __attribute__((always_inline)) auto empty() const noexcept
             {
                 return size() == 0;
             }

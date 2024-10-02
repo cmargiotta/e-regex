@@ -8,7 +8,7 @@
 namespace e_regex::nodes
 {
     template<typename... children>
-    constexpr auto get_children_expression()
+    constexpr __attribute__((always_inline)) auto get_children_expression()
     {
         if constexpr (sizeof...(children) == 0)
         {

@@ -34,7 +34,7 @@ namespace e_regex::nodes
             {
                 if (result.actual_iterator_end >= result.query.end())
                 {
-                    result = false;
+                    result.accepted = false;
                     return result;
                 }
 

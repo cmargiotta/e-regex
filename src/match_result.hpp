@@ -19,14 +19,16 @@ namespace e_regex
                 = {};
             bool accepted = true;
 
-            constexpr auto operator=(bool accepted) noexcept -> match_result_data&
+            constexpr auto __attribute__((always_inline))
+            operator=(bool accepted) noexcept -> match_result_data&
             {
                 this->accepted = accepted;
 
                 return *this;
             }
 
-            constexpr operator bool() const noexcept
+            constexpr
+                __attribute__((always_inline)) operator bool() const noexcept
             {
                 return accepted;
             }
@@ -174,22 +176,20 @@ namespace e_regex
              */
             constexpr __attribute__((always_inline)) auto next() noexcept
             {
+                data.match_groups = {};
                 data.actual_iterator_start = data.actual_iterator_end;
 
                 while (data.actual_iterator_start < data.query.end())
                 {
-                    data.match_groups = {};
-                    data.actual_iterator_end = data.actual_iterator_start;
-                    data.accepted = true;
-                    auto result   = matcher::match(data);
+                    matcher::match(data);
 
-                    if (result)
+                    if (data.accepted)
                     {
-                        data = result;
                         return true;
                     }
 
-                    data.actual_iterator_start++;
+                    data.actual_iterator_start
+                        = ++data.actual_iterator_end;
                 }
 
                 data.accepted = false;

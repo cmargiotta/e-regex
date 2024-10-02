@@ -2,6 +2,7 @@
 #define E_REGEX_NODES_BASIC_HPP_
 
 #include <concepts>
+#include <tuple>
 #include <type_traits>
 
 #include "common.hpp"
@@ -73,10 +74,8 @@ namespace e_regex::nodes
 
                 if (res)
                 {
-                    dfs<std::tuple<children...>,
-                        std::tuple<injected_children...>>(res);
-
-                    if (!res)
+                    if (!dfs<std::tuple<children...>,
+                             std::tuple<injected_children...>>(res))
                     {
                         res.actual_iterator_end = begin;
                     }
@@ -89,11 +88,16 @@ namespace e_regex::nodes
     template<typename... children>
     struct simple<void, children...> : public base<void, children...>
     {
+            using child
+                = std::tuple_element_t<0, std::tuple<children...>>;
+
             static constexpr auto expression
                 = get_children_expression<children...>();
 
-            using admission_set =
-                typename extract_admission_set<children...>::type;
+            using admission_set = std::conditional_t<
+                child::meta.minimum_match_size == 0,
+                typename extract_admission_set<children...>::type,
+                typename extract_admission_set<child>::type>;
 
             static constexpr auto meta = e_regex::meta<admission_set> {
                 .policy_ = policy::NONE,
