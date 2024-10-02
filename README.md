@@ -176,7 +176,7 @@ run_tests - Run tests
 
 ## Performance
 
-Benchmarks from the excellent (work)[https://github.com/mariomka/regex-benchmark] of mariomka have been ran on a Ryzen 7 7700X at 5.57GHz; the results are:
+Benchmarks from the excellent [work](https://github.com/mariomka/regex-benchmark) of mariomka have been ran on a Ryzen 7 7700X at 5.57GHz; the results are:
 
 Language | Email(ms) | URI(ms) | IP(ms) | Total(ms)
 --- | ---: | ---: | ---: | ---:
