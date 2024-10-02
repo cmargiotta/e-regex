@@ -174,6 +174,34 @@ build     - Automatically configure build folder and run build
 run_tests - Run tests
 ```
 
+## Performance
+
+Benchmarks from the excellent (work)[https://github.com/mariomka/regex-benchmark] of mariomka have been ran on a Ryzen 7 7700X at 5.57GHz; the results are:
+
+Language | Email(ms) | URI(ms) | IP(ms) | Total(ms)
+--- | ---: | ---: | ---: | ---:
+**Nim Regex** | 0.51 | 16.48 | 3.83 | 20.83
+**C++ e-regex** | 11.79 | 10.87 | 4.13 | 26.80
+**PHP** | 11.63 | 12.52 | 2.72 | 26.88
+**Rust** | 16.32 | 14.22 | 2.07 | 32.61
+**Crystal** | 25.21 | 24.19 | 6.21 | 55.61
+**C++ Boost** | 26.08 | 26.45 | 10.37 | 62.90
+**Julia** | 53.88 | 46.97 | 2.66 | 103.50
+**Perl** | 58.59 | 39.53 | 13.02 | 111.14
+**Dart** | 48.69 | 51.10 | 42.23 | 142.02
+**C PCRE2** | 77.36 | 70.20 | 8.30 | 155.85
+**D dmd** | 118.73 | 122.59 | 3.71 | 245.04
+**D ldc** | 126.13 | 122.90 | 3.48 | 252.52
+**Python PyPy2** | 85.05 | 79.99 | 114.31 | 279.35
+**Ruby** | 154.53 | 135.38 | 29.70 | 319.62
+**Kotlin** | 92.76 | 115.61 | 137.44 | 345.81
+**Python PyPy3** | 139.41 | 126.26 | 119.58 | 385.24
+**Dart Native** | 195.81 | 229.57 | 4.91 | 430.29
+**Java** | 157.80 | 143.49 | 166.36 | 467.65
+**Go** | 153.04 | 150.41 | 243.94 | 547.39
+**C++ STL** | 233.24 | 190.29 | 154.17 | 577.70
+**C# Mono** | 1527.89 | 1282.36 | 74.80 | 2885.05
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
