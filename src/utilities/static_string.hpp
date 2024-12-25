@@ -8,6 +8,7 @@
 #include <type_traits>
 
 #include "literal_string_view.hpp"
+#include "macros.hpp"
 
 namespace e_regex
 {
@@ -42,12 +43,13 @@ namespace e_regex
 
             constexpr static_string() noexcept = default;
 
-            constexpr operator literal_string_view<Char_Type>() const noexcept
+            constexpr EREGEX_ALWAYS_INLINE
+                operator literal_string_view<Char_Type>() const noexcept
             {
                 return to_view();
             }
 
-            constexpr auto to_view() const noexcept
+            constexpr EREGEX_ALWAYS_INLINE auto to_view() const noexcept
             {
                 if constexpr (size > 0)
                 {
@@ -59,13 +61,13 @@ namespace e_regex
                 }
             }
 
-            [[nodiscard]] constexpr bool empty() const noexcept
+            constexpr EREGEX_ALWAYS_INLINE bool empty() const noexcept
             {
                 return size == 0;
             }
 
             template<unsigned begin, unsigned end = size>
-            constexpr auto substring() const noexcept
+            constexpr EREGEX_ALWAYS_INLINE auto substring() const noexcept
             {
                 if constexpr (size > 0)
                 {
@@ -84,8 +86,8 @@ namespace e_regex
     };
 
     template<auto S1, auto S2, typename C>
-    constexpr auto operator+(static_string<S1, C> first,
-                             static_string<S2, C> other)
+    constexpr EREGEX_ALWAYS_INLINE auto
+        operator+(static_string<S1, C> first, static_string<S2, C> other)
     {
         if constexpr (first.size == 0)
         {
@@ -111,27 +113,29 @@ namespace e_regex
     }
 
     template<auto S1, auto S2, typename C>
-    constexpr auto operator+(const C (&first)[S1],
-                             static_string<S2, C> other)
+    constexpr EREGEX_ALWAYS_INLINE auto
+        operator+(const C (&first)[S1], static_string<S2, C> other)
     {
         return static_string {first} + other;
     }
 
     template<auto S1, auto S2, typename C>
-    constexpr auto operator+(static_string<S1, C> first,
-                             const C (&other)[S2])
+    constexpr EREGEX_ALWAYS_INLINE auto
+        operator+(static_string<S1, C> first, const C (&other)[S2])
     {
         return first + static_string {other};
     }
 
     template<auto S2, typename C>
-    constexpr auto operator+(C first, static_string<S2, C> other)
+    constexpr EREGEX_ALWAYS_INLINE auto
+        operator+(C first, static_string<S2, C> other)
     {
         return static_string {first} + other;
     }
 
     template<auto S1, typename C>
-    constexpr auto operator+(static_string<S1, C> first, C other)
+    constexpr EREGEX_ALWAYS_INLINE auto
+        operator+(static_string<S1, C> first, C other)
     {
         return first + static_string {other};
     }
@@ -144,5 +148,6 @@ namespace e_regex
     static_string(const C (&data)[S]) -> static_string<S - 1, C>;
 
 } // namespace e_regex
+
 
 #endif /* E_REGEX_UTILITIES_STATIC_STRING_HPP_*/

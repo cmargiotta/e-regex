@@ -6,6 +6,7 @@
 
 #include "common.hpp"
 #include "utilities/admitted_set.hpp"
+#include "utilities/macros.hpp"
 
 namespace e_regex::terminals
 {
@@ -18,7 +19,7 @@ namespace e_regex::terminals
     {
             static constexpr auto expression = static_string {"\\s"};
 
-            static constexpr __attribute__((always_inline)) auto
+            static constexpr EREGEX_ALWAYS_INLINE auto
                 match_(auto& result) -> auto&
             {
                 constexpr std::array matched {
@@ -43,5 +44,6 @@ namespace e_regex::terminals
             static constexpr auto expression = static_string {"\\S"};
     };
 } // namespace e_regex::terminals
+
 
 #endif /* E_REGEX_TERMINALS_SPACE_CHARACTERS_HPP_*/

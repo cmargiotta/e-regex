@@ -7,6 +7,7 @@
 
 #include "utilities/admitted_set.hpp"
 #include "utilities/first_type.hpp"
+#include "utilities/macros.hpp"
 #include "utilities/math.hpp"
 
 namespace e_regex::nodes
@@ -84,8 +85,7 @@ namespace e_regex::nodes
     struct invoke_match<std::tuple<injected_children...>>
     {
             template<typename T>
-            static constexpr __attribute__((always_inline)) auto
-                match(auto& res) -> auto&
+            static constexpr EREGEX_ALWAYS_INLINE auto match(auto& res) -> auto&
             {
                 return T::template match<injected_children...>(res);
             }
@@ -104,7 +104,7 @@ namespace e_regex::nodes
 
     template<typename children          = std::tuple<>,
              typename injected_children = std::tuple<>>
-    constexpr __attribute__((always_inline)) auto
+    constexpr EREGEX_ALWAYS_INLINE auto
         dfs(auto& match_result) noexcept -> auto&
     {
         if constexpr (std::tuple_size_v<children> == 0)
@@ -135,5 +135,6 @@ namespace e_regex::nodes
         }
     }
 } // namespace e_regex::nodes
+
 
 #endif /* E_REGEX_NODES_COMMON_HPP_*/

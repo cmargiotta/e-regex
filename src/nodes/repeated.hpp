@@ -5,6 +5,7 @@
 
 #include "basic.hpp"
 #include "meta.hpp"
+#include "utilities/macros.hpp"
 #include "utilities/number_to_pack_string.hpp"
 
 namespace e_regex::nodes
@@ -47,8 +48,7 @@ namespace e_regex::nodes
                            typename children::template optimize<>...>;
 
             template<typename... injected_children>
-            static constexpr __attribute__((always_inline)) auto
-                match(auto& res) -> auto&
+            static constexpr EREGEX_ALWAYS_INLINE auto match(auto& res) -> auto&
             {
                 for (unsigned i = 0; i < repetitions; ++i)
                 {
@@ -62,5 +62,6 @@ namespace e_regex::nodes
             }
     };
 } // namespace e_regex::nodes
+
 
 #endif /* E_REGEX_NODES_REPEATED_HPP_*/

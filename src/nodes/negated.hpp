@@ -6,6 +6,7 @@
 #include "basic.hpp"
 #include "common.hpp"
 #include "nodes/get_expression.hpp"
+#include "utilities/macros.hpp"
 
 namespace e_regex::nodes
 {
@@ -29,7 +30,7 @@ namespace e_regex::nodes
                 = negated_node<typename matcher::template optimize<>>;
 
             template<typename... injected_children>
-            static constexpr __attribute__((always_inline)) auto
+            static constexpr EREGEX_ALWAYS_INLINE auto
                 match(auto& result) -> auto&
             {
                 if (result.actual_iterator_end >= result.query.end())
@@ -52,5 +53,6 @@ namespace e_regex::nodes
 
     // TODO missing get_expression
 } // namespace e_regex::nodes
+
 
 #endif /* E_REGEX_NODES_NEGATED_HPP_*/

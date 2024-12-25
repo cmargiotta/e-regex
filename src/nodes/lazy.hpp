@@ -7,6 +7,7 @@
 #include "basic.hpp"
 #include "meta.hpp"
 #include "nodes/possessive.hpp"
+#include "utilities/macros.hpp"
 #include "utilities/number_to_pack_string.hpp"
 
 namespace e_regex::nodes
@@ -105,7 +106,7 @@ namespace e_regex::nodes
                      typename children::template optimize<>...>>;
 
             template<typename... injected_children>
-            static constexpr __attribute__((always_inline)) auto
+            static constexpr EREGEX_ALWAYS_INLINE auto
                 match(auto& result) -> auto&
             {
                 auto start = result.actual_iterator_end;
@@ -170,5 +171,6 @@ namespace e_regex::nodes
             }
     };
 } // namespace e_regex::nodes
+
 
 #endif /* E_REGEX_NODES_LAZY_HPP_*/

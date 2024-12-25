@@ -10,6 +10,7 @@
 #include "meta.hpp"
 #include "terminals.hpp"
 #include "utilities/admitted_set.hpp"
+#include "utilities/macros.hpp"
 #include "utilities/math.hpp"
 #include "utilities/static_string.hpp"
 
@@ -65,8 +66,7 @@ namespace e_regex::nodes
                          typename children::template optimize<>...>;
 
             template<typename... injected_children>
-            static constexpr __attribute__((always_inline)) auto
-                match(auto& res) -> auto&
+            static constexpr EREGEX_ALWAYS_INLINE auto match(auto& res) -> auto&
             {
                 auto begin = res.actual_iterator_end;
 
@@ -112,8 +112,7 @@ namespace e_regex::nodes
                 = simple<void, typename children::template optimize<>...>;
 
             template<typename... injected_children>
-            static constexpr __attribute__((always_inline)) auto
-                match(auto& res) -> auto&
+            static constexpr EREGEX_ALWAYS_INLINE auto match(auto& res) -> auto&
             {
                 return dfs<std::tuple<children...>,
                            std::tuple<injected_children...>>(res);
@@ -140,8 +139,7 @@ namespace e_regex::nodes
                 typename child::template optimize<injected_children...>;
 
             template<typename... injected_children>
-            static constexpr __attribute__((always_inline)) auto
-                match(auto& res) -> auto&
+            static constexpr EREGEX_ALWAYS_INLINE auto match(auto& res) -> auto&
             {
                 return child::template match<injected_children...>(res);
             }
@@ -166,13 +164,13 @@ namespace e_regex::nodes
                 typename matcher::template optimize<injected_children...>;
 
             template<typename... injected_children>
-            static constexpr __attribute__((always_inline)) auto
-                match(auto& res) -> auto&
+            static constexpr EREGEX_ALWAYS_INLINE auto match(auto& res) -> auto&
             {
                 return matcher::match(res);
             }
     };
 
 } // namespace e_regex::nodes
+
 
 #endif /* E_REGEX_NODES_BASIC_HPP_*/

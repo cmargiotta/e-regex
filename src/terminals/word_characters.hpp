@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "utilities/admitted_set.hpp"
+#include "utilities/macros.hpp"
 
 namespace e_regex::terminals
 {
@@ -18,7 +19,7 @@ namespace e_regex::terminals
     {
             static constexpr auto expression = static_string {"\\w"};
 
-            static constexpr __attribute__((always_inline)) auto
+            static constexpr EREGEX_ALWAYS_INLINE auto
                 match_(auto& result) -> auto&
             {
                 const auto& current = *result.actual_iterator_end;
@@ -44,5 +45,6 @@ namespace e_regex::terminals
             static constexpr auto expression = static_string {"\\W"};
     };
 } // namespace e_regex::terminals
+
 
 #endif /* E_REGEX_TERMINALS_WORD_CHARACTERS_HPP_*/

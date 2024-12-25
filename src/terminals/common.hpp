@@ -5,6 +5,7 @@
 
 #include "nodes/meta.hpp"
 #include "utilities/admitted_set.hpp"
+#include "utilities/macros.hpp"
 #include "utilities/static_string.hpp"
 
 namespace e_regex::terminals
@@ -23,7 +24,7 @@ namespace e_regex::terminals
 
             // Template used only for compatibility with nodes
             template<typename... injected_children>
-            static constexpr __attribute__((always_inline)) auto
+            static constexpr EREGEX_ALWAYS_INLINE auto
                 match(auto& result) -> auto&
             {
                 if (result.actual_iterator_end >= result.query.end())
@@ -58,5 +59,6 @@ namespace e_regex::terminals
     template<typename... identifiers>
     struct terminal;
 } // namespace e_regex::terminals
+
 
 #endif /* E_REGEX_TERMINALS_COMMON_HPP_*/

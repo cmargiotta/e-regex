@@ -3,12 +3,13 @@
 
 #include <tuple>
 
+#include "utilities/macros.hpp"
 #include "utilities/pack_string.hpp"
 
 namespace e_regex::nodes
 {
     template<typename... children>
-    constexpr __attribute__((always_inline)) auto get_children_expression()
+    constexpr EREGEX_ALWAYS_INLINE auto get_children_expression()
     {
         if constexpr (sizeof...(children) == 0)
         {
@@ -26,5 +27,6 @@ namespace e_regex::nodes
         }
     }
 } // namespace e_regex::nodes
+
 
 #endif /* E_REGEX_NODES_GET_EXPRESSION_HPP_*/

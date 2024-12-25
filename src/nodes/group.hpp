@@ -6,6 +6,7 @@
 #include "basic.hpp"
 #include "common.hpp"
 #include "meta.hpp"
+#include "utilities/macros.hpp"
 #include "utilities/math.hpp"
 
 namespace e_regex::nodes
@@ -38,7 +39,7 @@ namespace e_regex::nodes
                   + sum(group_getter<children>::value...) + 1;
 
             template<typename... injected_children>
-            static constexpr __attribute__((always_inline)) auto
+            static constexpr EREGEX_ALWAYS_INLINE auto
                 match(auto& result) -> auto&
             {
                 auto begin = result.actual_iterator_end;
@@ -61,5 +62,6 @@ namespace e_regex::nodes
             }
     };
 } // namespace e_regex::nodes
+
 
 #endif /* E_REGEX_NODES_GROUP_HPP_*/

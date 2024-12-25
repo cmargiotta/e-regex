@@ -3,6 +3,7 @@
 
 #include "nodes/meta.hpp"
 #include "terminals/common.hpp"
+#include "utilities/macros.hpp"
 
 namespace e_regex::terminals::anchors
 {
@@ -21,7 +22,7 @@ namespace e_regex::terminals::anchors
             using optimize = end;
 
             template<typename... injected_children>
-            static constexpr __attribute__((always_inline)) auto
+            static constexpr EREGEX_ALWAYS_INLINE auto
                 match(auto& result) -> auto&
             {
                 if (result.actual_iterator_end > result.query.end())
@@ -43,5 +44,6 @@ namespace e_regex::terminals::anchors
             }
     };
 } // namespace e_regex::terminals::anchors
+
 
 #endif /* E_REGEX_TERMINALS_ANCHORS_END_HPP_*/

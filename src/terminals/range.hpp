@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "utilities/admitted_set.hpp"
+#include "utilities/macros.hpp"
 
 namespace e_regex::terminals
 {
@@ -19,7 +20,7 @@ namespace e_regex::terminals
                 = pack_string<'[', start, '-', end, ']'>::string;
 
             template<typename... injected_children>
-            static constexpr __attribute__((always_inline)) auto
+            static constexpr EREGEX_ALWAYS_INLINE auto
                 match_(auto& result) -> auto&
             {
                 static_assert(end >= start,
@@ -37,5 +38,6 @@ namespace e_regex::terminals
             }
     };
 } // namespace e_regex::terminals
+
 
 #endif /* E_REGEX_TERMINALS_RANGE_HPP_*/

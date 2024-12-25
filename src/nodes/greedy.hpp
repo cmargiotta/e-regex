@@ -12,6 +12,7 @@
 #include "possessive.hpp"
 #include "utilities/admitted_set.hpp"
 #include "utilities/literal_string_view.hpp"
+#include "utilities/macros.hpp"
 #include "utilities/math.hpp"
 #include "utilities/number_to_pack_string.hpp"
 
@@ -118,8 +119,8 @@ namespace e_regex::nodes
                        typename children::template optimize<>...>>;
 
             template<typename... injected_children>
-            static constexpr auto __attribute__((always_inline))
-            backtrack(auto& result) -> auto&
+            static constexpr EREGEX_ALWAYS_INLINE auto
+                backtrack(auto& result) -> auto&
             {
                 if constexpr (sizeof...(children) > 0)
                 {
@@ -137,7 +138,7 @@ namespace e_regex::nodes
             }
 
             template<typename... injected_children>
-            static constexpr __attribute__((always_inline)) auto
+            static constexpr EREGEX_ALWAYS_INLINE auto
                 match(auto& result) -> auto&
             {
                 if constexpr (std::is_same_v<matcher, void>)
@@ -231,5 +232,6 @@ namespace e_regex::nodes
             }
     };
 } // namespace e_regex::nodes
+
 
 #endif /* E_REGEX_NODES_GREEDY_HPP_*/

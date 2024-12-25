@@ -6,6 +6,7 @@
 
 #include "nodes/common.hpp"
 #include "utilities/literal_string_view.hpp"
+#include "utilities/macros.hpp"
 
 namespace e_regex
 {
@@ -19,16 +20,15 @@ namespace e_regex
                 = {};
             bool accepted = true;
 
-            constexpr auto __attribute__((always_inline))
-            operator=(bool accepted) noexcept -> match_result_data&
+            constexpr EREGEX_ALWAYS_INLINE auto
+                operator=(bool accepted) noexcept -> match_result_data&
             {
                 this->accepted = accepted;
 
                 return *this;
             }
 
-            constexpr
-                __attribute__((always_inline)) operator bool() const noexcept
+            constexpr EREGEX_ALWAYS_INLINE operator bool() const noexcept
             {
                 return accepted;
             }
@@ -176,7 +176,7 @@ namespace e_regex
              */
             constexpr __attribute__((always_inline)) auto next() noexcept
             {
-                data.match_groups = {};
+                data.match_groups          = {};
                 data.actual_iterator_start = data.actual_iterator_end;
 
                 while (data.actual_iterator_start < data.query.end())
@@ -223,5 +223,6 @@ namespace std
     }
 
 } // namespace std
+
 
 #endif /* E_REGEX_MATCH_RESULT_HPP_*/

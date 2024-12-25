@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "utilities/admitted_set.hpp"
+#include "utilities/macros.hpp"
 #include "utilities/static_string.hpp"
 
 namespace e_regex::terminals
@@ -26,7 +27,7 @@ namespace e_regex::terminals
                     .maximum_match_size = sizeof...(identifiers) + 1,
                 };
 
-            static constexpr __attribute__((always_inline)) auto
+            static constexpr EREGEX_ALWAYS_INLINE auto
                 match_(auto& result) -> auto&
             {
                 const auto start = result.actual_iterator_end;
@@ -55,5 +56,6 @@ namespace e_regex::terminals
             static constexpr bool exact = true;
     };
 } // namespace e_regex::terminals
+
 
 #endif /* E_REGEX_TERMINALS_EXACT_MATCHER_HPP_*/
