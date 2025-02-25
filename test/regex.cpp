@@ -85,6 +85,20 @@ TEST_CASE("Round brackets")
     REQUIRE(matcher("aabab").to_view() == "aabab");
 }
 
+TEST_CASE("Round brackets with accumulator")
+{
+    constexpr e_regex::regex<"\\s*(ab)+"> matcher;
+
+    REQUIRE(matcher.groups == 1);
+    REQUIRE(!matcher("aaa").is_accepted());
+    REQUIRE(!matcher("a").is_accepted());
+
+    auto match = matcher("   ab");
+    REQUIRE(match.is_accepted());
+    auto [m, g] = match;
+    REQUIRE(g == "ab");
+}
+
 TEST_CASE("Braces")
 {
     constexpr e_regex::regex<"ab{2,10}c"> matcher;

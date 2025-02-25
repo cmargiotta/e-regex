@@ -1,5 +1,5 @@
-#ifndef E_REGEX_NODES_POSSESSIVE_HPP_
-#define E_REGEX_NODES_POSSESSIVE_HPP_
+#ifndef WCORE_NODES_POSSESSIVE_HPP_
+#define WCORE_NODES_POSSESSIVE_HPP_
 
 #include <cstddef>
 #include <limits>
@@ -98,6 +98,8 @@ namespace e_regex::nodes
             static constexpr __attribute__((always_inline)) auto
                 match(auto& result) -> auto&
             {
+	      auto end = result.actual_iterator_end;
+
                 for (unsigned i = 0; i < repetitions_max; ++i)
                 {
                     matcher::template match<injected_children...>(result);
@@ -113,8 +115,11 @@ namespace e_regex::nodes
                         // Failed but repetitions_min was satisfied,
                         // run dfs
                         result.accepted = true;
+			result.actual_iterator_end = end;
                         break;
                     }
+
+		  end = result.actual_iterator_end;
                 }
 
                 return dfs<std::tuple<children...>>(result);
@@ -123,4 +128,8 @@ namespace e_regex::nodes
 
 } // namespace e_regex::nodes
 
-#endif /* E_REGEX_NODES_POSSESSIVE_HPP_*/
+
+
+
+
+#endif /* WCORE_NODES_POSSESSIVE_HPP_*/
